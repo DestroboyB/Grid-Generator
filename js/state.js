@@ -1,18 +1,31 @@
 export const appState = {
 
+    // ========================================
     // Cropper
+    // ========================================
+
     cropper: null,
 
-    // Currently selected box
     selectedDiv: null,
 
-    // Currently opened image menu
     menuDiv: null,
 
-    // Saved cropped images
+    currentObjectURL: null,
+
+
+    // ========================================
+    // Images
+    // ========================================
+
     savedImages: [],
 
-    // Temporary URL for uploaded file
-    currentObjectURL: null
+
+    // ========================================
+    // Board Settings
+    // ========================================
+
+    spacing: 0,
+
+    backgroundColor: "#ffffff"
 
 };

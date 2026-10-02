@@ -12,7 +12,7 @@ import {
 import {
     downloadBoard
 } from "./download.js";
-
+import { appState } from "./state.js";
 
 // ========================================
 // Elements
@@ -49,7 +49,20 @@ const downloadMenu =
         "downloadMenu"
     );
 
+const spacingInput =
+    document.getElementById(
+        "spacing"
+    );
 
+const spacingValue =
+    document.getElementById(
+        "spacingValue"
+    );
+
+const backgroundColorInput =
+    document.getElementById(
+        "backgroundColor"
+    );
 // ========================================
 // Load Saved Project
 // ========================================
@@ -65,7 +78,8 @@ if (!loadBoard()) {
     generateBoard();
 }
 
-
+spacingValue.textContent =
+    `${appState.spacing} px`;
 // ========================================
 // Generate Board
 // ========================================
@@ -95,7 +109,48 @@ imageRatioInput.addEventListener(
     }
 );
 
+// ========================================
+// Spacing
+// ========================================
 
+spacingInput.addEventListener(
+    "input",
+    () => {
+
+        appState.spacing =
+            Number(
+                spacingInput.value
+            );
+
+
+        spacingValue.textContent =
+            `${appState.spacing} px`;
+
+
+        generateBoard();
+
+        saveBoard();
+    }
+);
+
+
+// ========================================
+// Background Color
+// ========================================
+
+backgroundColorInput.addEventListener(
+    "input",
+    () => {
+
+        appState.backgroundColor =
+            backgroundColorInput.value;
+
+
+        generateBoard();
+
+        saveBoard();
+    }
+);
 // ========================================
 // Bulk Import
 // ========================================

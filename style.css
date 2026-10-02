@@ -217,3 +217,16 @@
     border: 3px dashed #333;
     background: #f0f0f0;
 }
+
+/* ========================================
+   Image Reordering
+======================================== */
+
+.image.dragging {
+    opacity: 0.5;
+}
+
+.image.swap-target {
+    outline: 4px dashed #2196f3;
+    outline-offset: -4px;
+}

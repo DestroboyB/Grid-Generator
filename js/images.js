@@ -245,9 +245,66 @@ board.addEventListener(
     }
 );
 
+// ========================================
+// Image Reordering / Drag And Drop
+// ========================================
+
+let draggedDiv = null;
+
 
 // ========================================
-// Drag And Drop
+// Drag Start
+// ========================================
+
+board.addEventListener(
+    "dragstart",
+    (event) => {
+
+        const div =
+            event.target.closest(
+                ".image"
+            );
+
+        if (!div) {
+            return;
+        }
+
+
+        // Only images already in the board
+        // can be dragged for reordering
+        if (
+            !div.querySelector("img")
+        ) {
+
+            event.preventDefault();
+
+            return;
+        }
+
+
+        draggedDiv =
+            div;
+
+
+        event.dataTransfer.effectAllowed =
+            "move";
+
+
+        event.dataTransfer.setData(
+            "text/plain",
+            "grid-image"
+        );
+
+
+        div.classList.add(
+            "dragging"
+        );
+    }
+);
+
+
+// ========================================
+// Drag Over
 // ========================================
 
 board.addEventListener(
@@ -255,7 +312,9 @@ board.addEventListener(
     (event) => {
 
         const div =
-            event.target.closest(".image");
+            event.target.closest(
+                ".image"
+            );
 
 
         if (!div) {
@@ -263,17 +322,86 @@ board.addEventListener(
         }
 
 
+        // ========================================
+        // Existing Image Being Moved
+        // ========================================
+
+        if (draggedDiv) {
+
+            // Don't highlight the box
+            // we're dragging from
+            if (
+                div === draggedDiv
+            ) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            event.dataTransfer.dropEffect =
+                "move";
+
+
+            // Remove highlight from every box
+            board
+                .querySelectorAll(
+                    ".image"
+                )
+                .forEach(
+                    box => {
+
+                        box.classList.remove(
+                            "drag-over"
+                        );
+                    }
+                );
+
+
+            // Highlight ONLY the box
+            // currently being hovered
+            div.classList.add(
+                "drag-over"
+            );
+
+
+            return;
+        }
+
+
+        // ========================================
+        // External File / URL
+        // ========================================
+
+        const types =
+            event.dataTransfer.types;
+
+
         if (
-            event.dataTransfer.types.includes(
-                "Files"
-            ) ||
-            event.dataTransfer.types.includes(
-                "text/uri-list"
-            )
+            types.includes("Files") ||
+            types.includes("text/uri-list")
         ) {
 
             event.preventDefault();
 
+
+            // Remove highlight from all boxes
+            board
+                .querySelectorAll(
+                    ".image"
+                )
+                .forEach(
+                    box => {
+
+                        box.classList.remove(
+                            "drag-over"
+                        );
+                    }
+                );
+
+
+            // Highlight ONLY current box
             div.classList.add(
                 "drag-over"
             );
@@ -282,12 +410,18 @@ board.addEventListener(
 );
 
 
+// ========================================
+// Drag Leave
+// ========================================
+
 board.addEventListener(
     "dragleave",
     (event) => {
 
         const div =
-            event.target.closest(".image");
+            event.target.closest(
+                ".image"
+            );
 
 
         if (!div) {
@@ -295,19 +429,36 @@ board.addEventListener(
         }
 
 
-        div.classList.remove(
-            "drag-over"
-        );
+        // Only remove the highlight if
+        // we're actually leaving the box,
+        // rather than moving onto an element
+        // inside the same box.
+        if (
+            !div.contains(
+                event.relatedTarget
+            )
+        ) {
+
+            div.classList.remove(
+                "drag-over"
+            );
+        }
     }
 );
 
+
+// ========================================
+// Drop
+// ========================================
 
 board.addEventListener(
     "drop",
     (event) => {
 
         const div =
-            event.target.closest(".image");
+            event.target.closest(
+                ".image"
+            );
 
 
         if (!div) {
@@ -318,14 +469,41 @@ board.addEventListener(
         event.preventDefault();
 
 
+        // ========================================
+        // Internal Image Reordering
+        // ========================================
+
+        if (draggedDiv) {
+
+            if (
+                div !== draggedDiv
+            ) {
+
+                swapImages(
+                    draggedDiv,
+                    div
+                );
+            }
+
+
+            clearDragState();
+
+            return;
+        }
+
+
+        // ========================================
+        // External Image
+        // ========================================
+
         div.classList.remove(
             "drag-over"
         );
 
 
-        // ========================================
+        // ----------------------------------------
         // Dropped File
-        // ========================================
+        // ----------------------------------------
 
         const files =
             Array.from(
@@ -333,7 +511,9 @@ board.addEventListener(
             );
 
 
-        if (files.length > 0) {
+        if (
+            files.length > 0
+        ) {
 
             const imageFile =
                 files.find(
@@ -351,15 +531,14 @@ board.addEventListener(
                     div
                 );
 
-
                 return;
             }
         }
 
 
-        // ========================================
+        // ----------------------------------------
         // Image From Browser Tab
-        // ========================================
+        // ----------------------------------------
 
         const imageURL =
             event.dataTransfer.getData(
@@ -377,6 +556,174 @@ board.addEventListener(
     }
 );
 
+
+// ========================================
+// Drag End
+// ========================================
+
+board.addEventListener(
+    "dragend",
+    () => {
+
+        clearDragState();
+    }
+);
+
+
+// ========================================
+// Clear Drag State
+// ========================================
+
+function clearDragState() {
+
+    board
+        .querySelectorAll(
+            ".image"
+        )
+        .forEach(
+            div => {
+
+                div.classList.remove(
+                    "dragging"
+                );
+
+                div.classList.remove(
+                    "drag-over"
+                );
+            }
+        );
+
+
+    draggedDiv =
+        null;
+}
+
+
+// ========================================
+// Swap / Move Images
+// ========================================
+
+function swapImages(
+    firstDiv,
+    secondDiv
+) {
+
+    const boxes =
+        Array.from(
+            board.children
+        );
+
+
+    const firstIndex =
+        boxes.indexOf(
+            firstDiv
+        );
+
+
+    const secondIndex =
+        boxes.indexOf(
+            secondDiv
+        );
+
+
+    if (
+        firstIndex === -1 ||
+        secondIndex === -1
+    ) {
+        return;
+    }
+
+
+    // ========================================
+    // Swap Saved Images
+    // ========================================
+
+    const temp =
+        appState.savedImages[
+            firstIndex
+        ];
+
+
+    appState.savedImages[
+        firstIndex
+    ] =
+        appState.savedImages[
+            secondIndex
+        ];
+
+
+    appState.savedImages[
+        secondIndex
+    ] =
+        temp;
+
+
+    // ========================================
+    // Swap Visual Contents
+    // ========================================
+
+    const firstHTML =
+        firstDiv.innerHTML;
+
+
+    const secondHTML =
+        secondDiv.innerHTML;
+
+
+    firstDiv.innerHTML =
+        secondHTML;
+
+
+    secondDiv.innerHTML =
+        firstHTML;
+
+
+    // ========================================
+    // Restore Box Number
+    // ========================================
+    // If a box is now empty, give it
+    // its box number back.
+
+    if (
+        !firstDiv.querySelector("img")
+    ) {
+
+        firstDiv.textContent =
+            firstIndex + 1;
+    }
+
+
+    if (
+        !secondDiv.querySelector("img")
+    ) {
+
+        secondDiv.textContent =
+            secondIndex + 1;
+    }
+
+
+    // ========================================
+    // Update Draggable State
+    // ========================================
+
+    firstDiv.draggable =
+        Boolean(
+            firstDiv.querySelector("img")
+        );
+
+
+    secondDiv.draggable =
+        Boolean(
+            secondDiv.querySelector("img")
+        );
+
+
+    // ========================================
+    // Save
+    // ========================================
+
+    saveBoard();
+}
 
 // ========================================
 // Bulk Import

@@ -35,10 +35,14 @@ export function generateBoard() {
     // Image Ratio
     // ========================================
 
-    const [ratioWidth, ratioHeight] =
+    const [
+        ratioWidth,
+        ratioHeight
+    ] =
         imageRatioInput.value
             .split(":")
             .map(Number);
+
 
     const boxRatio =
         ratioWidth / ratioHeight;
@@ -72,6 +76,7 @@ export function generateBoard() {
             1200
         );
 
+
     const maxBoardHeight =
         window.innerHeight * 0.80;
 
@@ -80,13 +85,18 @@ export function generateBoard() {
         20;
 
 
-    // Maximum gap as percentage of box width
-    const gapRatio =
-        0.03;
+    // ========================================
+    // User Spacing
+    // ========================================
+
+    const spacing =
+        Number(
+            appState.spacing
+        );
 
 
     // ========================================
-    // Available Width
+    // Available Dimensions
     // ========================================
 
     const availableWidth =
@@ -94,19 +104,19 @@ export function generateBoard() {
         (boardPadding * 2);
 
 
+    const availableHeight =
+        maxBoardHeight -
+        (boardPadding * 2);
+
+
     // ========================================
     // Start By Fitting Width
     // ========================================
 
-    let gap =
-        (availableWidth / columns) *
-        gapRatio;
-
-
     let boxWidth =
         (
             availableWidth -
-            (gap * (columns - 1))
+            (spacing * (columns - 1))
         ) / columns;
 
 
@@ -118,14 +128,9 @@ export function generateBoard() {
     // Check Height
     // ========================================
 
-    const availableHeight =
-        maxBoardHeight -
-        (boardPadding * 2);
-
-
     let requiredHeight =
         (boxHeight * rows) +
-        (gap * (rows - 1));
+        (spacing * (rows - 1));
 
 
     if (
@@ -137,7 +142,7 @@ export function generateBoard() {
         boxHeight =
             (
                 availableHeight -
-                (gap * (rows - 1))
+                (spacing * (rows - 1))
             ) / rows;
 
 
@@ -145,15 +150,10 @@ export function generateBoard() {
             boxHeight * boxRatio;
 
 
-        // Recalculate gap
-        gap =
-            boxWidth * gapRatio;
-
-
-        // Check width again
+        // Make sure width still fits
         const totalWidth =
             (boxWidth * columns) +
-            (gap * (columns - 1));
+            (spacing * (columns - 1));
 
 
         if (
@@ -161,16 +161,10 @@ export function generateBoard() {
             availableWidth
         ) {
 
-            // Width is limiting factor
-            gap =
-                (availableWidth / columns) *
-                gapRatio;
-
-
             boxWidth =
                 (
                     availableWidth -
-                    (gap * (columns - 1))
+                    (spacing * (columns - 1))
                 ) / columns;
 
 
@@ -186,12 +180,12 @@ export function generateBoard() {
 
     const finalWidth =
         (boxWidth * columns) +
-        (gap * (columns - 1));
+        (spacing * (columns - 1));
 
 
     const finalHeight =
         (boxHeight * rows) +
-        (gap * (rows - 1));
+        (spacing * (rows - 1));
 
 
     // ========================================
@@ -211,6 +205,7 @@ export function generateBoard() {
     board.style.width =
         `${boardWidth}px`;
 
+
     board.style.height =
         `${boardHeight}px`;
 
@@ -228,7 +223,15 @@ export function generateBoard() {
 
 
     board.style.gap =
-        `${gap}px`;
+        `${spacing}px`;
+
+
+    // ========================================
+    // Background
+    // ========================================
+
+    board.style.backgroundColor =
+        appState.backgroundColor;
 
 
     // ========================================
@@ -245,43 +248,59 @@ export function generateBoard() {
     ) {
 
         const div =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
 
-        div.classList.add("image");
-
+        div.classList.add(
+            "image"
+        );
+        div.draggable =
+    Boolean(
+        appState.savedImages[i]
+    );
 
         div.textContent =
             i + 1;
 
 
         // ========================================
-        // Restore Saved Image
+        // Restore Image
         // ========================================
 
         if (
             appState.savedImages[i]
         ) {
 
-            div.innerHTML = "";
+            div.innerHTML =
+                "";
 
 
             const img =
-                document.createElement("img");
+                document.createElement(
+                    "img"
+                );
 
 
             img.src =
                 appState.savedImages[i];
 
 
-            div.appendChild(img);
+            div.appendChild(
+                img
+            );
+
+            div.draggable = true;
         }
 
 
         // ========================================
-        // Add Box To Board
+        // Add Box
         // ========================================
 
-        board.appendChild(div);
+        board.appendChild(
+            div
+        );
     }
 }

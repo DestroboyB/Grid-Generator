@@ -14,6 +14,14 @@ const columnsInput =
 const imageRatioInput =
     document.getElementById("imageRatio");
 
+const spacingInput =
+    document.getElementById("spacing");
+
+const backgroundColorInput =
+    document.getElementById(
+        "backgroundColor"
+    );
+
 
 // ========================================
 // Storage Key
@@ -40,6 +48,12 @@ export function saveBoard() {
         ratio:
             imageRatioInput.value,
 
+        spacing:
+            appState.spacing,
+
+        backgroundColor:
+            appState.backgroundColor,
+
         images:
             appState.savedImages
     };
@@ -64,7 +78,6 @@ export function loadBoard() {
         );
 
 
-    // Nothing saved
     if (!savedData) {
         return false;
     }
@@ -77,7 +90,7 @@ export function loadBoard() {
 
 
         // ========================================
-        // Restore Board Settings
+        // Board Settings
         // ========================================
 
         if (
@@ -108,7 +121,34 @@ export function loadBoard() {
 
 
         // ========================================
-        // Restore Images
+        // Spacing
+        // ========================================
+
+        appState.spacing =
+            Number(
+                boardData.spacing ?? 0
+            );
+
+
+        spacingInput.value =
+            appState.spacing;
+
+
+        // ========================================
+        // Background
+        // ========================================
+
+        appState.backgroundColor =
+            boardData.backgroundColor ||
+            "#ffffff";
+
+
+        backgroundColorInput.value =
+            appState.backgroundColor;
+
+
+        // ========================================
+        // Images
         // ========================================
 
         appState.savedImages =
@@ -147,4 +187,12 @@ export function clearSavedBoard() {
 
     appState.savedImages =
         [];
+
+
+    appState.spacing =
+        0;
+
+
+    appState.backgroundColor =
+        "#ffffff";
 }

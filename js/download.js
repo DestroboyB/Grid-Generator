@@ -58,7 +58,7 @@ export async function downloadBoard(format) {
     // ========================================
 
     ctx.fillStyle =
-        "white";
+    getComputedStyle(board).backgroundColor;
 
 
     ctx.fillRect(
