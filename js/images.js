@@ -1,5 +1,7 @@
 import { appState } from "./state.js";
-
+import {
+    saveHistoryState
+} from "./history.js";
 import {
     openCropForFile,
     openCropForURL
@@ -54,24 +56,25 @@ export function openFileSelector(element) {
 
 
     fileInput.addEventListener(
-        "change",
-        () => {
+    "change",
+    () => {
 
-            const file =
-                fileInput.files[0];
+        const file =
+            fileInput.files[0];
 
-
-            if (!file) {
-                return;
-            }
-
-
-            openCropForFile(
-                file,
-                element
-            );
+        if (!file) {
+            return;
         }
-    );
+
+        
+
+        openCropForFile(
+            file,
+            element
+        );
+        saveHistoryState();
+    }
+);
 
 
     fileInput.click();
@@ -157,13 +160,13 @@ deleteImageButton.addEventListener(
                 board.children
             ).indexOf(div);
 
-
+  
         // Remove saved image
         appState.savedImages[
             boxIndex
         ] = null;
 
-
+                  saveHistoryState();
         // Clear box
         div.innerHTML = "";
 
@@ -180,9 +183,6 @@ deleteImageButton.addEventListener(
         appState.menuDiv =
             null;
 
-
-        // Save after deleting
-        saveBoard();
     }
 );
 
@@ -607,7 +607,7 @@ function swapImages(
     firstDiv,
     secondDiv
 ) {
-
+        
     const boxes =
         Array.from(
             board.children
@@ -722,7 +722,7 @@ function swapImages(
     // Save
     // ========================================
 
-    saveBoard();
+    saveHistoryState();
 }
 
 // ========================================
@@ -785,7 +785,7 @@ export function bulkImport() {
                 return;
             }
 
-
+            saveHistoryState();
             const filesToImport =
                 files.slice(
                     0,

@@ -1,9 +1,6 @@
 export const appState = {
 
-    // ========================================
     // Cropper
-    // ========================================
-
     cropper: null,
 
     selectedDiv: null,
@@ -12,20 +9,17 @@ export const appState = {
 
     currentObjectURL: null,
 
-
-    // ========================================
     // Images
-    // ========================================
-
     savedImages: [],
 
-
-    // ========================================
     // Board Settings
-    // ========================================
-
     spacing: 0,
 
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
+
+    // Undo / Redo
+    undoStack: [],
+
+    redoStack: []
 
 };

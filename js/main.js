@@ -1,6 +1,14 @@
 import { generateBoard } from "./board.js";
 
 import {
+    undo,
+    redo,
+    updateHistoryButtons,
+    saveHistoryState,
+    initializeHistory
+} from "./history.js";
+
+import {
     bulkImport
 } from "./images.js";
 
@@ -12,7 +20,9 @@ import {
 import {
     downloadBoard
 } from "./download.js";
+
 import { appState } from "./state.js";
+
 
 // ========================================
 // Elements
@@ -63,6 +73,18 @@ const backgroundColorInput =
     document.getElementById(
         "backgroundColor"
     );
+
+const undoButton =
+    document.getElementById(
+        "undoButton"
+    );
+
+const redoButton =
+    document.getElementById(
+        "redoButton"
+    );
+
+
 // ========================================
 // Load Saved Project
 // ========================================
@@ -78,8 +100,16 @@ if (!loadBoard()) {
     generateBoard();
 }
 
+
+// Update controls after loading
 spacingValue.textContent =
     `${appState.spacing} px`;
+
+
+// Initialize history
+initializeHistory();
+
+
 // ========================================
 // Generate Board
 // ========================================
@@ -88,9 +118,11 @@ generateButton.addEventListener(
     "click",
     () => {
 
+
         generateBoard();
 
-        saveBoard();
+
+        saveHistoryState();
     }
 );
 
@@ -103,11 +135,14 @@ imageRatioInput.addEventListener(
     "change",
     () => {
 
+
         generateBoard();
 
-        saveBoard();
+
+         saveHistoryState();
     }
 );
+
 
 // ========================================
 // Spacing
@@ -122,16 +157,23 @@ spacingInput.addEventListener(
                 spacingInput.value
             );
 
-
         spacingValue.textContent =
             `${appState.spacing} px`;
 
-
         generateBoard();
-
-        saveBoard();
     }
 );
+
+
+spacingInput.addEventListener(
+    "change",
+    () => {
+
+        saveHistoryState();
+    }
+);
+
+
 
 
 // ========================================
@@ -145,12 +187,20 @@ backgroundColorInput.addEventListener(
         appState.backgroundColor =
             backgroundColorInput.value;
 
-
         generateBoard();
-
-        saveBoard();
     }
 );
+
+
+backgroundColorInput.addEventListener(
+    "change",
+    () => {
+
+        saveHistoryState();
+    }
+);
+
+
 // ========================================
 // Bulk Import
 // ========================================
@@ -158,6 +208,32 @@ backgroundColorInput.addEventListener(
 bulkImportButton.addEventListener(
     "click",
     bulkImport
+);
+
+
+// ========================================
+// Undo Button
+// ========================================
+
+undoButton.addEventListener(
+    "click",
+    () => {
+
+        undo();
+    }
+);
+
+
+// ========================================
+// Redo Button
+// ========================================
+
+redoButton.addEventListener(
+    "click",
+    () => {
+
+        redo();
+    }
 );
 
 
@@ -270,5 +346,82 @@ window.addEventListener(
                 },
                 100
             );
+    }
+);
+
+
+// ========================================
+// Keyboard Shortcuts
+// ========================================
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        const activeElement =
+            document.activeElement;
+
+
+        const isTyping =
+            activeElement.tagName === "INPUT" &&
+            activeElement.type === "text";
+
+
+        if (isTyping) {
+            return;
+        }
+
+
+        // ========================================
+        // Undo - Ctrl + Z
+        // ========================================
+
+        if (
+            event.ctrlKey &&
+            !event.shiftKey &&
+            event.key.toLowerCase() === "z"
+        ) {
+
+            event.preventDefault();
+
+            undo();
+
+            return;
+        }
+
+
+        // ========================================
+        // Redo - Ctrl + Y
+        // ========================================
+
+        if (
+            event.ctrlKey &&
+            event.key.toLowerCase() === "y"
+        ) {
+
+            event.preventDefault();
+
+            redo();
+
+            return;
+        }
+
+
+        // ========================================
+        // Redo - Ctrl + Shift + Z
+        // ========================================
+
+        if (
+            event.ctrlKey &&
+            event.shiftKey &&
+            event.key.toLowerCase() === "z"
+        ) {
+
+            event.preventDefault();
+
+            redo();
+
+            return;
+        }
     }
 );

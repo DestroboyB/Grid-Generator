@@ -37,27 +37,32 @@ const STORAGE_KEY =
 
 export function saveBoard() {
 
-    const boardData = {
+const boardData = {
 
-        rows:
-            rowsInput.value,
+    rows:
+        rowsInput.value,
 
-        columns:
-            columnsInput.value,
+    columns:
+        columnsInput.value,
 
-        ratio:
-            imageRatioInput.value,
+    ratio:
+        imageRatioInput.value,
 
-        spacing:
-            appState.spacing,
+    spacing:
+        appState.spacing,
 
-        backgroundColor:
-            appState.backgroundColor,
+    backgroundColor:
+        appState.backgroundColor,
 
-        images:
-            appState.savedImages
-    };
+    images:
+        appState.savedImages,
 
+    undoStack:
+        appState.undoStack,
+
+    redoStack:
+        appState.redoStack
+};
 
     localStorage.setItem(
         STORAGE_KEY,
@@ -159,6 +164,19 @@ export function loadBoard() {
                 : [];
 
 
+        appState.undoStack =
+    Array.isArray(
+        boardData.undoStack
+    )
+        ? boardData.undoStack
+        : [];
+
+appState.redoStack =
+    Array.isArray(
+        boardData.redoStack
+    )
+        ? boardData.redoStack
+        : [];
         return true;
 
     } catch (error) {
@@ -195,4 +213,10 @@ export function clearSavedBoard() {
 
     appState.backgroundColor =
         "#ffffff";
+
+        appState.undoStack =
+    [];
+
+appState.redoStack =
+    [];
 }
