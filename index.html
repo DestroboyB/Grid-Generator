@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="style.css" rel="stylesheet">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+>
+
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="controls">
+
+        <label>
+            Rows:
+            <select id="rows">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+        </label>
+
+        <span> × </span>
+
+        <label>
+            Columns:
+            <select id="columns">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+        </label>
+        <label>
+    <label>
+    Image Ratio:
+    <select id="imageRatio">
+        <option value="1:1">1:1 — Square</option>
+        <option value="4:3">4:3 — Standard</option>
+        <option value="3:2">3:2 — Photo</option>
+        <option value="16:9">16:9 — Widescreen</option>
+        <option value="3:4">3:4 — Portrait</option>
+        <option value="2:3">2:3 — Portrait Photo</option>
+        <option value="9:16">9:16 — Vertical</option>
+    </select>
+</label>
+        <button id="generateBoard">Generate Board</button>
+        <button id="bulkImportButton">Bulk Import</button>
+    </div>
+
+
+    <div class="board" id="board">
+    </div>
+
+
+    <!-- Crop window -->
+
+    <div id="cropModal" class="crop-modal">
+
+        <div class="crop-box">
+
+            <img id="cropImage">
+
+            <div class="crop-buttons">
+                <button id="cropButton">Crop</button>
+                <button id="cancelButton">Cancel</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="imageMenu" class="image-menu">
+        <button id="replaceImageButton">Replace Image</button>
+        <button id="deleteImageButton">Delete Image</button>
+        <button id="closeMenuButton">Cancel</button>
+    </div>
+   <div class="download-container">
+
+    <div id="downloadMenu" class="download-menu">
+        <button data-format="png">PNG</button>
+        <button data-format="jpg">JPG</button>
+        <button data-format="webp">WebP</button>
+    </div>
+
+    <button id="downloadButton">Download</button>
+
+</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
