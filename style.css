@@ -3,9 +3,6 @@
 ========================= */
 
 .board {
-    width: 90vw;
-    max-width: 1200px;
-
     margin: 10px auto;
 
     display: grid;
@@ -14,6 +11,8 @@
     padding: 10px;
 
     box-sizing: border-box;
+
+    overflow: hidden;
 
     justify-content: center;
     align-content: center;
@@ -79,13 +78,15 @@
     width: 80vw;
     max-width: 800px;
     max-height: 90vh;
-
     background: white;
     padding: 20px;
-
     box-sizing: border-box;
+    overflow: hidden;
 }
 
+.crop-box .cropper-container {
+    max-width: 100%;
+}
 
 /* =========================
    Crop Image
@@ -211,4 +212,8 @@
 
 .download-menu button:hover {
     background: #eeeeee;
+}
+.image.drag-over {
+    border: 3px dashed #333;
+    background: #f0f0f0;
 }

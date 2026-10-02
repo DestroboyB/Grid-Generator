@@ -32,6 +32,69 @@ const downloadMenu =
     document.getElementById("downloadMenu");
 
 // ========================================
+// Save board to localStorage
+// ========================================
+
+function saveBoard() {
+
+    const boardData = {
+        rows: rowsInput.value,
+        columns: columnsInput.value,
+        ratio: imageRatioInput.value,
+        images: savedImages
+    };
+
+    localStorage.setItem(
+        "gridBoardData",
+        JSON.stringify(boardData)
+    );
+}
+
+
+// ========================================
+// Load board from localStorage
+// ========================================
+
+function loadBoard() {
+
+    const savedData =
+        localStorage.getItem("gridBoardData");
+
+    if (!savedData) {
+        return false;
+    }
+
+    try {
+
+        const boardData =
+            JSON.parse(savedData);
+
+        rowsInput.value =
+            boardData.rows;
+
+        columnsInput.value =
+            boardData.columns;
+
+        imageRatioInput.value =
+            boardData.ratio;
+
+        savedImages =
+            boardData.images || [];
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "Could not load saved board:",
+            error
+        );
+
+        return false;
+    }
+}
+
+// ========================================
 // Generate board
 // ========================================
 function generateBoard() {
@@ -46,18 +109,14 @@ function generateBoard() {
 
     const totalBoxes = rows * columns;
 
-
-    // ========================================
     // Remove images that no longer fit
-    // ========================================
-
     if (savedImages.length > totalBoxes) {
         savedImages.length = totalBoxes;
     }
 
 
     // ========================================
-    // Available screen space
+    // Board limits
     // ========================================
 
     const maxBoardWidth = Math.min(
@@ -68,60 +127,113 @@ function generateBoard() {
     const maxBoardHeight =
         window.innerHeight * 0.80;
 
-    const boardPadding = 24;
+    const boardPadding = 20;
 
+    // Maximum gap as a percentage of box width
     const gapRatio = 0.03;
 
 
     // ========================================
-    // Calculate box size
+    // Calculate available width
     // ========================================
 
+    const availableWidth =
+        maxBoardWidth - (boardPadding * 2);
+
+
+    // ========================================
+    // Start by fitting to width
+    // ========================================
+
+    let gap =
+        (availableWidth / columns) * gapRatio;
+
     let boxWidth =
-        (maxBoardWidth - boardPadding) /
-        columns;
+        (
+            availableWidth -
+            (gap * (columns - 1))
+        ) / columns;
 
     let boxHeight =
         boxWidth / boxRatio;
 
-    let gap =
-        boxWidth * gapRatio;
 
+    // ========================================
+    // Check if height is too large
+    // ========================================
 
-    const requiredHeight =
+    const availableHeight =
+        maxBoardHeight - (boardPadding * 2);
+
+    let requiredHeight =
         (boxHeight * rows) +
-        (gap * (rows - 1)) +
-        boardPadding;
+        (gap * (rows - 1));
 
 
-    // If too tall, scale based on height
-    if (requiredHeight > maxBoardHeight) {
+    if (requiredHeight > availableHeight) {
 
+        // Calculate height-based box size
         boxHeight =
-            (maxBoardHeight - boardPadding) /
-            (rows + gapRatio * (rows - 1));
+            (
+                availableHeight -
+                (gap * (rows - 1))
+            ) / rows;
 
         boxWidth =
             boxHeight * boxRatio;
 
+
+        // Recalculate gap based on new width
         gap =
             boxWidth * gapRatio;
+
+
+        // Make sure width still fits
+        const totalWidth =
+            (boxWidth * columns) +
+            (gap * (columns - 1));
+
+
+        if (totalWidth > availableWidth) {
+
+            // Width is now the limiting factor
+            gap =
+                (availableWidth / columns) * gapRatio;
+
+            boxWidth =
+                (
+                    availableWidth -
+                    (gap * (columns - 1))
+                ) / columns;
+
+            boxHeight =
+                boxWidth / boxRatio;
+        }
     }
 
 
     // ========================================
-    // Final board dimensions
+    // Final safety calculation
+    // ========================================
+
+    const finalWidth =
+        (boxWidth * columns) +
+        (gap * (columns - 1));
+
+    const finalHeight =
+        (boxHeight * rows) +
+        (gap * (rows - 1));
+
+
+    // ========================================
+    // Board size
     // ========================================
 
     const boardWidth =
-        (boxWidth * columns) +
-        (gap * (columns - 1)) +
-        boardPadding;
+        finalWidth + (boardPadding * 2);
 
     const boardHeight =
-        (boxHeight * rows) +
-        (gap * (rows - 1)) +
-        boardPadding;
+        finalHeight + (boardPadding * 2);
 
 
     board.style.width =
@@ -129,6 +241,11 @@ function generateBoard() {
 
     board.style.height =
         `${boardHeight}px`;
+
+
+    // ========================================
+    // Grid
+    // ========================================
 
     board.style.gridTemplateColumns =
         `repeat(${columns}, ${boxWidth}px)`;
@@ -141,11 +258,10 @@ function generateBoard() {
 
 
     // ========================================
-    // Rebuild visual board
+    // Create boxes
     // ========================================
 
     board.innerHTML = "";
-
 
     for (let i = 0; i < totalBoxes; i++) {
 
@@ -156,11 +272,9 @@ function generateBoard() {
 
         div.textContent = i + 1;
 
+        setupDragAndDrop(div);
 
-        // ====================================
-        // Restore saved image
-        // ====================================
-
+        // Restore image
         if (savedImages[i]) {
 
             div.innerHTML = "";
@@ -175,23 +289,15 @@ function generateBoard() {
         }
 
 
-        // ====================================
-        // Click behavior
-        // ====================================
-
         div.addEventListener("click", () => {
 
             if (div.querySelector("img")) {
-
                 showImageMenu(div);
-
             } else {
-
                 openFileSelector(div);
             }
 
         });
-
 
         board.appendChild(div);
     }
@@ -332,15 +438,27 @@ async function importBulkImage(file, div) {
                             canvas.toDataURL("image/png");
 
 
-                        // Put image into grid
-                        div.innerHTML = "";
+                       // Find box index
+const boxIndex =
+    Array.from(board.children)
+        .indexOf(div);
 
-                        const img =
-                            document.createElement("img");
 
-                        img.src = croppedURL;
+// Save image
+savedImages[boxIndex] =
+    croppedURL;
 
-                        div.appendChild(img);
+    saveBoard();
+
+// Put image into grid
+div.innerHTML = "";
+
+const img =
+    document.createElement("img");
+
+img.src = croppedURL;
+
+div.appendChild(img);
 
 
                         // Cleanup
@@ -372,19 +490,13 @@ function openFileSelector(element) {
 
     selectedDiv = element;
 
-    const boxIndex =
-        Array.from(board.children)
-            .indexOf(element);
-
-
     const fileInput =
         document.createElement("input");
 
     fileInput.type = "file";
 
     fileInput.accept =
-        "image/jpeg, image/png";
-
+        "image/jpeg, image/png, image/webp";
 
     fileInput.addEventListener("change", () => {
 
@@ -395,51 +507,9 @@ function openFileSelector(element) {
             return;
         }
 
-
-        const imageURL =
-            URL.createObjectURL(file);
-
-
-        // Save the ORIGINAL image
-        savedImages[boxIndex] =
-            imageURL;
-
-
-        cropImage.src =
-            imageURL;
-
-
-        cropModal.style.display =
-            "flex";
-
-
-        if (cropper) {
-            cropper.destroy();
-        }
-
-
-        const [ratioWidth, ratioHeight] =
-            imageRatioInput.value
-                .split(":")
-                .map(Number);
-
-
-        cropper =
-            new Cropper(cropImage, {
-
-                aspectRatio:
-                    ratioWidth / ratioHeight,
-
-                viewMode: 1,
-
-                autoCropArea: 1,
-
-                responsive: true
-
-            });
+        openCropForFile(file, element);
 
     });
-
 
     fileInput.click();
 }
@@ -488,6 +558,7 @@ deleteImageButton.addEventListener("click", () => {
     savedImages[boxIndex] =
         null;
 
+    saveBoard();
 
     // Clear visual box
     menuDiv.innerHTML = "";
@@ -514,9 +585,13 @@ closeMenuButton.addEventListener("click", () => {
 // Crop button
 // ========================================
 
+// ========================================
+// Crop button
+// ========================================
+
 cropButton.addEventListener("click", () => {
 
-    if (!cropper) {
+    if (!cropper || !selectedDiv) {
         return;
     }
 
@@ -525,25 +600,39 @@ cropButton.addEventListener("click", () => {
         height: 500
     });
 
-    const imageURL = canvas.toDataURL("image/png");
+    const imageURL =
+        canvas.toDataURL("image/png");
 
+    // Find which box this is
+    const boxIndex =
+        Array.from(board.children)
+            .indexOf(selectedDiv);
+
+    // Save the image so it survives board regeneration
+    savedImages[boxIndex] =
+        imageURL;
+
+    saveBoard();
+
+    // Display the image
     selectedDiv.innerHTML = "";
 
-    const img = document.createElement("img");
+    const img =
+        document.createElement("img");
 
     img.src = imageURL;
 
     selectedDiv.appendChild(img);
 
-
     // Close modal
     cropModal.style.display = "none";
-
 
     // Destroy cropper
     cropper.destroy();
 
     cropper = null;
+
+    selectedDiv = null;
 });
 
 
@@ -565,10 +654,20 @@ cancelButton.addEventListener("click", () => {
 
 
 // ========================================
-// Generate default 3 x 3 board
+// Load saved board or create default board
 // ========================================
 
-generateBoard();
+if (!loadBoard()) {
+
+    generateBoard();
+
+    saveBoard();
+
+} else {
+
+    generateBoard();
+
+}
 
 
 // ========================================
@@ -578,6 +677,8 @@ generateBoard();
 generateButton.addEventListener("click", () => {
 
     generateBoard();
+
+    saveBoard();
 
 });
 
@@ -824,3 +925,113 @@ async function downloadBoard(format) {
 
     link.click();
 }
+
+// ========================================
+// Drag and drop image
+// ========================================
+
+function setupDragAndDrop(div) {
+
+    div.addEventListener("dragover", (event) => {
+
+        event.preventDefault();
+
+        // Only allow image files
+        if (
+            event.dataTransfer.types.includes("Files") ||
+            event.dataTransfer.types.includes("text/uri-list")
+        ) {
+            div.classList.add("drag-over");
+        }
+    });
+
+
+    div.addEventListener("dragleave", () => {
+
+        div.classList.remove("drag-over");
+
+    });
+
+
+    div.addEventListener("drop", (event) => {
+
+        event.preventDefault();
+
+        div.classList.remove("drag-over");
+
+        const files =
+            Array.from(event.dataTransfer.files);
+
+        // Dropped actual image file
+        if (files.length > 0) {
+
+            const imageFile =
+                files.find(file =>
+                    file.type.startsWith("image/")
+                );
+
+            if (imageFile) {
+                openCropForFile(imageFile, div);
+                return;
+            }
+        }
+
+
+        // Image dragged from another browser tab/site
+        const imageURL =
+            event.dataTransfer.getData("text/uri-list");
+
+        if (imageURL) {
+
+            openCropForURL(imageURL, div);
+
+        }
+    });
+}
+
+function openCropForFile(file, element) {
+
+    selectedDiv = element;
+
+    const imageURL =
+        URL.createObjectURL(file);
+
+    cropImage.src = imageURL;
+
+    cropModal.style.display = "flex";
+
+
+    if (cropper) {
+        cropper.destroy();
+    }
+
+
+    const [ratioWidth, ratioHeight] =
+        imageRatioInput.value
+            .split(":")
+            .map(Number);
+
+    const cropRatio =
+        ratioWidth / ratioHeight;
+
+
+    cropper = new Cropper(cropImage, {
+
+        aspectRatio: cropRatio,
+
+        viewMode: 1,
+
+        autoCropArea: 1,
+
+        responsive: true
+
+    });
+}
+
+imageRatioInput.addEventListener("change", () => {
+
+    generateBoard();
+
+    saveBoard();
+
+});
