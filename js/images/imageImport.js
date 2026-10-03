@@ -1,12 +1,12 @@
-import { appState } from "./state.js";
+import { appState } from "../state.js";
 
 import {
     saveHistoryState
-} from "./history.js";
+} from "../history.js";
 
 import {
     renderImage
-} from "./board.js";
+} from "../board.js";
 
 // ========================================
 // Elements

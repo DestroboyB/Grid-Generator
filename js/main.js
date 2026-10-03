@@ -12,13 +12,13 @@ import {
 import {
     openFileSelector,
     showImageMenu
-} from "./images.js";
+} from "./images/images.js";
 
 import {
     bulkImport
-} from "./imageImport.js";
+} from "./images/imageImport.js";
 
-import "./imageDragDrop.js";
+import "./images/imageDragDrop.js";
 
 import {
     loadBoard,

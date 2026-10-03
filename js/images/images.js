@@ -1,17 +1,17 @@
-import { appState } from "./state.js";
+import { appState } from "../state.js";
 
 import {
     saveHistoryState
-} from "./history.js";
+} from "../history.js";
 
 import {
     openCropForFile,
     openCropForExistingImage
-} from "./cropper.js";
+} from "../cropper/cropper.js";
 
 import {
     clearImageBox
-} from "./board.js";
+} from "../board.js";
 
 // ========================================
 // Elements

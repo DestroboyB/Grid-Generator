@@ -1,0 +1,147 @@
+/* ========================================
+   Controls
+======================================== */
+
+.controls {
+    width: 100%;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    padding: 18px 20px;
+
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    gap: 16px;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+
+/* ========================================
+   Control Groups
+======================================== */
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.ratio-control {
+    min-width: 180px;
+}
+
+.spacing-control {
+    min-width: 190px;
+}
+
+
+/* ========================================
+   Dimension Separator
+======================================== */
+
+.dimension-separator {
+    font-size: 20px;
+    font-weight: 600;
+    color: #9ca3af;
+
+    padding-bottom: 7px;
+}
+
+
+/* ========================================
+   Inputs
+======================================== */
+
+select,
+input[type="range"] {
+    cursor: pointer;
+}
+
+select {
+    min-width: 70px;
+
+    padding: 8px 30px 8px 10px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #1f2937;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+select:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+input[type="color"] {
+    width: 48px;
+    height: 36px;
+
+    padding: 3px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    cursor: pointer;
+}
+
+
+/* ========================================
+   Range Control
+======================================== */
+
+.range-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+input[type="range"] {
+    width: 130px;
+}
+
+#spacingValue {
+    min-width: 42px;
+
+    font-size: 13px;
+    color: #6b7280;
+}
+
+
+/* ========================================
+   Control Actions
+======================================== */
+
+.control-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-left: auto;
+}

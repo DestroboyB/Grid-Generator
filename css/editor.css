@@ -1,0 +1,387 @@
+/* ========================================
+   IMAGE EDITOR
+======================================== */
+
+.editor-modal {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.65);
+
+    z-index: 1000;
+
+    padding: 20px;
+}
+
+
+.editor-window {
+    width: min(1000px, 95vw);
+    max-height: 95vh;
+
+    display: flex;
+    flex-direction: column;
+
+    background: white;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+
+/* ========================================
+   Header
+======================================== */
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 16px 20px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.editor-header h2 {
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: 600;
+}
+
+
+.editor-close {
+    border: none;
+
+    background: transparent;
+
+    font-size: 28px;
+    line-height: 1;
+
+    color: #6b7280;
+
+    cursor: pointer;
+
+    padding: 2px 6px;
+}
+
+
+.editor-close:hover {
+    color: #111827;
+}
+
+
+/* ========================================
+   Main Content
+======================================== */
+
+.editor-content {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+
+    flex: 1;
+}
+
+
+/* ========================================
+   Image Preview
+======================================== */
+
+.editor-preview {
+    position: relative;
+
+    width: 100%;
+    height: 55vh;
+    min-height: 400px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #1f2937;
+
+    overflow: hidden;
+
+    flex-shrink: 0;
+}
+
+
+.editor-preview img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+
+/* ========================================
+   Cropper Container
+======================================== */
+
+.editor-preview .cropper-container {
+    width: 100% !important;
+    height: 100% !important;
+
+    max-width: none;
+    max-height: none;
+}
+
+
+/* ========================================
+   Tool Navigation
+======================================== */
+
+.editor-tools {
+    display: flex;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    background: #f9fafb;
+}
+
+
+.editor-tool {
+    flex: 1;
+
+    padding: 12px 16px;
+
+    border: none;
+
+    background: transparent;
+
+    color: #6b7280;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    border-bottom: 3px solid transparent;
+}
+
+
+.editor-tool:hover {
+    background: #f3f4f6;
+
+    color: #111827;
+}
+
+
+.editor-tool.active {
+    color: #2563eb;
+
+    border-bottom-color: #2563eb;
+
+    background: white;
+}
+
+
+/* ========================================
+   Tool Panels
+======================================== */
+
+.editor-panel-container {
+    min-height: 120px;
+
+    padding: 18px 20px;
+}
+
+
+.editor-panel {
+    display: none;
+}
+
+
+.editor-panel.active {
+    display: block;
+}
+
+
+.editor-panel-title {
+    font-size: 15px;
+    font-weight: 600;
+
+    margin-bottom: 4px;
+}
+
+
+.editor-panel-description {
+    color: #6b7280;
+
+    font-size: 13px;
+
+    margin-bottom: 15px;
+}
+
+
+/* ========================================
+   Transform Controls
+======================================== */
+
+.editor-controls {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.editor-action {
+    padding: 8px 12px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 6px;
+
+    background: white;
+
+    color: #374151;
+
+    cursor: pointer;
+}
+
+
+.editor-action:hover {
+    background: #f3f4f6;
+}
+
+
+/* ========================================
+   Adjust Controls
+======================================== */
+
+.adjust-controls {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px 24px;
+}
+
+
+.adjust-controls label {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    font-size: 13px;
+    color: #374151;
+}
+
+
+.adjust-controls input[type="range"] {
+    width: 100%;
+}
+
+
+/* ========================================
+   Filters
+======================================== */
+
+.filter-controls {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.filter-button {
+    padding: 8px 12px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 6px;
+
+    background: white;
+
+    color: #374151;
+
+    cursor: pointer;
+}
+
+
+.filter-button:hover {
+    background: #f3f4f6;
+}
+
+
+.filter-button.active {
+    border-color: #2563eb;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+}
+
+
+/* ========================================
+   Footer
+======================================== */
+
+.editor-footer {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding: 14px 20px;
+
+    border-top: 1px solid #e5e7eb;
+
+    background: #f9fafb;
+}
+
+
+.editor-cancel,
+.editor-apply {
+    padding: 9px 18px;
+
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+
+.editor-cancel {
+    border: 1px solid #d1d5db;
+
+    background: white;
+
+    color: #374151;
+}
+
+
+.editor-cancel:hover {
+    background: #f3f4f6;
+}
+
+
+.editor-apply {
+    border: 1px solid #2563eb;
+
+    background: #2563eb;
+
+    color: white;
+}
+
+
+.editor-apply:hover {
+    background: #1d4ed8;
+}

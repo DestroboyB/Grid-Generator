@@ -213,47 +213,37 @@ export function updateBoardStyle() {
 }
 
 
-export function renderImage(
-    div,
-    imageData
-) {
+export function renderImage(div, imageData) {
 
-    div.innerHTML =
-        "";
+    div.innerHTML = "";
 
-        div.classList.add(
-        "has-image"
-    );
-    div.style.position =
-        "relative";
+    div.classList.add("has-image");
 
-    div.style.overflow =
-        "hidden";
+    div.style.position = "relative";
+    div.style.overflow = "hidden";
 
 
     const img =
-        document.createElement(
-            "img"
-        );
+        document.createElement("img");
 
 
     // ========================================
-    // New Image Data Format
+    // New Image Data Model
     // ========================================
 
-    if (
-        typeof imageData ===
-        "object"
-    ) {
+    if (typeof imageData === "object") {
 
         img.src =
             imageData.source;
 
+
         img.style.position =
             "absolute";
 
+
         img.style.maxWidth =
             "none";
+
 
         img.style.maxHeight =
             "none";
@@ -266,10 +256,10 @@ export function renderImage(
                 img,
                 imageData
             );
+
         };
 
 
-        // Image may already be loaded
         if (img.complete) {
 
             applyImageCrop(
@@ -277,14 +267,17 @@ export function renderImage(
                 img,
                 imageData
             );
+
         }
 
+    }
+
 
     // ========================================
-    // Old Image Data Format
+    // Legacy Image Data
     // ========================================
 
-    } else {
+    else {
 
         img.src =
             imageData;
@@ -303,12 +296,9 @@ export function renderImage(
     }
 
 
-    div.appendChild(
-        img
-    );
+    div.appendChild(img);
 
-    div.draggable =
-        true;
+    div.draggable = true;
 }
 
 function applyImageCrop(
@@ -342,7 +332,7 @@ function applyImageCrop(
 
 
     // ========================================
-    // Scale Crop To Fit Box
+    // Calculate Image Scale
     // ========================================
 
     const scaleX =
@@ -353,6 +343,7 @@ function applyImageCrop(
         div.clientHeight /
         crop.height;
 
+
     const scale =
         Math.max(
             scaleX,
@@ -361,12 +352,10 @@ function applyImageCrop(
 
 
     const displayWidth =
-        naturalWidth *
-        scale;
+        naturalWidth * scale;
 
     const displayHeight =
-        naturalHeight *
-        scale;
+        naturalHeight * scale;
 
 
     img.style.width =
@@ -377,7 +366,7 @@ function applyImageCrop(
 
 
     // ========================================
-    // Center The Crop
+    // Position Image
     // ========================================
 
     const cropCenterX =
@@ -397,16 +386,36 @@ function applyImageCrop(
 
 
     img.style.left =
-        `${
-            boxCenterX -
-            (cropCenterX * scale)
-        }px`;
+        `${boxCenterX - (cropCenterX * scale)}px`;
 
     img.style.top =
-        `${
-            boxCenterY -
-            (cropCenterY * scale)
-        }px`;
+        `${boxCenterY - (cropCenterY * scale)}px`;
+
+
+    // ========================================
+    // Transform
+    // ========================================
+
+    const rotation =
+        imageData.rotation ?? 0;
+
+    const flipX =
+        imageData.flipX
+            ? -1
+            : 1;
+
+    const flipY =
+        imageData.flipY
+            ? -1
+            : 1;
+
+
+    img.style.transform =
+        `rotate(${rotation}deg) scale(${flipX}, ${flipY})`;
+
+
+    img.style.transformOrigin =
+        "center center";
 }
 
 

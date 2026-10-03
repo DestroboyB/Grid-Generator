@@ -1,0 +1,114 @@
+/* ========================================
+   Download
+======================================== */
+
+.download-container {
+    position: relative;
+
+    width: fit-content;
+
+    margin: 24px auto 0;
+}
+
+.download-button {
+    min-width: 130px;
+}
+
+
+/* ========================================
+   Download Menu
+======================================== */
+
+.download-menu {
+    display: none;
+
+    position: absolute;
+
+    bottom: calc(100% + 8px);
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    background: #ffffff;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    padding: 5px;
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.12);
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    z-index: 1000;
+}
+
+.download-menu button {
+    border: none;
+    border-radius: 5px;
+
+    background: #ffffff;
+
+    padding: 9px 25px;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    white-space: nowrap;
+}
+
+.download-menu button:hover {
+    background: #f3f4f6;
+}
+
+
+/* ========================================
+   Image Options Menu
+======================================== */
+
+.image-menu {
+    display: none;
+
+    position: fixed;
+
+    background: #ffffff;
+
+    padding: 8px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.16);
+
+    z-index: 2000;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 170px;
+}
+
+.image-menu button {
+    width: 100%;
+
+    border: none;
+    border-radius: 5px;
+
+    text-align: left;
+
+    background: #ffffff;
+}
+
+.image-menu button:hover {
+    background: #f3f4f6;
+}
+
+.image-menu .danger-button:hover {
+    background: #fef2f2;
+}

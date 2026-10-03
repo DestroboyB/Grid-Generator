@@ -1,18 +1,18 @@
-import { appState } from "./state.js";
+import { appState } from "../state.js";
 
 import {
     saveHistoryState
-} from "./history.js";
+} from "../history.js";
 
 import {
     openCropForFile,
     openCropForURL
-} from "./cropper.js";
+} from "../cropper/cropper.js";
 
 import {
     renderImage,
     clearImageBox
-} from "./board.js";
+} from "../board.js";
 
 // ========================================
 // Elements

@@ -1,0 +1,120 @@
+/* ========================================
+   Board Container
+======================================== */
+
+.board-container {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 24px;
+
+    overflow: auto;
+}
+
+
+/* ========================================
+   Board
+======================================== */
+
+.board {
+    margin: 0 auto;
+
+    display: grid;
+
+    border: 2px solid #374151;
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    overflow: hidden;
+
+    justify-content: center;
+    align-content: center;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ========================================
+   Image Boxes
+======================================== */
+
+.image {
+    width: 100%;
+    height: 100%;
+
+    border: 2px solid #9ca3af;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+
+    position: relative;
+
+    background-color: transparent;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+
+    min-width: 0;
+    min-height: 0;
+
+    color: #9ca3af;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.image:hover:not(.has-image) {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.image.has-image {
+    border: none;
+}
+
+.image img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transform-origin: center center;
+
+    user-select: none;
+    pointer-events: none;
+}
+
+
+/* ========================================
+   Drag & Drop
+======================================== */
+
+.image.drag-over {
+    border: 3px dashed #2563eb;
+    background: #eff6ff;
+}
+
+.image.dragging {
+    opacity: 0.5;
+}
+
+.image.swap-target {
+    outline: 4px dashed #2563eb;
+    outline-offset: -4px;
+}
