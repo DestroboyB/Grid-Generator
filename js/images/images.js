@@ -42,6 +42,9 @@ const closeAddImageMenuButton =
 const updateImageButton =
     document.getElementById("updateImageButton");
 
+const replaceWithMalButton =
+    document.getElementById("replaceWithMalButton");
+
 const replaceImageButton =
     document.getElementById("replaceImageButton");
 
@@ -104,14 +107,10 @@ export function showImageMenu(element) {
     imageMenu.style.display =
         "flex";
 
-    imageMenu.style.left =
-        "50%";
-
-    imageMenu.style.top =
-        "50%";
-
-    imageMenu.style.transform =
-        "translate(-50%, -50%)";
+    positionMenu(
+        imageMenu,
+        element
+    );
 }
 
 
@@ -127,16 +126,123 @@ export function showAddImageMenu(element) {
     addImageMenu.style.display =
         "flex";
 
-    addImageMenu.style.left =
-        "50%";
-
-    addImageMenu.style.top =
-        "50%";
-
-    addImageMenu.style.transform =
-        "translate(-50%, -50%)";
+    positionMenu(
+        addImageMenu,
+        element
+    );
 }
+// ========================================
+// Position Menu Near Box
+// ========================================
 
+function positionMenu(
+    menu,
+    element
+) {
+
+    // Remove the old centered transform
+    menu.style.transform =
+        "none";
+
+
+    // Get the clicked box's position
+    const boxRect =
+        element.getBoundingClientRect();
+
+
+    // Get the menu's dimensions
+    const menuRect =
+        menu.getBoundingClientRect();
+
+
+    const margin =
+        10;
+
+
+    // ========================================
+    // Default Position
+    // ========================================
+
+    let left =
+        boxRect.left +
+        (boxRect.width / 2) -
+        (menuRect.width / 2);
+
+
+    let top =
+        boxRect.bottom +
+        margin;
+
+
+    // ========================================
+    // Keep Inside Left Edge
+    // ========================================
+
+    if (
+        left < margin
+    ) {
+
+        left =
+            margin;
+    }
+
+
+    // ========================================
+    // Keep Inside Right Edge
+    // ========================================
+
+    if (
+        left + menuRect.width >
+        window.innerWidth - margin
+    ) {
+
+        left =
+            window.innerWidth -
+            menuRect.width -
+            margin;
+    }
+
+
+    // ========================================
+    // If Not Enough Room Below,
+    // Put It Above The Box
+    // ========================================
+
+    if (
+        top + menuRect.height >
+        window.innerHeight - margin
+    ) {
+
+        top =
+            boxRect.top -
+            menuRect.height -
+            margin;
+    }
+
+
+    // ========================================
+    // Keep Inside Top Edge
+    // ========================================
+
+    if (
+        top < margin
+    ) {
+
+        top =
+            margin;
+    }
+
+
+    // ========================================
+    // Apply Position
+    // ========================================
+
+    menu.style.left =
+        `${left}px`;
+
+    menu.style.top =
+        `${top}px`;
+}
 
 // ========================================
 // Upload Image From Add Menu
@@ -172,10 +278,6 @@ searchMalButton.addEventListener(
     "click",
     () => {
 
-        searchMalButton.addEventListener(
-    "click",
-    () => {
-
         if (!appState.menuDiv) {
             return;
         }
@@ -194,10 +296,6 @@ searchMalButton.addEventListener(
         );
     }
 );
-
-    }
-);
-
 
 // ========================================
 // Close Add Image Menu
@@ -291,6 +389,32 @@ replaceImageButton.addEventListener(
     }
 );
 
+// ========================================
+// Replace Image With MyAnimeList
+// ========================================
+
+replaceWithMalButton.addEventListener(
+    "click",
+    () => {
+
+        if (!appState.menuDiv) {
+            return;
+        }
+
+        const div =
+            appState.menuDiv;
+
+        imageMenu.style.display =
+            "none";
+
+        appState.menuDiv =
+            null;
+
+        openMalSearch(
+            div
+        );
+    }
+);
 
 // ========================================
 // Delete Image
@@ -364,21 +488,36 @@ board.addEventListener(
     "click",
     (event) => {
 
-        const div =
-            event.target.closest(
-                ".image"
-            );
-
-        if (!div) {
-            return;
-        }
-
-        // Don't process clicks on buttons
+        // Don't process clicks on popup buttons
         if (
             event.target.closest("button")
         ) {
             return;
         }
+
+
+        const div =
+            event.target.closest(
+                ".image"
+            );
+
+
+        // Clicked somewhere inside the board
+        // but not on an image box
+        if (!div) {
+
+            imageMenu.style.display =
+                "none";
+
+            addImageMenu.style.display =
+                "none";
+
+            appState.menuDiv =
+                null;
+
+            return;
+        }
+
 
         // Image already exists
         if (
@@ -392,4 +531,107 @@ board.addEventListener(
             showAddImageMenu(div);
         }
     }
-)
+);
+
+
+// ========================================
+// Click On Board
+// ========================================
+
+board.addEventListener(
+    "click",
+    (event) => {
+
+        // Don't process clicks on buttons
+        // inside the menus.
+        if (
+            event.target.closest("button")
+        ) {
+            return;
+        }
+
+
+        const div =
+            event.target.closest(
+                ".image"
+            );
+
+
+        // ========================================
+        // Close Existing Menus First
+        // ========================================
+
+        imageMenu.style.display =
+            "none";
+
+        addImageMenu.style.display =
+            "none";
+
+        appState.menuDiv =
+            null;
+
+
+        // ========================================
+        // Not an Image Box
+        // ========================================
+
+        if (!div) {
+            return;
+        }
+
+
+        // ========================================
+        // Open Appropriate Menu
+        // ========================================
+
+        if (
+            div.querySelector("img")
+        ) {
+
+            showImageMenu(div);
+
+        } else {
+
+            showAddImageMenu(div);
+        }
+    }
+);
+
+
+// ========================================
+// Close Menus When Clicking Outside
+// ========================================
+
+document.addEventListener(
+    "click",
+    (event) => {
+
+        // Click was inside one of the menus
+        if (
+            imageMenu.contains(event.target) ||
+            addImageMenu.contains(event.target)
+        ) {
+            return;
+        }
+
+
+        // Click was handled by the board
+        if (
+            board.contains(event.target)
+        ) {
+            return;
+        }
+
+
+        // Click was somewhere completely
+        // outside the board and menus
+        imageMenu.style.display =
+            "none";
+
+        addImageMenu.style.display =
+            "none";
+
+        appState.menuDiv =
+            null;
+    }
+);

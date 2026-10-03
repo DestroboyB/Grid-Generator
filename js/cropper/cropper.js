@@ -45,7 +45,10 @@ const cropButton =
 
 const cancelButton =
     document.getElementById("cancelButton");
-
+const editorCloseButton =
+    document.querySelector(
+        ".editor-close"
+    );
 const board =
     document.getElementById("board");
 
@@ -323,19 +326,13 @@ export function openCropForExistingImage(
 function restoreOriginalImage() {
 
     // ========================================
-    // Make Sure We Have An Existing Image
+    // Determine Original Image
     // ========================================
 
-    if (
-        !cropperState.editingImageData
-    ) {
-        return;
-    }
-
-
     const originalSource =
-        cropperState.editingImageData.originalSource ||
-        cropperState.editingImageData.source;
+        cropperState.editingImageData?.originalSource ||
+        cropperState.editingImageData?.source ||
+        cropImage.src;
 
 
     if (!originalSource) {
@@ -351,7 +348,6 @@ function restoreOriginalImage() {
 
 
     // ========================================
-    // IMPORTANT:
     // Clear Editing Image Data
     // ========================================
     //
@@ -552,7 +548,25 @@ cancelButton.addEventListener(
 
     }
 );
+// ========================================
+// Editor Close Button
+// ========================================
 
+if (editorCloseButton) {
+
+    editorCloseButton.addEventListener(
+        "click",
+        () => {
+
+            closeCropper(
+                cropModal,
+                cropImage
+            );
+
+        }
+    );
+
+}
 
 // ========================================
 // Change Crop Ratio While Open
