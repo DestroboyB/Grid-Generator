@@ -208,12 +208,10 @@ export function updateBoardStyle() {
 
     board.style.backgroundColor =
         appState.backgroundColor;
+
+        renderAllImages();
 }
 
-
-// ========================================
-// Render Single Image
-// ========================================
 
 export function renderImage(
     div,
@@ -223,6 +221,9 @@ export function renderImage(
     div.innerHTML =
         "";
 
+        div.classList.add(
+        "has-image"
+    );
     div.style.position =
         "relative";
 
@@ -260,67 +261,23 @@ export function renderImage(
 
         img.onload = () => {
 
-            const crop =
-                imageData.crop;
-
-
-            if (!crop) {
-                return;
-            }
-
-
-            const naturalWidth =
-                img.naturalWidth;
-
-            const naturalHeight =
-                img.naturalHeight;
-
-
-            if (
-                !naturalWidth ||
-                !naturalHeight
-            ) {
-                return;
-            }
-
-
-            const scaleX =
-                div.clientWidth /
-                crop.width;
-
-            const scaleY =
-                div.clientHeight /
-                crop.height;
-
-            const scale =
-                Math.max(
-                    scaleX,
-                    scaleY
-                );
-
-
-            const displayWidth =
-                naturalWidth *
-                scale;
-
-            const displayHeight =
-                naturalHeight *
-                scale;
-
-
-            img.style.width =
-                `${displayWidth}px`;
-
-            img.style.height =
-                `${displayHeight}px`;
-
-
-            img.style.left =
-                `${-crop.x * scale}px`;
-
-            img.style.top =
-                `${-crop.y * scale}px`;
+            applyImageCrop(
+                div,
+                img,
+                imageData
+            );
         };
+
+
+        // Image may already be loaded
+        if (img.complete) {
+
+            applyImageCrop(
+                div,
+                img,
+                imageData
+            );
+        }
 
 
     // ========================================
@@ -354,6 +311,104 @@ export function renderImage(
         true;
 }
 
+function applyImageCrop(
+    div,
+    img,
+    imageData
+) {
+
+    const crop =
+        imageData.crop;
+
+
+    if (!crop) {
+        return;
+    }
+
+
+    const naturalWidth =
+        img.naturalWidth;
+
+    const naturalHeight =
+        img.naturalHeight;
+
+
+    if (
+        !naturalWidth ||
+        !naturalHeight
+    ) {
+        return;
+    }
+
+
+    // ========================================
+    // Scale Crop To Fit Box
+    // ========================================
+
+    const scaleX =
+        div.clientWidth /
+        crop.width;
+
+    const scaleY =
+        div.clientHeight /
+        crop.height;
+
+    const scale =
+        Math.max(
+            scaleX,
+            scaleY
+        );
+
+
+    const displayWidth =
+        naturalWidth *
+        scale;
+
+    const displayHeight =
+        naturalHeight *
+        scale;
+
+
+    img.style.width =
+        `${displayWidth}px`;
+
+    img.style.height =
+        `${displayHeight}px`;
+
+
+    // ========================================
+    // Center The Crop
+    // ========================================
+
+    const cropCenterX =
+        crop.x +
+        (crop.width / 2);
+
+    const cropCenterY =
+        crop.y +
+        (crop.height / 2);
+
+
+    const boxCenterX =
+        div.clientWidth / 2;
+
+    const boxCenterY =
+        div.clientHeight / 2;
+
+
+    img.style.left =
+        `${
+            boxCenterX -
+            (cropCenterX * scale)
+        }px`;
+
+    img.style.top =
+        `${
+            boxCenterY -
+            (cropCenterY * scale)
+        }px`;
+}
+
 
 // ========================================
 // Clear Single Image Box
@@ -367,6 +422,9 @@ export function clearImageBox(
     div.innerHTML =
         "";
 
+       div.classList.remove(
+        "has-image"
+    );
     div.style.position =
         "";
 

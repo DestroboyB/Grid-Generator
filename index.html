@@ -60,9 +60,55 @@
         <option value="2:3">2:3 — Portrait Photo</option>
         <option value="9:16">9:16 — Vertical</option>
     </select>
+      <label for="spacing">
+        Spacing
+    </label>
+
+    <input
+        type="range"
+        id="spacing"
+        min="0"
+        max="50"
+        value="0"
+    >
+
+    <span id="spacingValue">
+        0 px
+    </span>
+
+
+    <label for="backgroundColor">
+        Background
+    </label>
+
+    <input
+        type="color"
+        id="backgroundColor"
+        value="#ffffff"
+    >
+
 </label>
         <button id="generateBoard">Generate Board</button>
         <button id="bulkImportButton">Bulk Import</button>
+        <button
+    id="clearBoardButton"
+    type="button"
+>
+    Clear Board
+</button>
+        <button
+        id="undoButton"
+        disabled
+    >
+        Undo
+    </button>
+
+    <button
+        id="redoButton"
+        disabled
+    >
+        Redo
+    </button>
     </div>
 
 
@@ -99,8 +145,11 @@
         <button data-format="jpg">JPG</button>
         <button data-format="webp">WebP</button>
     </div>
-
+    
     <button id="downloadButton">Download</button>
+
+    
+
 
 </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
