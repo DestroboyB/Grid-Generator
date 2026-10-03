@@ -1,16 +1,13 @@
 import { appState } from "./state.js";
 
 import {
-    saveBoard
-} from "./storage.js";
-
-import {
     saveHistoryState
 } from "./history.js";
 
 import {
     renderImage
 } from "./board.js";
+
 // ========================================
 // Elements
 // ========================================
@@ -35,6 +32,17 @@ const imageRatioInput =
 
 
 // ========================================
+// Cropper State
+// ========================================
+
+// Stores the image data when we are
+// updating an existing image.
+//
+// null = creating/replacing an image
+let editingImageData = null;
+
+
+// ========================================
 // Open Cropper For Local File
 // ========================================
 
@@ -46,6 +54,8 @@ export function openCropForFile(
     appState.selectedDiv =
         element;
 
+    editingImageData =
+        null;
 
     cleanupObjectURL();
 
@@ -60,8 +70,6 @@ export function openCropForFile(
 
     reader.onload = () => {
 
-        // Store the original image
-        // as persistent data.
         cropImage.crossOrigin =
             null;
 
@@ -95,6 +103,8 @@ export function openCropForURL(
     appState.selectedDiv =
         element;
 
+    editingImageData =
+        null;
 
     cleanupObjectURL();
 
@@ -105,6 +115,47 @@ export function openCropForURL(
 
     cropImage.src =
         imageURL;
+
+
+    cropModal.style.display =
+        "flex";
+
+
+    createCropper();
+}
+
+
+// ========================================
+// Open Cropper For Existing Image
+// ========================================
+
+export function openCropForExistingImage(
+    imageData,
+    element
+) {
+
+    if (
+        !imageData ||
+        !imageData.source
+    ) {
+        return;
+    }
+
+
+    appState.selectedDiv =
+        element;
+
+    editingImageData =
+        imageData;
+
+    cleanupObjectURL();
+
+
+    cropImage.crossOrigin =
+        null;
+
+    cropImage.src =
+        imageData.source;
 
 
     cropModal.style.display =
@@ -130,19 +181,50 @@ function createCropper() {
     }
 
 
-    const [
-        ratioWidth,
-        ratioHeight
-    ] =
-        imageRatioInput.value
-            .split(":")
-            .map(Number);
+    // ========================================
+    // Determine Crop Ratio
+    // ========================================
+
+    let cropRatio;
 
 
-    const cropRatio =
-        ratioWidth /
-        ratioHeight;
+    // When updating an existing image,
+    // preserve the existing crop ratio.
+    if (
+        editingImageData &&
+        editingImageData.crop
+    ) {
 
+        const crop =
+            editingImageData.crop;
+
+        cropRatio =
+            crop.width /
+            crop.height;
+
+    }
+
+    // When creating a new image,
+    // use the currently selected board ratio.
+    else {
+
+        const [
+            ratioWidth,
+            ratioHeight
+        ] =
+            imageRatioInput.value
+                .split(":")
+                .map(Number);
+
+        cropRatio =
+            ratioWidth /
+            ratioHeight;
+    }
+
+
+    // ========================================
+    // Create Cropper
+    // ========================================
 
     appState.cropper =
         new Cropper(
@@ -159,8 +241,68 @@ function createCropper() {
                     1,
 
                 responsive:
-                    true
+                    true,
 
+
+                // ========================================
+                // Restore Existing Crop
+                // ========================================
+
+                ready() {
+
+                    if (
+                        !editingImageData ||
+                        !editingImageData.crop
+                    ) {
+                        return;
+                    }
+
+
+                    const crop =
+                        editingImageData.crop;
+
+
+                    // Restore the actual crop
+                    // coordinates in the original image.
+                    this.cropper.setData({
+
+                        x:
+                            crop.x,
+
+                        y:
+                            crop.y,
+
+                        width:
+                            crop.width,
+
+                        height:
+                            crop.height
+                    });
+
+
+                    // Restore the visual crop box
+                    // position if this image was
+                    // previously saved with one.
+                    if (
+                        editingImageData.cropBox
+                    ) {
+
+                        this.cropper.setCropBoxData({
+
+                            left:
+                                editingImageData.cropBox.left,
+
+                            top:
+                                editingImageData.cropBox.top,
+
+                            width:
+                                editingImageData.cropBox.width,
+
+                            height:
+                                editingImageData.cropBox.height
+                        });
+                    }
+                }
             }
         );
 }
@@ -200,19 +342,6 @@ cropButton.addEventListener(
 
 
         // ========================================
-        // Get Original Image
-        // ========================================
-
-        const source =
-            cropImage.src;
-
-
-        if (!source) {
-            return;
-        }
-
-
-        // ========================================
         // Get Crop Data
         // ========================================
 
@@ -220,65 +349,159 @@ cropButton.addEventListener(
             appState.cropper.getData();
 
 
+        // Get the visual position and
+        // dimensions of the crop box.
+        const cropBoxData =
+            appState.cropper.getCropBoxData();
+
+
         // ========================================
-        // Save Image Data
+        // Update Existing Image
         // ========================================
 
-        appState.savedImages[
-            boxIndex
-        ] = {
+        if (editingImageData) {
 
-            source:
-                source,
+            appState.savedImages[
+                boxIndex
+            ] = {
 
-            crop: {
+                source:
+                    editingImageData.source,
+
+
+                crop: {
+
+                    x:
+                        cropData.x,
+
+                    y:
+                        cropData.y,
+
+                    width:
+                        cropData.width,
+
+                    height:
+                        cropData.height
+                },
+
+
+                cropBox: {
+
+                    left:
+                        cropBoxData.left,
+
+                    top:
+                        cropBoxData.top,
+
+                    width:
+                        cropBoxData.width,
+
+                    height:
+                        cropBoxData.height
+                },
+
 
                 x:
-                    cropData.x,
+                    editingImageData.x ?? 0,
 
                 y:
-                    cropData.y,
+                    editingImageData.y ?? 0,
 
-                width:
-                    cropData.width,
-
-                height:
-                    cropData.height
-            },
-
-            x:
-                0,
-
-            y:
-                0,
-
-            zoom:
-                1
-        };
+                zoom:
+                    editingImageData.zoom ?? 1
+            };
+        }
 
 
-       // ========================================
-// Save History
-// ========================================
+        // ========================================
+        // Create New Image
+        // ========================================
 
-saveHistoryState();
+        else {
 
-
-// ========================================
-// Display Image
-// ========================================
-
-renderImage(
-    appState.selectedDiv,
-    appState.savedImages[boxIndex]
-);
+            const source =
+                cropImage.src;
 
 
-// ========================================
-// Close
-// ========================================
+            if (!source) {
+                return;
+            }
 
-closeCropper();
+
+            appState.savedImages[
+                boxIndex
+            ] = {
+
+                source:
+                    source,
+
+
+                crop: {
+
+                    x:
+                        cropData.x,
+
+                    y:
+                        cropData.y,
+
+                    width:
+                        cropData.width,
+
+                    height:
+                        cropData.height
+                },
+
+
+                cropBox: {
+
+                    left:
+                        cropBoxData.left,
+
+                    top:
+                        cropBoxData.top,
+
+                    width:
+                        cropBoxData.width,
+
+                    height:
+                        cropBoxData.height
+                },
+
+
+                x:
+                    0,
+
+                y:
+                    0,
+
+                zoom:
+                    1
+            };
+        }
+
+
+        // ========================================
+        // Save History
+        // ========================================
+
+        saveHistoryState();
+
+
+        // ========================================
+        // Display Image
+        // ========================================
+
+        renderImage(
+            appState.selectedDiv,
+            appState.savedImages[boxIndex]
+        );
+
+
+        // ========================================
+        // Close
+        // ========================================
+
+        closeCropper();
     }
 );
 
@@ -319,6 +542,10 @@ function closeCropper() {
 
 
     appState.selectedDiv =
+        null;
+
+
+    editingImageData =
         null;
 
 
@@ -380,3 +607,49 @@ imageRatioInput.addEventListener(
         );
     }
 );
+
+// ========================================
+// Editor Tool Navigation
+// ========================================
+
+const editorTools =
+    document.querySelectorAll(".editor-tool");
+
+const editorPanels =
+    document.querySelectorAll(".editor-panel");
+
+
+editorTools.forEach(tool => {
+
+    tool.addEventListener("click", () => {
+
+        const toolName =
+            tool.dataset.tool;
+
+
+        editorTools.forEach(button => {
+            button.classList.remove("active");
+        });
+
+
+        editorPanels.forEach(panel => {
+            panel.classList.remove("active");
+        });
+
+
+        tool.classList.add("active");
+
+
+        const panel =
+            document.querySelector(
+                `.editor-panel[data-panel="${toolName}"]`
+            );
+
+
+        if (panel) {
+            panel.classList.add("active");
+        }
+
+    });
+
+});

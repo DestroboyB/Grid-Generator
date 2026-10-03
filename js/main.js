@@ -10,8 +10,15 @@ import {
 } from "./history.js";
 
 import {
-    bulkImport
+    openFileSelector,
+    showImageMenu
 } from "./images.js";
+
+import {
+    bulkImport
+} from "./imageImport.js";
+
+import "./imageDragDrop.js";
 
 import {
     loadBoard,

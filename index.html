@@ -1,159 +1,658 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="style.css" rel="stylesheet">
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>Document</title>
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+    >
+
+    <title>Grid Generator</title>
 </head>
+
 <body>
 
-    <div class="controls">
+    <main class="app">
 
-        <label>
-            Rows:
-            <select id="rows">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
-        </label>
+        <!-- ========================================
+             Controls
+        ========================================= -->
 
-        <span> × </span>
+        <section class="controls">
 
-        <label>
-            Columns:
-            <select id="columns">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
-        </label>
-        <label>
-    <label>
-    Image Ratio:
-    <select id="imageRatio">
-        <option value="1:1">1:1 — Square</option>
-        <option value="4:3">4:3 — Standard</option>
-        <option value="3:2">3:2 — Photo</option>
-        <option value="16:9">16:9 — Widescreen</option>
-        <option value="3:4">3:4 — Portrait</option>
-        <option value="2:3">2:3 — Portrait Photo</option>
-        <option value="9:16">9:16 — Vertical</option>
-    </select>
-      <label for="spacing">
-        Spacing
-    </label>
+            <div class="control-group">
+                <label for="rows">
+                    Rows
+                </label>
 
-    <input
-        type="range"
-        id="spacing"
-        min="0"
-        max="50"
-        value="0"
-    >
-
-    <span id="spacingValue">
-        0 px
-    </span>
-
-
-    <label for="backgroundColor">
-        Background
-    </label>
-
-    <input
-        type="color"
-        id="backgroundColor"
-        value="#ffffff"
-    >
-
-</label>
-        <button id="generateBoard">Generate Board</button>
-        <button id="bulkImportButton">Bulk Import</button>
-        <button
-    id="clearBoardButton"
-    type="button"
->
-    Clear Board
-</button>
-        <button
-        id="undoButton"
-        disabled
-    >
-        Undo
-    </button>
-
-    <button
-        id="redoButton"
-        disabled
-    >
-        Redo
-    </button>
-    </div>
-
-
-    <div class="board" id="board">
-    </div>
-
-
-    <!-- Crop window -->
-
-    <div id="cropModal" class="crop-modal">
-
-        <div class="crop-box">
-
-            <img id="cropImage">
-
-            <div class="crop-buttons">
-                <button id="cropButton">Crop</button>
-                <button id="cancelButton">Cancel</button>
+                <select id="rows">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
             </div>
+
+
+            <span class="dimension-separator">
+                ×
+            </span>
+
+
+            <div class="control-group">
+                <label for="columns">
+                    Columns
+                </label>
+
+                <select id="columns">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
+
+
+            <div class="control-group ratio-control">
+                <label for="imageRatio">
+                    Image Ratio
+                </label>
+
+                <select id="imageRatio">
+                    <option value="1:1">
+                        1:1 — Square
+                    </option>
+
+                    <option value="4:3">
+                        4:3 — Standard
+                    </option>
+
+                    <option value="3:2">
+                        3:2 — Photo
+                    </option>
+
+                    <option value="16:9">
+                        16:9 — Widescreen
+                    </option>
+
+                    <option value="3:4">
+                        3:4 — Portrait
+                    </option>
+
+                    <option value="2:3">
+                        2:3 — Portrait Photo
+                    </option>
+
+                    <option value="9:16">
+                        9:16 — Vertical
+                    </option>
+                </select>
+            </div>
+
+
+            <div class="control-group spacing-control">
+                <label for="spacing">
+                    Spacing
+                </label>
+
+                <div class="range-control">
+                    <input
+                        type="range"
+                        id="spacing"
+                        min="0"
+                        max="50"
+                        value="0"
+                    >
+
+                    <span id="spacingValue">
+                        0 px
+                    </span>
+                </div>
+            </div>
+
+
+            <div class="control-group">
+                <label for="backgroundColor">
+                    Background
+                </label>
+
+                <input
+                    type="color"
+                    id="backgroundColor"
+                    value="#ffffff"
+                >
+            </div>
+
+
+            <!-- ========================================
+                 Board Actions
+            ========================================= -->
+
+            <div class="control-actions">
+
+                <button
+                    id="generateBoard"
+                    type="button"
+                    class="primary-button"
+                >
+                    Generate Board
+                </button>
+
+                <button
+                    id="bulkImportButton"
+                    type="button"
+                >
+                    Bulk Import
+                </button>
+
+                <button
+                    id="clearBoardButton"
+                    type="button"
+                    class="danger-button"
+                >
+                    Clear Board
+                </button>
+
+                <button
+                    id="undoButton"
+                    type="button"
+                    disabled
+                >
+                    Undo
+                </button>
+
+                <button
+                    id="redoButton"
+                    type="button"
+                    disabled
+                >
+                    Redo
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================
+             Board
+        ========================================= -->
+
+        <section
+            class="board-container"
+            aria-label="Grid preview"
+        >
+            <div
+                class="board"
+                id="board"
+            ></div>
+        </section>
+
+
+        <!-- ========================================
+             Download
+        ========================================= -->
+
+        <div class="download-container">
+
+            <div
+                id="downloadMenu"
+                class="download-menu"
+            >
+                <button
+                    type="button"
+                    data-format="png"
+                >
+                    PNG
+                </button>
+
+                <button
+                    type="button"
+                    data-format="jpg"
+                >
+                    JPG
+                </button>
+
+                <button
+                    type="button"
+                    data-format="webp"
+                >
+                    WebP
+                </button>
+            </div>
+
+            <button
+                id="downloadButton"
+                type="button"
+                class="primary-button download-button"
+            >
+                Download
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- ========================================
+         Crop Modal
+    ========================================= -->
+
+    <div id="cropModal" class="editor-modal">
+
+    <div class="editor-window">
+
+        <!-- ========================================
+             Editor Header
+        ========================================= -->
+
+        <div class="editor-header">
+
+            <h2>Edit Image</h2>
+
+            <button
+                id="editorCloseButton"
+                class="editor-close"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- ========================================
+             Image Editing Area
+        ========================================= -->
+
+        <div class="editor-content">
+
+            <div class="editor-preview">
+
+                <img
+                    id="cropImage"
+                    alt="Image being edited"
+                >
+
+            </div>
+
+
+            <!-- ========================================
+                 Editor Tools
+            ========================================= -->
+
+            <div class="editor-tools">
+
+                <button
+                    type="button"
+                    class="editor-tool active"
+                    data-tool="crop"
+                >
+                    Crop
+                </button>
+
+                <button
+                    type="button"
+                    class="editor-tool"
+                    data-tool="transform"
+                >
+                    Transform
+                </button>
+
+                <button
+                    type="button"
+                    class="editor-tool"
+                    data-tool="adjust"
+                >
+                    Adjust
+                </button>
+
+                <button
+                    type="button"
+                    class="editor-tool"
+                    data-tool="filter"
+                >
+                    Filters
+                </button>
+
+            </div>
+
+
+            <!-- ========================================
+                 Tool Panels
+            ========================================= -->
+
+            <div class="editor-panel-container">
+
+
+                <!-- Crop Panel -->
+
+                <div
+                    class="editor-panel active"
+                    data-panel="crop"
+                >
+
+                    <div class="editor-panel-title">
+                        Crop
+                    </div>
+
+                    <div class="editor-panel-description">
+                        Adjust the visible area of the image.
+                    </div>
+
+                </div>
+
+
+                <!-- Transform Panel -->
+
+                <div
+                    class="editor-panel"
+                    data-panel="transform"
+                >
+
+                    <div class="editor-panel-title">
+                        Transform
+                    </div>
+
+                    <div class="editor-panel-description">
+                        Rotate and flip the image.
+                    </div>
+
+                    <div class="editor-controls">
+
+                        <button
+                            type="button"
+                            class="editor-action"
+                            id="rotateLeftButton"
+                        >
+                            ↶ Rotate Left
+                        </button>
+
+                        <button
+                            type="button"
+                            class="editor-action"
+                            id="rotateRightButton"
+                        >
+                            ↷ Rotate Right
+                        </button>
+
+                        <button
+                            type="button"
+                            class="editor-action"
+                            id="flipHorizontalButton"
+                        >
+                            ↔ Flip Horizontal
+                        </button>
+
+                        <button
+                            type="button"
+                            class="editor-action"
+                            id="flipVerticalButton"
+                        >
+                            ↕ Flip Vertical
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Adjust Panel -->
+
+                <div
+                    class="editor-panel"
+                    data-panel="adjust"
+                >
+
+                    <div class="editor-panel-title">
+                        Adjust
+                    </div>
+
+                    <div class="editor-panel-description">
+                        Fine-tune the appearance of the image.
+                    </div>
+
+                    <div class="adjust-controls">
+
+                        <label>
+                            <span>Brightness</span>
+
+                            <input
+                                type="range"
+                                id="brightnessInput"
+                                min="0"
+                                max="200"
+                                value="100"
+                            >
+                        </label>
+
+
+                        <label>
+                            <span>Contrast</span>
+
+                            <input
+                                type="range"
+                                id="contrastInput"
+                                min="0"
+                                max="200"
+                                value="100"
+                            >
+                        </label>
+
+
+                        <label>
+                            <span>Saturation</span>
+
+                            <input
+                                type="range"
+                                id="saturationInput"
+                                min="0"
+                                max="200"
+                                value="100"
+                            >
+                        </label>
+
+
+                        <label>
+                            <span>Blur</span>
+
+                            <input
+                                type="range"
+                                id="blurInput"
+                                min="0"
+                                max="10"
+                                value="0"
+                            >
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Filter Panel -->
+
+                <div
+                    class="editor-panel"
+                    data-panel="filter"
+                >
+
+                    <div class="editor-panel-title">
+                        Filters
+                    </div>
+
+                    <div class="filter-controls">
+
+                        <button
+                            type="button"
+                            class="filter-button active"
+                            data-filter="none"
+                        >
+                            Original
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="grayscale"
+                        >
+                            Grayscale
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="sepia"
+                        >
+                            Sepia
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="warm"
+                        >
+                            Warm
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="cool"
+                        >
+                            Cool
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="vintage"
+                        >
+                            Vintage
+                        </button>
+
+                        <button
+                            type="button"
+                            class="filter-button"
+                            data-filter="high-contrast"
+                        >
+                            High Contrast
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ========================================
+             Editor Footer
+        ========================================= -->
+
+        <div class="editor-footer">
+
+            <button
+                id="cancelButton"
+                class="editor-cancel"
+                type="button"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="cropButton"
+                class="editor-apply"
+                type="button"
+            >
+                Apply
+            </button>
 
         </div>
 
     </div>
 
-    <div id="imageMenu" class="image-menu">
-        <button id="replaceImageButton">Replace Image</button>
-        <button id="deleteImageButton">Delete Image</button>
-        <button id="closeMenuButton">Cancel</button>
-    </div>
-   <div class="download-container">
-
-    <div id="downloadMenu" class="download-menu">
-        <button data-format="png">PNG</button>
-        <button data-format="jpg">JPG</button>
-        <button data-format="webp">WebP</button>
-    </div>
-    
-    <button id="downloadButton">Download</button>
-
-    
-
-
 </div>
+
+
+    <!-- ========================================
+         Image Options Menu
+    ========================================= -->
+
+    <div
+        id="imageMenu"
+        class="image-menu"
+    >
+
+        <button
+            id="updateImageButton"
+            type="button"
+        >
+            Update Image
+        </button>
+
+        <button
+            id="replaceImageButton"
+            type="button"
+        >
+            Replace Image
+        </button>
+
+        <button
+            id="deleteImageButton"
+            type="button"
+            class="danger-button"
+        >
+            Delete Image
+        </button>
+
+        <button
+            id="closeMenuButton"
+            type="button"
+        >
+            Cancel
+        </button>
+
+    </div>
+
+
+    <!-- ========================================
+         Scripts
+    ========================================= -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-<script type="module" src="js/main.js"></script>
+
+    <script
+        type="module"
+        src="js/main.js"
+    ></script>
 
 </body>
+
 </html>
