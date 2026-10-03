@@ -32,7 +32,8 @@
     align-items: center;
 
     cursor: pointer;
-
+    position: relative;
+    background-color: transparent;
     overflow: hidden;
     box-sizing: border-box;
 
@@ -44,6 +45,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+
+    transform-origin: center center;
+
+    user-select: none;
+    pointer-events: none;
 }
 
 
@@ -230,3 +236,4 @@
     outline: 4px dashed #2196f3;
     outline-offset: -4px;
 }
+

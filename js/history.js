@@ -5,7 +5,9 @@ import {
 } from "./storage.js";
 
 import {
-    generateBoard
+    generateBoard,
+    updateBoardStyle,
+    renderAllImages
 } from "./board.js";
 
 
@@ -41,7 +43,11 @@ export function getCurrentState() {
             imageRatioInput.value,
 
         images:
-            [...appState.savedImages],
+            JSON.parse(
+                JSON.stringify(
+                    appState.savedImages
+                )
+            ),
 
         spacing:
             appState.spacing,
@@ -170,6 +176,20 @@ function restoreState(
     state
 ) {
 
+    const previousRows =
+        rowsInput.value;
+
+    const previousColumns =
+        columnsInput.value;
+
+    const previousRatio =
+        imageRatioInput.value;
+
+
+    // ========================================
+    // Restore Inputs
+    // ========================================
+
     rowsInput.value =
         state.rows;
 
@@ -180,13 +200,24 @@ function restoreState(
         state.ratio;
 
 
-    appState.savedImages =
-        [...state.images];
+    // ========================================
+    // Restore Images
+    // ========================================
 
+    appState.savedImages =
+        JSON.parse(
+            JSON.stringify(
+                state.images
+            )
+        );
+
+
+    // ========================================
+    // Restore Board Settings
+    // ========================================
 
     appState.spacing =
         state.spacing;
-
 
     appState.backgroundColor =
         state.backgroundColor;
@@ -229,7 +260,40 @@ function restoreState(
     }
 
 
-    generateBoard();
+    // ========================================
+    // Determine If Grid Structure Changed
+    // ========================================
+
+    const gridChanged =
+        previousRows !==
+            String(state.rows) ||
+
+        previousColumns !==
+            String(state.columns) ||
+
+        previousRatio !==
+            state.ratio;
+
+
+    // ========================================
+    // Rebuild Only If Necessary
+    // ========================================
+
+    if (gridChanged) {
+
+        generateBoard();
+
+    } else {
+
+        updateBoardStyle();
+
+        renderAllImages();
+    }
+
+
+    // ========================================
+    // Save
+    // ========================================
 
     saveBoard();
 

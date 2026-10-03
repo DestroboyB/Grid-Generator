@@ -2,7 +2,7 @@ import { appState } from "./state.js";
 
 
 // ========================================
-// Board Elements
+// Elements
 // ========================================
 
 const board =
@@ -19,6 +19,407 @@ const imageRatioInput =
 
 
 // ========================================
+// Board Dimensions
+// ========================================
+
+function calculateBoardDimensions() {
+
+    const rows =
+        Number(rowsInput.value);
+
+    const columns =
+        Number(columnsInput.value);
+
+    const [
+        ratioWidth,
+        ratioHeight
+    ] =
+        imageRatioInput.value
+            .split(":")
+            .map(Number);
+
+    const boxRatio =
+        ratioWidth /
+        ratioHeight;
+
+    const spacing =
+        Number(
+            appState.spacing
+        );
+
+
+    const maxBoardWidth =
+        Math.min(
+            window.innerWidth * 0.90,
+            1200
+        );
+
+    const maxBoardHeight =
+        window.innerHeight * 0.80;
+
+    const boardPadding =
+        20;
+
+
+    const availableWidth =
+        maxBoardWidth -
+        (boardPadding * 2);
+
+    const availableHeight =
+        maxBoardHeight -
+        (boardPadding * 2);
+
+
+    let boxWidth =
+        (
+            availableWidth -
+            (
+                spacing *
+                (columns - 1)
+            )
+        ) / columns;
+
+    let boxHeight =
+        boxWidth /
+        boxRatio;
+
+
+    const requiredHeight =
+        (boxHeight * rows) +
+        (
+            spacing *
+            (rows - 1)
+        );
+
+
+    if (
+        requiredHeight >
+        availableHeight
+    ) {
+
+        boxHeight =
+            (
+                availableHeight -
+                (
+                    spacing *
+                    (rows - 1)
+                )
+            ) / rows;
+
+        boxWidth =
+            boxHeight *
+            boxRatio;
+
+
+        const totalWidth =
+            (boxWidth * columns) +
+            (
+                spacing *
+                (columns - 1)
+            );
+
+
+        if (
+            totalWidth >
+            availableWidth
+        ) {
+
+            boxWidth =
+                (
+                    availableWidth -
+                    (
+                        spacing *
+                        (columns - 1)
+                    )
+                ) / columns;
+
+            boxHeight =
+                boxWidth /
+                boxRatio;
+        }
+    }
+
+
+    const finalWidth =
+        (boxWidth * columns) +
+        (
+            spacing *
+            (columns - 1)
+        );
+
+    const finalHeight =
+        (boxHeight * rows) +
+        (
+            spacing *
+            (rows - 1)
+        );
+
+
+    return {
+
+        boardWidth:
+            finalWidth +
+            (boardPadding * 2),
+
+        boardHeight:
+            finalHeight +
+            (boardPadding * 2),
+
+        boxWidth:
+            boxWidth,
+
+        boxHeight:
+            boxHeight
+    };
+}
+
+
+// ========================================
+// Apply Board Dimensions / Styling
+// ========================================
+
+export function updateBoardStyle() {
+
+    const rows =
+        Number(rowsInput.value);
+
+    const columns =
+        Number(columnsInput.value);
+
+
+    const dimensions =
+        calculateBoardDimensions();
+
+
+    board.style.width =
+        `${dimensions.boardWidth}px`;
+
+    board.style.height =
+        `${dimensions.boardHeight}px`;
+
+    board.style.gridTemplateColumns =
+        `repeat(${columns}, ${dimensions.boxWidth}px)`;
+
+    board.style.gridTemplateRows =
+        `repeat(${rows}, ${dimensions.boxHeight}px)`;
+
+    board.style.gap =
+        `${appState.spacing}px`;
+
+    board.style.backgroundColor =
+        appState.backgroundColor;
+}
+
+
+// ========================================
+// Render Single Image
+// ========================================
+
+export function renderImage(
+    div,
+    imageData
+) {
+
+    div.innerHTML =
+        "";
+
+    div.style.position =
+        "relative";
+
+    div.style.overflow =
+        "hidden";
+
+
+    const img =
+        document.createElement(
+            "img"
+        );
+
+
+    // ========================================
+    // New Image Data Format
+    // ========================================
+
+    if (
+        typeof imageData ===
+        "object"
+    ) {
+
+        img.src =
+            imageData.source;
+
+        img.style.position =
+            "absolute";
+
+        img.style.maxWidth =
+            "none";
+
+        img.style.maxHeight =
+            "none";
+
+
+        img.onload = () => {
+
+            const crop =
+                imageData.crop;
+
+
+            if (!crop) {
+                return;
+            }
+
+
+            const naturalWidth =
+                img.naturalWidth;
+
+            const naturalHeight =
+                img.naturalHeight;
+
+
+            if (
+                !naturalWidth ||
+                !naturalHeight
+            ) {
+                return;
+            }
+
+
+            const scaleX =
+                div.clientWidth /
+                crop.width;
+
+            const scaleY =
+                div.clientHeight /
+                crop.height;
+
+            const scale =
+                Math.max(
+                    scaleX,
+                    scaleY
+                );
+
+
+            const displayWidth =
+                naturalWidth *
+                scale;
+
+            const displayHeight =
+                naturalHeight *
+                scale;
+
+
+            img.style.width =
+                `${displayWidth}px`;
+
+            img.style.height =
+                `${displayHeight}px`;
+
+
+            img.style.left =
+                `${-crop.x * scale}px`;
+
+            img.style.top =
+                `${-crop.y * scale}px`;
+        };
+
+
+    // ========================================
+    // Old Image Data Format
+    // ========================================
+
+    } else {
+
+        img.src =
+            imageData;
+
+        img.style.width =
+            "100%";
+
+        img.style.height =
+            "100%";
+
+        img.style.objectFit =
+            "cover";
+
+        img.style.objectPosition =
+            "center";
+    }
+
+
+    div.appendChild(
+        img
+    );
+
+    div.draggable =
+        true;
+}
+
+
+// ========================================
+// Clear Single Image Box
+// ========================================
+
+export function clearImageBox(
+    div,
+    index
+) {
+
+    div.innerHTML =
+        "";
+
+    div.style.position =
+        "";
+
+    div.style.overflow =
+        "";
+
+    div.textContent =
+        index + 1;
+
+    div.draggable =
+        false;
+}
+
+
+// ========================================
+// Render All Existing Images
+// ========================================
+
+export function renderAllImages() {
+
+    const boxes =
+        Array.from(
+            board.children
+        );
+
+
+    boxes.forEach(
+        (div, index) => {
+
+            const imageData =
+                appState.savedImages[index];
+
+
+            if (imageData) {
+
+                renderImage(
+                    div,
+                    imageData
+                );
+
+            } else {
+
+                clearImageBox(
+                    div,
+                    index
+                );
+            }
+        }
+    );
+}
+
+
+// ========================================
 // Generate Board
 // ========================================
 
@@ -30,30 +431,12 @@ export function generateBoard() {
     const columns =
         Number(columnsInput.value);
 
-
-    // ========================================
-    // Image Ratio
-    // ========================================
-
-    const [
-        ratioWidth,
-        ratioHeight
-    ] =
-        imageRatioInput.value
-            .split(":")
-            .map(Number);
-
-
-    const boxRatio =
-        ratioWidth / ratioHeight;
-
-
     const totalBoxes =
         rows * columns;
 
 
     // ========================================
-    // Remove Images That No Longer Fit
+    // Remove Images Beyond Board Size
     // ========================================
 
     if (
@@ -67,178 +450,11 @@ export function generateBoard() {
 
 
     // ========================================
-    // Board Limits
+    // Rebuild Grid
     // ========================================
 
-    const maxBoardWidth =
-        Math.min(
-            window.innerWidth * 0.90,
-            1200
-        );
-
-
-    const maxBoardHeight =
-        window.innerHeight * 0.80;
-
-
-    const boardPadding =
-        20;
-
-
-    // ========================================
-    // User Spacing
-    // ========================================
-
-    const spacing =
-        Number(
-            appState.spacing
-        );
-
-
-    // ========================================
-    // Available Dimensions
-    // ========================================
-
-    const availableWidth =
-        maxBoardWidth -
-        (boardPadding * 2);
-
-
-    const availableHeight =
-        maxBoardHeight -
-        (boardPadding * 2);
-
-
-    // ========================================
-    // Start By Fitting Width
-    // ========================================
-
-    let boxWidth =
-        (
-            availableWidth -
-            (spacing * (columns - 1))
-        ) / columns;
-
-
-    let boxHeight =
-        boxWidth / boxRatio;
-
-
-    // ========================================
-    // Check Height
-    // ========================================
-
-    let requiredHeight =
-        (boxHeight * rows) +
-        (spacing * (rows - 1));
-
-
-    if (
-        requiredHeight >
-        availableHeight
-    ) {
-
-        // Height is limiting factor
-        boxHeight =
-            (
-                availableHeight -
-                (spacing * (rows - 1))
-            ) / rows;
-
-
-        boxWidth =
-            boxHeight * boxRatio;
-
-
-        // Make sure width still fits
-        const totalWidth =
-            (boxWidth * columns) +
-            (spacing * (columns - 1));
-
-
-        if (
-            totalWidth >
-            availableWidth
-        ) {
-
-            boxWidth =
-                (
-                    availableWidth -
-                    (spacing * (columns - 1))
-                ) / columns;
-
-
-            boxHeight =
-                boxWidth / boxRatio;
-        }
-    }
-
-
-    // ========================================
-    // Final Dimensions
-    // ========================================
-
-    const finalWidth =
-        (boxWidth * columns) +
-        (spacing * (columns - 1));
-
-
-    const finalHeight =
-        (boxHeight * rows) +
-        (spacing * (rows - 1));
-
-
-    // ========================================
-    // Board Size
-    // ========================================
-
-    const boardWidth =
-        finalWidth +
-        (boardPadding * 2);
-
-
-    const boardHeight =
-        finalHeight +
-        (boardPadding * 2);
-
-
-    board.style.width =
-        `${boardWidth}px`;
-
-
-    board.style.height =
-        `${boardHeight}px`;
-
-
-    // ========================================
-    // Grid
-    // ========================================
-
-    board.style.gridTemplateColumns =
-        `repeat(${columns}, ${boxWidth}px)`;
-
-
-    board.style.gridTemplateRows =
-        `repeat(${rows}, ${boxHeight}px)`;
-
-
-    board.style.gap =
-        `${spacing}px`;
-
-
-    // ========================================
-    // Background
-    // ========================================
-
-    board.style.backgroundColor =
-        appState.backgroundColor;
-
-
-    // ========================================
-    // Create Boxes
-    // ========================================
-
-    board.innerHTML = "";
+    board.innerHTML =
+        "";
 
 
     for (
@@ -252,55 +468,41 @@ export function generateBoard() {
                 "div"
             );
 
-
         div.classList.add(
             "image"
         );
-        div.draggable =
-    Boolean(
-        appState.savedImages[i]
-    );
-
-        div.textContent =
-            i + 1;
 
 
-        // ========================================
-        // Restore Image
-        // ========================================
-
-        if (
-            appState.savedImages[i]
-        ) {
-
-            div.innerHTML =
-                "";
+        const imageData =
+            appState.savedImages[i];
 
 
-            const img =
-                document.createElement(
-                    "img"
-                );
+        if (imageData) {
 
-
-            img.src =
-                appState.savedImages[i];
-
-
-            div.appendChild(
-                img
+            renderImage(
+                div,
+                imageData
             );
 
-            div.draggable = true;
+        } else {
+
+            div.textContent =
+                i + 1;
+
+            div.draggable =
+                false;
         }
 
-
-        // ========================================
-        // Add Box
-        // ========================================
 
         board.appendChild(
             div
         );
     }
+
+
+    // ========================================
+    // Apply Dimensions / Styling
+    // ========================================
+
+    updateBoardStyle();
 }

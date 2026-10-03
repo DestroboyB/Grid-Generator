@@ -163,7 +163,6 @@ export function loadBoard() {
                 ? boardData.images
                 : [];
 
-
         appState.undoStack =
     Array.isArray(
         boardData.undoStack
@@ -209,7 +208,6 @@ export function clearSavedBoard() {
 
     appState.spacing =
         0;
-
 
     appState.backgroundColor =
         "#ffffff";

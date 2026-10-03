@@ -4,7 +4,13 @@ import {
     saveBoard
 } from "./storage.js";
 
+import {
+    saveHistoryState
+} from "./history.js";
 
+import {
+    renderImage
+} from "./board.js";
 // ========================================
 // Elements
 // ========================================
@@ -41,28 +47,39 @@ export function openCropForFile(
         element;
 
 
-    // Clean up previous URL
     cleanupObjectURL();
 
 
-    // Create temporary URL
-    appState.currentObjectURL =
-        URL.createObjectURL(file);
+    // ========================================
+    // Read Original File
+    // ========================================
+
+    const reader =
+        new FileReader();
 
 
-    cropImage.crossOrigin =
-        null;
+    reader.onload = () => {
+
+        // Store the original image
+        // as persistent data.
+        cropImage.crossOrigin =
+            null;
+
+        cropImage.src =
+            reader.result;
 
 
-    cropImage.src =
-        appState.currentObjectURL;
+        cropModal.style.display =
+            "flex";
 
 
-    cropModal.style.display =
-        "flex";
+        createCropper();
+    };
 
 
-    createCropper();
+    reader.readAsDataURL(
+        file
+    );
 }
 
 
@@ -104,7 +121,6 @@ export function openCropForURL(
 
 function createCropper() {
 
-    // Destroy previous cropper
     if (appState.cropper) {
 
         appState.cropper.destroy();
@@ -113,10 +129,6 @@ function createCropper() {
             null;
     }
 
-
-    // ========================================
-    // Get Selected Ratio
-    // ========================================
 
     const [
         ratioWidth,
@@ -131,10 +143,6 @@ function createCropper() {
         ratioWidth /
         ratioHeight;
 
-
-    // ========================================
-    // Create Cropper
-    // ========================================
 
     appState.cropper =
         new Cropper(
@@ -175,73 +183,6 @@ cropButton.addEventListener(
 
 
         // ========================================
-        // Get Ratio
-        // ========================================
-
-        const [
-            ratioWidth,
-            ratioHeight
-        ] =
-            imageRatioInput.value
-                .split(":")
-                .map(Number);
-
-
-        const cropRatio =
-            ratioWidth /
-            ratioHeight;
-
-
-        // ========================================
-        // Output Size
-        // ========================================
-
-        const outputWidth =
-            500;
-
-
-        const outputHeight =
-            Math.round(
-                outputWidth /
-                cropRatio
-            );
-
-
-        // ========================================
-        // Get Cropped Canvas
-        // ========================================
-
-        const canvas =
-            appState.cropper
-                .getCroppedCanvas(
-                    {
-
-                        width:
-                            outputWidth,
-
-                        height:
-                            outputHeight
-
-                    }
-                );
-
-
-        if (!canvas) {
-            return;
-        }
-
-
-        // ========================================
-        // Convert To Image
-        // ========================================
-
-        const imageURL =
-            canvas.toDataURL(
-                "image/png"
-            );
-
-
-        // ========================================
         // Find Box
         // ========================================
 
@@ -259,46 +200,85 @@ cropButton.addEventListener(
 
 
         // ========================================
-        // Save Image
+        // Get Original Image
+        // ========================================
+
+        const source =
+            cropImage.src;
+
+
+        if (!source) {
+            return;
+        }
+
+
+        // ========================================
+        // Get Crop Data
+        // ========================================
+
+        const cropData =
+            appState.cropper.getData();
+
+
+        // ========================================
+        // Save Image Data
         // ========================================
 
         appState.savedImages[
             boxIndex
-        ] =
-            imageURL;
+        ] = {
+
+            source:
+                source,
+
+            crop: {
+
+                x:
+                    cropData.x,
+
+                y:
+                    cropData.y,
+
+                width:
+                    cropData.width,
+
+                height:
+                    cropData.height
+            },
+
+            x:
+                0,
+
+            y:
+                0,
+
+            zoom:
+                1
+        };
 
 
-        saveBoard();
+       // ========================================
+// Save History
+// ========================================
+
+saveHistoryState();
 
 
-        // ========================================
-        // Display Image
-        // ========================================
+// ========================================
+// Display Image
+// ========================================
 
-        appState.selectedDiv.innerHTML =
-            "";
-
-
-        const img =
-            document.createElement(
-                "img"
-            );
+renderImage(
+    appState.selectedDiv,
+    appState.savedImages[boxIndex]
+);
 
 
-        img.src =
-            imageURL;
+// ========================================
+// Close
+// ========================================
 
-
-        appState.selectedDiv.appendChild(
-            img
-        );
-
-
-        // ========================================
-        // Close
-        // ========================================
-
-        closeCropper();
+closeCropper();
     }
 );
 

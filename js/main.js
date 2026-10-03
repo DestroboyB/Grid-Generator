@@ -1,4 +1,5 @@
-import { generateBoard } from "./board.js";
+import { updateBoardStyle,
+    generateBoard } from "./board.js";
 
 import {
     undo,
@@ -84,7 +85,10 @@ const redoButton =
         "redoButton"
     );
 
-
+const clearBoardButton =
+    document.getElementById(
+        "clearBoardButton"
+    );
 // ========================================
 // Load Saved Project
 // ========================================
@@ -160,7 +164,7 @@ spacingInput.addEventListener(
         spacingValue.textContent =
             `${appState.spacing} px`;
 
-        generateBoard();
+        updateBoardStyle();
     }
 );
 
@@ -187,7 +191,7 @@ backgroundColorInput.addEventListener(
         appState.backgroundColor =
             backgroundColorInput.value;
 
-        generateBoard();
+        updateBoardStyle();
     }
 );
 
@@ -236,7 +240,41 @@ redoButton.addEventListener(
     }
 );
 
+// ========================================
+// Clear Board
+// ========================================
 
+clearBoardButton.addEventListener(
+    "click",
+    () => {
+
+        // Don't create a history entry
+        // if the board is already empty.
+        const hasImages =
+            appState.savedImages.some(
+                image => image !== null
+            );
+
+
+        if (!hasImages) {
+            return;
+        }
+
+
+        // Clear all images
+        appState.savedImages =
+            [];
+
+
+        // Rebuild the board
+        generateBoard();
+
+
+        // Save the cleared board
+        // as a new history state
+        saveHistoryState();
+    }
+);
 // ========================================
 // Download Menu
 // ========================================
