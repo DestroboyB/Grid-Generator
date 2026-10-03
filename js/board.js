@@ -474,7 +474,9 @@ export function generateBoard() {
             "image"
         );
 
-
+        div.dataset.index =
+    i;
+    
         const imageData =
             appState.savedImages[i];
 

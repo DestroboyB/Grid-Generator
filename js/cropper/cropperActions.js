@@ -41,25 +41,72 @@ export function applyCrop(
 
 
     // ========================================
-    // Determine Box Index
-    // ========================================
+// Determine Box Index
+// ========================================
 
-    const boxIndex =
+let boxIndex = -1;
+
+
+// ========================================
+// Use Stored Board Index
+// ========================================
+
+if (
+    appState.selectedDiv &&
+    appState.selectedDiv.dataset.index !== undefined
+) {
+
+    boxIndex =
+        Number(
+            appState.selectedDiv.dataset.index
+        );
+
+}
+
+
+// ========================================
+// Fallback To DOM Lookup
+// ========================================
+
+if (
+    boxIndex === -1 &&
+    appState.selectedDiv
+) {
+
+    boxIndex =
         Array.from(
             board.children
         ).indexOf(
             appState.selectedDiv
         );
 
+}
 
-    if (boxIndex === -1) {
 
-        console.error(
-            "Cannot apply crop: selected board element was not found."
-        );
+// ========================================
+// Validate Index
+// ========================================
 
-        return;
-    }
+if (
+    boxIndex < 0 ||
+    boxIndex >= board.children.length
+) {
+
+    console.error(
+        "Cannot apply crop: selected board element was not found.",
+        {
+            selectedDiv:
+                appState.selectedDiv,
+
+            boxIndex,
+
+            boardChildren:
+                board.children.length
+        }
+    );
+
+    return;
+}
 
 
     // ========================================
@@ -255,10 +302,14 @@ export function applyCrop(
     // Update Board Image
     // ========================================
 
-    renderImage(
-        appState.selectedDiv,
-        appState.savedImages[boxIndex]
-    );
+    const currentBoardElement =
+    board.children[boxIndex];
+
+
+renderImage(
+    currentBoardElement,
+    appState.savedImages[boxIndex]
+);
 
 
     // ========================================
