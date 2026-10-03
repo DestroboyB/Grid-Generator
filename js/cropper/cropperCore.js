@@ -13,6 +13,7 @@ import {
     applyAdjustments
 } from "./cropperAdjust.js";
 
+
 // ========================================
 // Create Cropper
 // ========================================
@@ -22,20 +23,33 @@ export function createCropper(
     imageRatioInput
 ) {
 
+    // ========================================
+    // Destroy Existing Cropper
+    // ========================================
+
     if (appState.cropper) {
 
         appState.cropper.destroy();
 
         appState.cropper =
             null;
+
     }
 
+
+    // ========================================
+    // Get Crop Ratio
+    // ========================================
 
     const cropRatio =
         getCropRatio(
             imageRatioInput
         );
 
+
+    // ========================================
+    // Create CropperJS
+    // ========================================
 
     appState.cropper =
         new Cropper(
@@ -56,152 +70,155 @@ export function createCropper(
 
 
                 // ========================================
-                // Restore Existing Image
+                // Cropper Ready
                 // ========================================
 
                 ready() {
 
-                    if (
-                        !cropperState.editingImageData ||
-                        !cropperState.editingImageData.crop
-                    ) {
-                        return;
-                    }
-
-
-                    const crop =
-                        cropperState.editingImageData.crop;
-
-
                     // ========================================
-                    // Restore Crop
-                    // ========================================
-
-                    this.cropper.setData({
-
-                        x:
-                            crop.x,
-
-                        y:
-                            crop.y,
-
-                        width:
-                            crop.width,
-
-                        height:
-                            crop.height
-                    });
-
-
-                    // ========================================
-                    // Restore Crop Box
+                    // Restore Existing Image Data
                     // ========================================
 
                     if (
-                        cropperState.editingImageData.cropBox
+                        cropperState.editingImageData
                     ) {
 
-                        this.cropper.setCropBoxData({
-
-                            left:
-                                cropperState
-                                    .editingImageData
-                                    .cropBox
-                                    .left,
-
-                            top:
-                                cropperState
-                                    .editingImageData
-                                    .cropBox
-                                    .top,
-
-                            width:
-                                cropperState
-                                    .editingImageData
-                                    .cropBox
-                                    .width,
-
-                            height:
-                                cropperState
-                                    .editingImageData
-                                    .cropBox
-                                    .height
-                        });
-                    }
+                        const imageData =
+                            cropperState.editingImageData;
 
 
-                    // ========================================
-                    // Restore Rotation
-                    // ========================================
+                        // ========================================
+                        // Restore Crop
+                        // ========================================
 
-                    if (
-                        cropperState.rotation
-                    ) {
+                        if (
+                            imageData.crop
+                        ) {
 
-                        /*
-                         * Reset before rotation so the
-                         * old crop box does not interfere
-                         * with the rotated image.
-                         */
-
-                        this.cropper.reset();
+                            const crop =
+                                imageData.crop;
 
 
-                        this.cropper.rotate(
+                            this.cropper.setData({
+
+                                x:
+                                    crop.x,
+
+                                y:
+                                    crop.y,
+
+                                width:
+                                    crop.width,
+
+                                height:
+                                    crop.height
+
+                            });
+
+                        }
+
+
+                        // ========================================
+                        // Restore Crop Box
+                        // ========================================
+
+                        if (
+                            imageData.cropBox
+                        ) {
+
+                            this.cropper.setCropBoxData({
+
+                                left:
+                                    imageData.cropBox.left,
+
+                                top:
+                                    imageData.cropBox.top,
+
+                                width:
+                                    imageData.cropBox.width,
+
+                                height:
+                                    imageData.cropBox.height
+
+                            });
+
+                        }
+
+
+                        // ========================================
+                        // Restore Rotation
+                        // ========================================
+
+                        if (
                             cropperState.rotation
-                        );
+                        ) {
 
+                            this.cropper.reset();
 
-                        this.cropper.setAspectRatio(
-                            cropRatio
-                        );
-
-
-                        /*
-                         * Give Cropper a frame to finish
-                         * recalculating the rotated canvas
-                         * before resizing it.
-                         */
-
-                        requestAnimationFrame(() => {
-
-                            fitRotatedImage(
-                                appState.cropper,
-                                imageRatioInput
+                            this.cropper.rotate(
+                                cropperState.rotation
                             );
 
-                        });
+                            this.cropper.setAspectRatio(
+                                cropRatio
+                            );
+
+
+                            requestAnimationFrame(
+                                () => {
+
+                                    fitRotatedImage(
+                                        appState.cropper,
+                                        imageRatioInput
+                                    );
+
+                                }
+                            );
+
+                        }
+
+
+                        // ========================================
+                        // Restore Horizontal Flip
+                        // ========================================
+
+                        if (
+                            cropperState.flipX
+                        ) {
+
+                            this.cropper.scaleX(
+                                -1
+                            );
+
+                        }
+
+
+                        // ========================================
+                        // Restore Vertical Flip
+                        // ========================================
+
+                        if (
+                            cropperState.flipY
+                        ) {
+
+                            this.cropper.scaleY(
+                                -1
+                            );
+
+                        }
+
                     }
 
 
                     // ========================================
-                    // Restore Horizontal Flip
+                    // Apply Saved Adjustments
                     // ========================================
 
-                    if (
-                        cropperState.flipX
-                    ) {
-
-                        this.cropper.scaleX(
-                            -1
-                        );
-                    }
-
-
-                    // ========================================
-                    // Restore Vertical Flip
-                    // ========================================
-
-                    if (
-                        cropperState.flipY
-                    ) {
-
-                        this.cropper.scaleY(
-                            -1
-                        );
-                    }
                     applyAdjustments();
+
                 }
+
             }
         );
+
 }

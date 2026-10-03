@@ -13,6 +13,10 @@ import {
     clearImageBox
 } from "../board.js";
 
+import {
+    openMalSearch
+} from "./malSearch.js";
+
 // ========================================
 // Elements
 // ========================================
@@ -22,6 +26,18 @@ const board =
 
 const imageMenu =
     document.getElementById("imageMenu");
+
+const addImageMenu =
+    document.getElementById("addImageMenu");
+
+const uploadImageButton =
+    document.getElementById("uploadImageButton");
+
+const searchMalButton =
+    document.getElementById("searchMalButton");
+
+const closeAddImageMenuButton =
+    document.getElementById("closeAddImageMenuButton");
 
 const updateImageButton =
     document.getElementById("updateImageButton");
@@ -97,6 +113,109 @@ export function showImageMenu(element) {
     imageMenu.style.transform =
         "translate(-50%, -50%)";
 }
+
+
+// ========================================
+// Show Add Image Menu
+// ========================================
+
+export function showAddImageMenu(element) {
+
+    appState.menuDiv =
+        element;
+
+    addImageMenu.style.display =
+        "flex";
+
+    addImageMenu.style.left =
+        "50%";
+
+    addImageMenu.style.top =
+        "50%";
+
+    addImageMenu.style.transform =
+        "translate(-50%, -50%)";
+}
+
+
+// ========================================
+// Upload Image From Add Menu
+// ========================================
+
+uploadImageButton.addEventListener(
+    "click",
+    () => {
+
+        if (!appState.menuDiv) {
+            return;
+        }
+
+        const div =
+            appState.menuDiv;
+
+        addImageMenu.style.display =
+            "none";
+
+        appState.menuDiv =
+            null;
+
+        openFileSelector(div);
+    }
+);
+
+
+// ========================================
+// Search MyAnimeList
+// ========================================
+
+searchMalButton.addEventListener(
+    "click",
+    () => {
+
+        searchMalButton.addEventListener(
+    "click",
+    () => {
+
+        if (!appState.menuDiv) {
+            return;
+        }
+
+        const div =
+            appState.menuDiv;
+
+        addImageMenu.style.display =
+            "none";
+
+        appState.menuDiv =
+            null;
+
+        openMalSearch(
+            div
+        );
+    }
+);
+
+    }
+);
+
+
+// ========================================
+// Close Add Image Menu
+// ========================================
+
+closeAddImageMenuButton.addEventListener(
+    "click",
+    () => {
+
+        addImageMenu.style.display =
+            "none";
+
+        appState.menuDiv =
+            null;
+    }
+);
+
+
 // ========================================
 // Update Existing Image
 // ========================================
@@ -109,25 +228,20 @@ updateImageButton.addEventListener(
             return;
         }
 
-
         const div =
             appState.menuDiv;
-
 
         const boxIndex =
             Array.from(
                 board.children
             ).indexOf(div);
 
-
         if (boxIndex === -1) {
             return;
         }
 
-
         const imageData =
             appState.savedImages[boxIndex];
-
 
         if (
             !imageData ||
@@ -136,15 +250,12 @@ updateImageButton.addEventListener(
             return;
         }
 
-
         // Close the image menu
         imageMenu.style.display =
             "none";
 
-
         appState.menuDiv =
             null;
-
 
         // Open existing image in Cropper
         openCropForExistingImage(
@@ -153,6 +264,7 @@ updateImageButton.addEventListener(
         );
     }
 );
+
 
 // ========================================
 // Replace Image
@@ -277,7 +389,7 @@ board.addEventListener(
 
         } else {
 
-            openFileSelector(div);
+            showAddImageMenu(div);
         }
     }
-);
+)

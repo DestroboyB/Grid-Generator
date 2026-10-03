@@ -1,9 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -20,6 +21,7 @@
     >
 
     <title>Grid Generator</title>
+
 </head>
 
 <body>
@@ -33,22 +35,58 @@
         <section class="controls">
 
             <div class="control-group">
+
                 <label for="rows">
                     Rows
                 </label>
 
                 <select id="rows">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3" selected>3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
+
+                    <option value="1">
+                        1
+                    </option>
+
+                    <option value="2">
+                        2
+                    </option>
+
+                    <option
+                        value="3"
+                        selected
+                    >
+                        3
+                    </option>
+
+                    <option value="4">
+                        4
+                    </option>
+
+                    <option value="5">
+                        5
+                    </option>
+
+                    <option value="6">
+                        6
+                    </option>
+
+                    <option value="7">
+                        7
+                    </option>
+
+                    <option value="8">
+                        8
+                    </option>
+
+                    <option value="9">
+                        9
+                    </option>
+
+                    <option value="10">
+                        10
+                    </option>
+
                 </select>
+
             </div>
 
 
@@ -58,31 +96,69 @@
 
 
             <div class="control-group">
+
                 <label for="columns">
                     Columns
                 </label>
 
                 <select id="columns">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3" selected>3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
+
+                    <option value="1">
+                        1
+                    </option>
+
+                    <option value="2">
+                        2
+                    </option>
+
+                    <option
+                        value="3"
+                        selected
+                    >
+                        3
+                    </option>
+
+                    <option value="4">
+                        4
+                    </option>
+
+                    <option value="5">
+                        5
+                    </option>
+
+                    <option value="6">
+                        6
+                    </option>
+
+                    <option value="7">
+                        7
+                    </option>
+
+                    <option value="8">
+                        8
+                    </option>
+
+                    <option value="9">
+                        9
+                    </option>
+
+                    <option value="10">
+                        10
+                    </option>
+
                 </select>
+
             </div>
 
 
             <div class="control-group ratio-control">
+
                 <label for="imageRatio">
                     Image Ratio
                 </label>
 
                 <select id="imageRatio">
+
                     <option value="1:1">
                         1:1 — Square
                     </option>
@@ -110,16 +186,20 @@
                     <option value="9:16">
                         9:16 — Vertical
                     </option>
+
                 </select>
+
             </div>
 
 
             <div class="control-group spacing-control">
+
                 <label for="spacing">
                     Spacing
                 </label>
 
                 <div class="range-control">
+
                     <input
                         type="range"
                         id="spacing"
@@ -131,11 +211,14 @@
                     <span id="spacingValue">
                         0 px
                     </span>
+
                 </div>
+
             </div>
 
 
             <div class="control-group">
+
                 <label for="backgroundColor">
                     Background
                 </label>
@@ -145,6 +228,7 @@
                     id="backgroundColor"
                     value="#ffffff"
                 >
+
             </div>
 
 
@@ -206,10 +290,12 @@
             class="board-container"
             aria-label="Grid preview"
         >
+
             <div
                 class="board"
                 id="board"
             ></div>
+
         </section>
 
 
@@ -223,6 +309,7 @@
                 id="downloadMenu"
                 class="download-menu"
             >
+
                 <button
                     type="button"
                     data-format="png"
@@ -243,6 +330,7 @@
                 >
                     WebP
                 </button>
+
             </div>
 
             <button
@@ -262,306 +350,311 @@
          Crop Modal
     ========================================= -->
 
-    <div id="cropModal" class="editor-modal">
+    <div
+        id="cropModal"
+        class="editor-modal"
+    >
 
-    <div class="editor-window">
-
-        <!-- ========================================
-             Editor Header
-        ========================================= -->
-
-        <div class="editor-header">
-
-            <h2>Edit Image</h2>
-
-            <button
-                id="editorCloseButton"
-                class="editor-close"
-                type="button"
-            >
-                ×
-            </button>
-
-        </div>
-
-
-        <!-- ========================================
-             Image Editing Area
-        ========================================= -->
-
-        <div class="editor-content">
-
-            <div class="editor-preview">
-
-                <img
-                    id="cropImage"
-                    alt="Image being edited"
-                >
-
-            </div>
-
+        <div class="editor-window">
 
             <!-- ========================================
-                 Editor Tools
+                 Editor Header
             ========================================= -->
 
-            <div class="editor-tools">
+            <div class="editor-header">
+
+                <h2>
+                    Edit Image
+                </h2>
 
                 <button
+                    id="editorCloseButton"
+                    class="editor-close"
                     type="button"
-                    class="editor-tool active"
-                    data-tool="crop"
                 >
-                    Crop
-                </button>
-
-                <button
-                    type="button"
-                    class="editor-tool"
-                    data-tool="transform"
-                >
-                    Transform
-                </button>
-
-                <button
-                    type="button"
-                    class="editor-tool"
-                    data-tool="adjust"
-                >
-                    Adjust
-                </button>
-
-                <button
-                    type="button"
-                    class="editor-tool"
-                    data-tool="filter"
-                >
-                    Filters
+                    ×
                 </button>
 
             </div>
 
 
             <!-- ========================================
-                 Tool Panels
+                 Image Editing Area
             ========================================= -->
 
-            <div class="editor-panel-container">
+            <div class="editor-content">
 
+                <div class="editor-preview">
 
-                <!-- Crop Panel -->
-
-                <div
-                    class="editor-panel active"
-                    data-panel="crop"
-                >
-
-                    <div class="editor-panel-title">
-                        Crop
-                    </div>
-
-                    <div class="editor-panel-description">
-                        Adjust the visible area of the image.
-                    </div>
+                    <img
+                        id="cropImage"
+                        alt="Image being edited"
+                    >
 
                 </div>
 
 
-                <!-- Transform Panel -->
+                <!-- ========================================
+                     Editor Tools
+                ========================================= -->
 
-                <div
-                    class="editor-panel"
-                    data-panel="transform"
-                >
+                <div class="editor-tools">
 
-                    <div class="editor-panel-title">
+                    <button
+                        type="button"
+                        class="editor-tool"
+                        data-tool="transform"
+                    >
                         Transform
-                    </div>
+                    </button>
 
-                    <div class="editor-panel-description">
-                        Rotate and flip the image.
-                    </div>
-
-                    <div class="editor-controls">
-
-                        <button
-                            type="button"
-                            class="editor-action"
-                            id="rotateLeftButton"
-                        >
-                            ↶ Rotate Left
-                        </button>
-
-                        <button
-                            type="button"
-                            class="editor-action"
-                            id="rotateRightButton"
-                        >
-                            ↷ Rotate Right
-                        </button>
-
-                        <button
-                            type="button"
-                            class="editor-action"
-                            id="flipHorizontalButton"
-                        >
-                            ↔ Flip Horizontal
-                        </button>
-
-                        <button
-                            type="button"
-                            class="editor-action"
-                            id="flipVerticalButton"
-                        >
-                            ↕ Flip Vertical
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Adjust Panel -->
-
-                <div
-                    class="editor-panel"
-                    data-panel="adjust"
-                >
-
-                    <div class="editor-panel-title">
+                    <button
+                        type="button"
+                        class="editor-tool"
+                        data-tool="adjust"
+                    >
                         Adjust
-                    </div>
+                    </button>
 
-                    <div class="editor-panel-description">
-                        Fine-tune the appearance of the image.
-                    </div>
+                    <button
+                        type="button"
+                        class="editor-tool"
+                        data-tool="filter"
+                    >
+                        Filters
+                    </button>
 
-                    <div class="adjust-controls">
-
-                        <label>
-                            <span>Brightness</span>
-
-                            <input
-                                type="range"
-                                id="brightnessInput"
-                                min="0"
-                                max="200"
-                                value="100"
-                            >
-                        </label>
-
-
-                        <label>
-                            <span>Contrast</span>
-
-                            <input
-                                type="range"
-                                id="contrastInput"
-                                min="0"
-                                max="200"
-                                value="100"
-                            >
-                        </label>
-
-
-                        <label>
-                            <span>Saturation</span>
-
-                            <input
-                                type="range"
-                                id="saturationInput"
-                                min="0"
-                                max="200"
-                                value="100"
-                            >
-                        </label>
-
-
-                        <label>
-                            <span>Blur</span>
-
-                            <input
-                                type="range"
-                                id="blurInput"
-                                min="0"
-                                max="10"
-                                value="0"
-                            >
-                        </label>
-
-                    </div>
+                    <button
+                        type="button"
+                        id="restoreOriginalButton"
+                        class="restore-original-button"
+                    >
+                        Restore Original
+                    </button>
 
                 </div>
 
 
-                <!-- Filter Panel -->
+                <!-- ========================================
+                     Tool Panels
+                ========================================= -->
 
-                <div
-                    class="editor-panel"
-                    data-panel="filter"
-                >
+                <div class="editor-panel-container">
 
-                    <div class="editor-panel-title">
-                        Filters
+
+                    <!-- Transform Panel -->
+
+                    <div
+                        class="editor-panel"
+                        data-panel="transform"
+                    >
+
+                        <div class="editor-panel-title">
+                            Transform
+                        </div>
+
+                        <div class="editor-panel-description">
+                            Rotate and flip the image.
+                        </div>
+
+                        <div class="editor-controls">
+
+                            <button
+                                type="button"
+                                class="editor-action"
+                                id="rotateLeftButton"
+                            >
+                                ↶ Rotate Left
+                            </button>
+
+                            <button
+                                type="button"
+                                class="editor-action"
+                                id="rotateRightButton"
+                            >
+                                ↷ Rotate Right
+                            </button>
+
+                            <button
+                                type="button"
+                                class="editor-action"
+                                id="flipHorizontalButton"
+                            >
+                                ↔ Flip Horizontal
+                            </button>
+
+                            <button
+                                type="button"
+                                class="editor-action"
+                                id="flipVerticalButton"
+                            >
+                                ↕ Flip Vertical
+                            </button>
+
+                        </div>
+
                     </div>
 
-                    <div class="filter-controls">
 
-                        <button
-                            type="button"
-                            class="filter-button active"
-                            data-filter="none"
-                        >
-                            Original
-                        </button>
+                    <!-- Adjust Panel -->
 
-                        <button
-                            type="button"
-                            class="filter-button"
-                            data-filter="grayscale"
-                        >
-                            Grayscale
-                        </button>
+                    <div
+                        class="editor-panel"
+                        data-panel="adjust"
+                    >
 
-                        <button
-                            type="button"
-                            class="filter-button"
-                            data-filter="sepia"
-                        >
-                            Sepia
-                        </button>
+                        <div class="editor-panel-title">
+                            Adjust
+                        </div>
 
-                        <button
-                            type="button"
-                            class="filter-button"
-                            data-filter="warm"
-                        >
-                            Warm
-                        </button>
+                        <div class="editor-panel-description">
+                            Fine-tune the appearance of the image.
+                        </div>
 
-                        <button
-                            type="button"
-                            class="filter-button"
-                            data-filter="cool"
-                        >
-                            Cool
-                        </button>
+                        <div class="adjust-controls">
 
-                        <button
-                            type="button"
-                            class="filter-button"
-                            data-filter="vintage"
-                        >
-                            Vintage
-                        </button>
+                            <label>
 
-                        <button
-                            type="button"
-                            class="filter-button"
-                            data-filter="high-contrast"
-                        >
-                            High Contrast
-                        </button>
+                                <span>
+                                    Brightness
+                                </span>
+
+                                <input
+                                    type="range"
+                                    id="brightnessInput"
+                                    min="0"
+                                    max="200"
+                                    value="100"
+                                >
+
+                            </label>
+
+
+                            <label>
+
+                                <span>
+                                    Contrast
+                                </span>
+
+                                <input
+                                    type="range"
+                                    id="contrastInput"
+                                    min="0"
+                                    max="200"
+                                    value="100"
+                                >
+
+                            </label>
+
+
+                            <label>
+
+                                <span>
+                                    Saturation
+                                </span>
+
+                                <input
+                                    type="range"
+                                    id="saturationInput"
+                                    min="0"
+                                    max="200"
+                                    value="100"
+                                >
+
+                            </label>
+
+
+                            <label>
+
+                                <span>
+                                    Blur
+                                </span>
+
+                                <input
+                                    type="range"
+                                    id="blurInput"
+                                    min="0"
+                                    max="10"
+                                    value="0"
+                                >
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Filter Panel -->
+
+                    <div
+                        class="editor-panel"
+                        data-panel="filter"
+                    >
+
+                        <div class="editor-panel-title">
+                            Filters
+                        </div>
+
+                        <div class="filter-controls">
+
+                            <button
+                                type="button"
+                                class="filter-button active"
+                                data-filter="none"
+                            >
+                                Original
+                            </button>
+
+                            <button
+                                type="button"
+                                class="filter-button"
+                                data-filter="grayscale"
+                            >
+                                Grayscale
+                            </button>
+
+                            <button
+                                type="button"
+                                class="filter-button"
+                                data-filter="sepia"
+                            >
+                                Sepia
+                            </button>
+
+                            <button
+                                type="button"
+                                class="filter-button"
+                                data-filter="warm"
+                            >
+                                Warm
+                            </button>
+
+                            <button
+                                type="button"
+                                class="filter-button"
+                                data-filter="cool"
+                            >
+                                Cool
+                            </button>
+
+                            <button
+                                type="button"
+                                class="filter-button"
+                                data-filter="vintage"
+                            >
+                                Vintage
+                            </button>
+
+                            <button
+                                type="button"
+                                class="filter-button"
+                                data-filter="high-contrast"
+                            >
+                                High Contrast
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -569,36 +662,34 @@
 
             </div>
 
-        </div>
 
+            <!-- ========================================
+                 Editor Footer
+            ========================================= -->
 
-        <!-- ========================================
-             Editor Footer
-        ========================================= -->
+            <div class="editor-footer">
 
-        <div class="editor-footer">
+                <button
+                    id="cancelButton"
+                    class="editor-cancel"
+                    type="button"
+                >
+                    Cancel
+                </button>
 
-            <button
-                id="cancelButton"
-                class="editor-cancel"
-                type="button"
-            >
-                Cancel
-            </button>
+                <button
+                    id="cropButton"
+                    class="editor-apply"
+                    type="button"
+                >
+                    Apply
+                </button>
 
-            <button
-                id="cropButton"
-                class="editor-apply"
-                type="button"
-            >
-                Apply
-            </button>
+            </div>
 
         </div>
 
     </div>
-
-</div>
 
 
     <!-- ========================================
@@ -641,6 +732,109 @@
 
     </div>
 
+
+    <!-- ========================================
+         Add Image Menu
+    ========================================= -->
+
+    <div
+        id="addImageMenu"
+        class="image-menu"
+    >
+
+        <button
+            id="uploadImageButton"
+            type="button"
+        >
+            Upload Image
+        </button>
+
+        <button
+            id="searchMalButton"
+            type="button"
+        >
+            Search MyAnimeList
+        </button>
+
+        <button
+            id="closeAddImageMenuButton"
+            type="button"
+        >
+            Cancel
+        </button>
+
+    </div>
+
+    <!-- ========================================
+     MyAnimeList Search Modal
+========================================= -->
+
+<div
+    id="malSearchModal"
+    class="mal-search-modal"
+>
+
+    <div class="mal-search-window">
+
+        <!-- Header -->
+
+        <div class="mal-search-header">
+
+            <h2>
+                Search MyAnimeList
+            </h2>
+
+            <button
+                id="malSearchCloseButton"
+                type="button"
+                class="editor-close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- Search -->
+
+        <div class="mal-search-controls">
+
+            <input
+                type="text"
+                id="malSearchInput"
+                placeholder="Search for a character..."
+                autocomplete="off"
+            >
+
+            <button
+                id="malSearchButton"
+                type="button"
+                class="primary-button"
+            >
+                Search
+            </button>
+
+        </div>
+
+
+        <!-- Status -->
+
+        <div
+            id="malSearchStatus"
+            class="mal-search-status"
+        ></div>
+
+
+        <!-- Results -->
+
+        <div
+            id="malSearchResults"
+            class="mal-search-results"
+        ></div>
+
+    </div>
+
+</div>
 
     <!-- ========================================
          Scripts

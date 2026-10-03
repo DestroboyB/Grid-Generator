@@ -1,3 +1,4 @@
+
 import { appState } from "./state.js";
 
 
@@ -37,37 +38,192 @@ const STORAGE_KEY =
 
 export function saveBoard() {
 
-const boardData = {
+    /*
+     * IMPORTANT:
+     *
+     * Do NOT save undoStack or redoStack here.
+     *
+     * Those stacks can contain multiple copies of
+     * large base64 image strings. This can very
+     * quickly exceed the browser's localStorage
+     * quota, especially with images imported from
+     * MyAnimeList.
+     *
+     * Undo/redo still works during the current
+     * session. The stacks simply aren't persisted
+     * across a page refresh.
+     */
 
-    rows:
-        rowsInput.value,
+    const boardData = {
 
-    columns:
-        columnsInput.value,
+        rows:
+            rowsInput.value,
 
-    ratio:
-        imageRatioInput.value,
+        columns:
+            columnsInput.value,
 
-    spacing:
-        appState.spacing,
+        ratio:
+            imageRatioInput.value,
 
-    backgroundColor:
-        appState.backgroundColor,
+        spacing:
+            appState.spacing,
 
-    images:
-        appState.savedImages,
+        backgroundColor:
+            appState.backgroundColor,
 
-    undoStack:
-        appState.undoStack,
+        images:
+            appState.savedImages
+    };
 
-    redoStack:
-        appState.redoStack
-};
 
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(boardData)
-    );
+    try {
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(boardData)
+        );
+
+
+        return true;
+
+    } catch (error) {
+
+        /*
+         * If the images themselves are too large,
+         * localStorage may still exceed its quota.
+         *
+         * Do not allow this error to break actions
+         * such as Apply/Crop.
+         */
+
+        if (
+            error instanceof DOMException &&
+            (
+                error.name === "QuotaExceededError" ||
+                error.code === 22 ||
+                error.code === 1014
+            )
+        ) {
+
+            console.warn(
+                "Board could not be saved because browser storage is full."
+            );
+
+
+            /*
+             * Try one more time with a lightweight
+             * version of the image data.
+             *
+             * originalSource is only needed to restore
+             * the completely original image after a
+             * page reload. The current edited source
+             * remains available.
+             */
+
+            try {
+
+                const lightweightImages =
+                    appState.savedImages.map(
+                        (image) => {
+
+                            if (!image) {
+                                return image;
+                            }
+
+
+                            const {
+                                originalSource,
+                                ...rest
+                            } = image;
+
+
+                            return rest;
+                        }
+                    );
+
+
+                const lightweightBoardData = {
+
+                    rows:
+                        rowsInput.value,
+
+                    columns:
+                        columnsInput.value,
+
+                    ratio:
+                        imageRatioInput.value,
+
+                    spacing:
+                        appState.spacing,
+
+                    backgroundColor:
+                        appState.backgroundColor,
+
+                    images:
+                        lightweightImages
+                };
+
+
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify(
+                        lightweightBoardData
+                    )
+                );
+
+
+                console.warn(
+                    "Board saved without original image sources to reduce storage usage."
+                );
+
+
+                return true;
+
+            } catch (fallbackError) {
+
+                /*
+                 * The browser storage is completely full
+                 * or the images themselves are too large.
+                 *
+                 * Remove the saved board so that the
+                 * application can continue functioning.
+                 */
+
+                console.error(
+                    "Unable to save board to browser storage:",
+                    fallbackError
+                );
+
+
+                try {
+
+                    localStorage.removeItem(
+                        STORAGE_KEY
+                    );
+
+                } catch (removeError) {
+
+                    console.error(
+                        "Unable to clear full board storage:",
+                        removeError
+                    );
+                }
+
+
+                return false;
+            }
+
+        }
+
+
+        console.error(
+            "Could not save board:",
+            error
+        );
+
+
+        return false;
+    }
 }
 
 
@@ -163,19 +319,23 @@ export function loadBoard() {
                 ? boardData.images
                 : [];
 
-        appState.undoStack =
-    Array.isArray(
-        boardData.undoStack
-    )
-        ? boardData.undoStack
-        : [];
 
-appState.redoStack =
-    Array.isArray(
-        boardData.redoStack
-    )
-        ? boardData.redoStack
-        : [];
+        /*
+         * Undo/redo history is intentionally reset
+         * when the board is loaded.
+         *
+         * History is session-based rather than
+         * persistent because storing image-heavy
+         * history can exceed localStorage limits.
+         */
+
+        appState.undoStack =
+            [];
+
+        appState.redoStack =
+            [];
+
+
         return true;
 
     } catch (error) {
@@ -209,12 +369,15 @@ export function clearSavedBoard() {
     appState.spacing =
         0;
 
+
     appState.backgroundColor =
         "#ffffff";
 
-        appState.undoStack =
-    [];
 
-appState.redoStack =
-    [];
+    appState.undoStack =
+        [];
+
+
+    appState.redoStack =
+        [];
 }

@@ -30,8 +30,6 @@ import {
 } from "./cropperAdjust.js";
 
 
-
-
 // ========================================
 // Elements
 // ========================================
@@ -90,6 +88,16 @@ const flipVerticalButton =
 
 
 // ========================================
+// Restore Original Button
+// ========================================
+
+const restoreOriginalButton =
+    document.getElementById(
+        "restoreOriginalButton"
+    );
+
+
+// ========================================
 // Open Cropper For Local File
 // ========================================
 
@@ -140,6 +148,7 @@ export function openCropForFile(
         restoreAdjustments();
 
         applyAdjustments();
+
     };
 
 
@@ -191,6 +200,7 @@ export function openCropForURL(
     restoreAdjustments();
 
     applyAdjustments();
+
 }
 
 
@@ -302,6 +312,109 @@ export function openCropForExistingImage(
     restoreAdjustments();
 
     applyAdjustments();
+
+}
+
+
+// ========================================
+// Restore Original Image
+// ========================================
+
+function restoreOriginalImage() {
+
+    // ========================================
+    // Make Sure We Have An Existing Image
+    // ========================================
+
+    if (
+        !cropperState.editingImageData
+    ) {
+        return;
+    }
+
+
+    const originalSource =
+        cropperState.editingImageData.originalSource ||
+        cropperState.editingImageData.source;
+
+
+    if (!originalSource) {
+        return;
+    }
+
+
+    // ========================================
+    // Reset All Editing State
+    // ========================================
+
+    resetCropperState();
+
+
+    // ========================================
+    // IMPORTANT:
+    // Clear Editing Image Data
+    // ========================================
+    //
+    // This prevents cropperCore.js from
+    // restoring the previous crop/rotation.
+    //
+
+    cropperState.editingImageData =
+        null;
+
+
+    // ========================================
+    // Replace With Original Image
+    // ========================================
+
+    if (appState.cropper) {
+
+        appState.cropper.replace(
+            originalSource
+        );
+
+    } else {
+
+        cropImage.crossOrigin =
+            null;
+
+        cropImage.src =
+            originalSource;
+
+        createCropper(
+            cropImage,
+            imageRatioInput
+        );
+
+    }
+
+
+    // ========================================
+    // Restore Default Controls
+    // ========================================
+
+    restoreAdjustments();
+
+    applyAdjustments();
+
+}
+
+
+// ========================================
+// Restore Original Button
+// ========================================
+
+if (restoreOriginalButton) {
+
+    restoreOriginalButton.addEventListener(
+        "click",
+        () => {
+
+            restoreOriginalImage();
+
+        }
+    );
+
 }
 
 
@@ -326,6 +439,7 @@ function handleRotate(
 
         }
     );
+
 }
 
 

@@ -1,0 +1,399 @@
+
+import {
+    openCropForURL
+} from "../cropper/cropper.js";
+
+
+// ========================================
+// Elements
+// ========================================
+
+const malSearchModal =
+    document.getElementById("malSearchModal");
+
+const malSearchInput =
+    document.getElementById("malSearchInput");
+
+const malSearchButton =
+    document.getElementById("malSearchButton");
+
+const malSearchCloseButton =
+    document.getElementById("malSearchCloseButton");
+
+const malSearchStatus =
+    document.getElementById("malSearchStatus");
+
+const malSearchResults =
+    document.getElementById("malSearchResults");
+
+
+// ========================================
+// Current Target Box
+// ========================================
+
+let targetElement = null;
+
+
+// ========================================
+// API
+// ========================================
+
+const API_BASE =
+    "https://jikan.lucashdo.com/v1";
+
+
+// ========================================
+// Open MAL Search
+// ========================================
+
+export function openMalSearch(element) {
+
+    targetElement = element;
+
+    malSearchModal.style.display =
+        "flex";
+
+    malSearchInput.value = "";
+
+    malSearchResults.innerHTML = "";
+
+    malSearchStatus.textContent =
+        "Search MyAnimeList for a character.";
+
+    malSearchInput.focus();
+}
+
+
+// ========================================
+// Close MAL Search
+// ========================================
+
+function closeMalSearch() {
+
+    malSearchModal.style.display =
+        "none";
+
+    targetElement = null;
+}
+
+
+// ========================================
+// Search MAL
+// ========================================
+
+async function searchMal() {
+
+    const query =
+        malSearchInput.value.trim();
+
+    if (!query) {
+
+        malSearchStatus.textContent =
+            "Enter a character name.";
+
+        return;
+    }
+
+
+    malSearchButton.disabled =
+        true;
+
+    malSearchStatus.textContent =
+        "Searching MyAnimeList...";
+
+    malSearchResults.innerHTML = "";
+
+
+    try {
+
+        const url =
+            API_BASE
+            + "/characters?q="
+            + encodeURIComponent(query);
+
+
+        const response =
+            await fetch(url);
+
+
+        if (!response.ok) {
+
+            let errorMessage =
+                `HTTP ${response.status}`;
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+                if (
+                    errorData?.error?.message
+                ) {
+
+                    errorMessage =
+                        errorData.error.message;
+                }
+
+            } catch {
+                // Ignore JSON parsing failure
+            }
+
+
+            throw new Error(
+                errorMessage
+            );
+        }
+
+
+        const result =
+            await response.json();
+
+
+        const characters =
+            Array.isArray(result.data)
+                ? result.data
+                : [];
+
+
+        if (
+            characters.length === 0
+        ) {
+
+            malSearchStatus.textContent =
+                "No characters found.";
+
+            return;
+        }
+
+
+        malSearchStatus.textContent =
+            `${characters.length} character result(s) found.`;
+
+
+        displayCharacterResults(
+            characters
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "MyAnimeList search failed:",
+            error
+        );
+
+
+        malSearchStatus.textContent =
+            `MyAnimeList search failed: ${error.message}`;
+
+
+    } finally {
+
+        malSearchButton.disabled =
+            false;
+    }
+}
+
+
+// ========================================
+// Display Character Results
+// ========================================
+
+function displayCharacterResults(
+    characters
+) {
+
+    malSearchResults.innerHTML =
+        "";
+
+
+    characters.forEach(
+        character => {
+
+            const result =
+                document.createElement(
+                    "button"
+                );
+
+
+            result.type =
+                "button";
+
+            result.className =
+                "mal-character-result";
+
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            const imageURL =
+                character.images?.large
+                || character.images?.medium
+                || character.images?.small
+                || "";
+
+
+            image.src =
+                imageURL;
+
+            image.alt =
+                character.name
+                || "Character";
+
+            image.loading =
+                "lazy";
+
+
+            const name =
+                document.createElement(
+                    "span"
+                );
+
+
+            name.className =
+                "mal-character-name";
+
+            name.textContent =
+                character.name
+                || "Unknown";
+
+
+            const id =
+                document.createElement(
+                    "span"
+                );
+
+
+            id.className =
+                "mal-character-id";
+
+            id.textContent =
+                `MAL ID: ${character.malId}`;
+
+
+            result.appendChild(
+                image
+            );
+
+            result.appendChild(
+                name
+            );
+
+            result.appendChild(
+                id
+            );
+
+
+            result.addEventListener(
+                "click",
+                () => {
+
+                    selectCharacter(
+                        character
+                    );
+                }
+            );
+
+
+            malSearchResults.appendChild(
+                result
+            );
+        }
+    );
+}
+
+
+// ========================================
+// Select Character
+// ========================================
+
+function selectCharacter(
+    character
+) {
+
+    if (!targetElement) {
+        return;
+    }
+
+
+    const characterImage =
+        character.images?.large
+        || character.images?.medium
+        || character.images?.small;
+
+
+    if (!characterImage) {
+
+        malSearchStatus.textContent =
+            "This character does not have an available image.";
+
+        return;
+    }
+
+
+    const element =
+        targetElement;
+
+
+    closeMalSearch();
+
+
+    openCropForURL(
+        characterImage,
+        element
+    );
+}
+
+
+// ========================================
+// Event Listeners
+// ========================================
+
+malSearchButton.addEventListener(
+    "click",
+    searchMal
+);
+
+
+malSearchCloseButton.addEventListener(
+    "click",
+    closeMalSearch
+);
+
+
+malSearchInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            searchMal();
+        }
+    }
+);
+
+
+// ========================================
+// Close By Clicking Overlay
+// ========================================
+
+malSearchModal.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target ===
+            malSearchModal
+        ) {
+
+            closeMalSearch();
+        }
+    }
+);
