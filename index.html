@@ -765,76 +765,130 @@
 
     </div>
 
+
     <!-- ========================================
-     MyAnimeList Search Modal
-========================================= -->
+         MyAnimeList Search Modal
+    ========================================= -->
 
-<div
-    id="malSearchModal"
-    class="mal-search-modal"
->
+    <div
+        id="malSearchModal"
+        class="mal-search-modal"
+    >
 
-    <div class="mal-search-window">
+        <div class="mal-search-window">
 
-        <!-- Header -->
 
-        <div class="mal-search-header">
+            <!-- ========================================
+                 Header
+            ========================================= -->
 
-            <h2>
-                Search MyAnimeList
-            </h2>
+            <div class="mal-search-header">
 
-            <button
-                id="malSearchCloseButton"
-                type="button"
-                class="editor-close"
-            >
-                ×
-            </button>
+                <h2>
+                    Search MyAnimeList
+                </h2>
+
+                <button
+                    id="malSearchCloseButton"
+                    type="button"
+                    class="editor-close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <!-- ========================================
+                 Search Type Tabs
+            ========================================= -->
+
+            <div class="mal-search-tabs">
+
+                <button
+                    id="malCharacterTab"
+                    type="button"
+                    class="mal-search-tab active"
+                >
+                    Character
+                </button>
+
+                <button
+                    id="malAnimeTab"
+                    type="button"
+                    class="mal-search-tab"
+                >
+                    Anime
+                </button>
+
+            </div>
+
+
+            <!-- ========================================
+                 Search Controls
+            ========================================= -->
+
+            <div class="mal-search-controls">
+
+                <input
+                    type="text"
+                    id="malSearchInput"
+                    placeholder="Search for a character..."
+                    autocomplete="off"
+                >
+
+                <button
+                    id="malSearchButton"
+                    type="button"
+                    class="primary-button"
+                >
+                    Search
+                </button>
+
+            </div>
+
+
+            <!-- ========================================
+                 Status
+            ========================================= -->
+
+            <div
+                id="malSearchStatus"
+                class="mal-search-status"
+            ></div>
+
+
+            <!-- ========================================
+                 Navigation
+            ========================================= -->
+
+            <div class="mal-search-navigation">
+
+                <button
+                    id="malSearchBackButton"
+                    type="button"
+                    class="mal-search-back"
+                    style="display: none;"
+                >
+                    ← Back to Results
+                </button>
+
+            </div>
+
+
+            <!-- ========================================
+                 Results
+            ========================================= -->
+
+            <div
+                id="malSearchResults"
+                class="mal-search-results"
+            ></div>
 
         </div>
-
-
-        <!-- Search -->
-
-        <div class="mal-search-controls">
-
-            <input
-                type="text"
-                id="malSearchInput"
-                placeholder="Search for a character..."
-                autocomplete="off"
-            >
-
-            <button
-                id="malSearchButton"
-                type="button"
-                class="primary-button"
-            >
-                Search
-            </button>
-
-        </div>
-
-
-        <!-- Status -->
-
-        <div
-            id="malSearchStatus"
-            class="mal-search-status"
-        ></div>
-
-
-        <!-- Results -->
-
-        <div
-            id="malSearchResults"
-            class="mal-search-results"
-        ></div>
 
     </div>
 
-</div>
 
     <!-- ========================================
          Scripts

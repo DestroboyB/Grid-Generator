@@ -457,7 +457,7 @@ async function loadResultImage(
     imageElement
 ) {
 
-    if (!item || !item.mal_id) {
+    if (!item || !item.malId) {
         return;
     }
 
@@ -472,7 +472,7 @@ async function loadResultImage(
 
         const response =
             await fetch(
-                `${API_BASE}/${endpoint}/${item.mal_id}`
+                `${API_BASE}/${endpoint}/${item.malId}`
             );
 
 
@@ -519,10 +519,10 @@ async function loadResultImage(
 
 async function openPictureGallery(item) {
 
-    if (!item || !item.mal_id) {
+    if (!item || !item.malId) {
 
         console.error(
-            "MAL result has no mal_id:",
+            "MAL result has no malId:",
             item
         );
 
@@ -560,7 +560,7 @@ async function openPictureGallery(item) {
         ======================================== */
 
         const detailURL =
-            `${API_BASE}/${endpoint}/${item.mal_id}`;
+            `${API_BASE}/${endpoint}/${item.malId}`;
 
 
         console.log(
@@ -618,7 +618,7 @@ async function openPictureGallery(item) {
         try {
 
             const picturesURL =
-                `${API_BASE}/${endpoint}/${item.mal_id}/pictures`;
+                `${API_BASE}/${endpoint}/${item.malId}/pictures`;
 
 
             console.log(
