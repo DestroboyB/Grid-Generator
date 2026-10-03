@@ -1,5 +1,7 @@
-import { updateBoardStyle,
-    generateBoard } from "./board.js";
+import {
+    updateBoardStyle,
+    generateBoard
+} from "./board.js";
 
 import {
     undo,
@@ -96,15 +98,21 @@ const clearBoardButton =
     document.getElementById(
         "clearBoardButton"
     );
+
+
 // ========================================
 // Load Saved Project
 // ========================================
 
-if (!loadBoard()) {
+const loaded =
+    await loadBoard();
+
+
+if (!loaded) {
 
     generateBoard();
 
-    saveBoard();
+    await saveBoard();
 
 } else {
 
@@ -112,12 +120,18 @@ if (!loadBoard()) {
 }
 
 
-// Update controls after loading
+// ========================================
+// Update Controls After Loading
+// ========================================
+
 spacingValue.textContent =
     `${appState.spacing} px`;
 
 
-// Initialize history
+// ========================================
+// Initialize History
+// ========================================
+
 initializeHistory();
 
 
@@ -129,9 +143,7 @@ generateButton.addEventListener(
     "click",
     () => {
 
-
         generateBoard();
-
 
         saveHistoryState();
     }
@@ -146,11 +158,9 @@ imageRatioInput.addEventListener(
     "change",
     () => {
 
-
         generateBoard();
 
-
-         saveHistoryState();
+        saveHistoryState();
     }
 );
 
@@ -183,8 +193,6 @@ spacingInput.addEventListener(
         saveHistoryState();
     }
 );
-
-
 
 
 // ========================================
@@ -247,6 +255,7 @@ redoButton.addEventListener(
     }
 );
 
+
 // ========================================
 // Clear Board
 // ========================================
@@ -282,6 +291,8 @@ clearBoardButton.addEventListener(
         saveHistoryState();
     }
 );
+
+
 // ========================================
 // Download Menu
 // ========================================

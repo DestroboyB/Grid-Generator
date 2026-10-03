@@ -10,24 +10,32 @@ import {
     renderAllImages
 } from "./board.js";
 
-
-// ========================================
-// Elements
-// ========================================
+const MAX_HISTORY_STATES =
+    30;
 
 const rowsInput =
-    document.getElementById("rows");
+    document.getElementById(
+        "rows"
+    );
 
 const columnsInput =
-    document.getElementById("columns");
+    document.getElementById(
+        "columns"
+    );
 
 const imageRatioInput =
-    document.getElementById("imageRatio");
+    document.getElementById(
+        "imageRatio"
+    );
 
+function cloneState(
+    state
+) {
 
-// ========================================
-// Get Current State
-// ========================================
+    return JSON.parse(
+        JSON.stringify(state)
+    );
+}
 
 export function getCurrentState() {
 
@@ -43,10 +51,8 @@ export function getCurrentState() {
             imageRatioInput.value,
 
         images:
-            JSON.parse(
-                JSON.stringify(
-                    appState.savedImages
-                )
+            cloneState(
+                appState.savedImages
             ),
 
         spacing:
@@ -56,11 +62,6 @@ export function getCurrentState() {
             appState.backgroundColor
     };
 }
-
-
-// ========================================
-// Save History State
-// ========================================
 
 export function saveHistoryState() {
 
@@ -72,105 +73,97 @@ export function saveHistoryState() {
             appState.undoStack.length - 1
         ];
 
-
-    // Don't save duplicate states
+    /*
+     * Don't create a history entry if
+     * nothing actually changed.
+     */
     if (
         lastState &&
         JSON.stringify(lastState) ===
-        JSON.stringify(currentState)
+            JSON.stringify(currentState)
     ) {
-
         return;
     }
-
 
     appState.undoStack.push(
         currentState
     );
 
-
-    // Any new action clears redo
+    /*
+     * A new action invalidates the
+     * redo history.
+     */
     appState.redoStack =
         [];
 
+    /*
+     * Keep only the most recent
+     * 30 undo states.
+     */
+    if (
+        appState.undoStack.length >
+        MAX_HISTORY_STATES
+    ) {
+
+        appState.undoStack =
+            appState.undoStack.slice(
+                -MAX_HISTORY_STATES
+            );
+    }
 
     updateHistoryButtons();
 
+    /*
+     * Persist the current board AND
+     * the updated history to IndexedDB.
+     */
     saveBoard();
 }
 
-
-// ========================================
-// Undo
-// ========================================
-
 export function undo() {
 
-    // Need at least the current state
-    // and one previous state.
     if (
         appState.undoStack.length <= 1
     ) {
-
         return;
     }
 
-
-    // Current state goes to redo
     const currentState =
         appState.undoStack.pop();
-
 
     appState.redoStack.push(
         currentState
     );
 
-
-    // Previous state becomes current
     const previousState =
         appState.undoStack[
             appState.undoStack.length - 1
         ];
-
 
     restoreState(
         previousState
     );
 }
 
-
-// ========================================
-// Redo
-// ========================================
-
 export function redo() {
 
     if (
         appState.redoStack.length === 0
     ) {
-
         return;
     }
 
-
     const nextState =
         appState.redoStack.pop();
-
 
     appState.undoStack.push(
         nextState
     );
 
-
     restoreState(
         nextState
     );
 }
-
-
-// ========================================
-// Restore State
-// ========================================
 
 function restoreState(
     state
@@ -185,11 +178,6 @@ function restoreState(
     const previousRatio =
         imageRatioInput.value;
 
-
-    // ========================================
-    // Restore Inputs
-    // ========================================
-
     rowsInput.value =
         state.rows;
 
@@ -199,29 +187,16 @@ function restoreState(
     imageRatioInput.value =
         state.ratio;
 
-
-    // ========================================
-    // Restore Images
-    // ========================================
-
     appState.savedImages =
-        JSON.parse(
-            JSON.stringify(
-                state.images
-            )
+        cloneState(
+            state.images
         );
-
-
-    // ========================================
-    // Restore Board Settings
-    // ========================================
 
     appState.spacing =
         state.spacing;
 
     appState.backgroundColor =
         state.backgroundColor;
-
 
     const spacingInput =
         document.getElementById(
@@ -238,13 +213,11 @@ function restoreState(
             "backgroundColor"
         );
 
-
     if (spacingInput) {
 
         spacingInput.value =
             appState.spacing;
     }
-
 
     if (spacingValue) {
 
@@ -252,17 +225,11 @@ function restoreState(
             `${appState.spacing} px`;
     }
 
-
     if (backgroundColorInput) {
 
         backgroundColorInput.value =
             appState.backgroundColor;
     }
-
-
-    // ========================================
-    // Determine If Grid Structure Changed
-    // ========================================
 
     const gridChanged =
         previousRows !==
@@ -274,11 +241,6 @@ function restoreState(
         previousRatio !==
             state.ratio;
 
-
-    // ========================================
-    // Rebuild Only If Necessary
-    // ========================================
-
     if (gridChanged) {
 
         generateBoard();
@@ -286,38 +248,66 @@ function restoreState(
     } else {
 
         updateBoardStyle();
-
         renderAllImages();
     }
 
-
-    // ========================================
-    // Save
-    // ========================================
-
+    /*
+     * Important:
+     *
+     * We intentionally do NOT call
+     * saveHistoryState() here because
+     * undo/redo should move through the
+     * existing history rather than create
+     * a new history entry.
+     *
+     * saveBoard() DOES save the current
+     * undo/redo stacks to IndexedDB.
+     */
     saveBoard();
 
     updateHistoryButtons();
 }
 
-
-// ========================================
-// Initialize History
-// ========================================
-
 export function initializeHistory() {
 
-    // Don't initialize twice
+    /*
+     * If history was loaded from IndexedDB,
+     * keep it.
+     */
     if (
         appState.undoStack.length > 0
     ) {
 
+        /*
+         * Make sure old/oversized history
+         * doesn't exceed our limit.
+         */
+        if (
+            appState.undoStack.length >
+            MAX_HISTORY_STATES
+        ) {
+
+            appState.undoStack =
+                appState.undoStack.slice(
+                    -MAX_HISTORY_STATES
+                );
+        }
+
         updateHistoryButtons();
+
+        /*
+         * Save once so any trimmed history
+         * is reflected in IndexedDB.
+         */
+        saveBoard();
 
         return;
     }
 
-
+    /*
+     * No saved history exists.
+     * Create the initial state.
+     */
     appState.undoStack = [
         getCurrentState()
     ];
@@ -325,16 +315,10 @@ export function initializeHistory() {
     appState.redoStack =
         [];
 
-
     saveBoard();
 
     updateHistoryButtons();
 }
-
-
-// ========================================
-// Update Undo / Redo Buttons
-// ========================================
 
 export function updateHistoryButtons() {
 
@@ -348,13 +332,11 @@ export function updateHistoryButtons() {
             "redoButton"
         );
 
-
     if (undoButton) {
 
         undoButton.disabled =
             appState.undoStack.length <= 1;
     }
-
 
     if (redoButton) {
 

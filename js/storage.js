@@ -1,60 +1,250 @@
-
 import { appState } from "./state.js";
 
+const DATABASE_NAME =
+    "gridBoardDatabase";
 
-// ========================================
-// Elements
-// ========================================
+const DATABASE_VERSION =
+    1;
 
-const rowsInput =
-    document.getElementById("rows");
+const STORE_NAME =
+    "boards";
 
-const columnsInput =
-    document.getElementById("columns");
+const BOARD_KEY =
+    "currentBoard";
 
-const imageRatioInput =
-    document.getElementById("imageRatio");
+let saveQueue =
+    Promise.resolve();
 
-const spacingInput =
-    document.getElementById("spacing");
 
-const backgroundColorInput =
-    document.getElementById(
-        "backgroundColor"
+function openDatabase() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const request =
+                indexedDB.open(
+                    DATABASE_NAME,
+                    DATABASE_VERSION
+                );
+
+            request.onupgradeneeded =
+                event => {
+
+                    const db =
+                        event.target.result;
+
+                    if (
+                        !db.objectStoreNames.contains(
+                            STORE_NAME
+                        )
+                    ) {
+                        db.createObjectStore(
+                            STORE_NAME
+                        );
+                    }
+                };
+
+            request.onsuccess =
+                () => {
+
+                    resolve(
+                        request.result
+                    );
+                };
+
+            request.onerror =
+                () => {
+
+                    reject(
+                        request.error
+                    );
+                };
+        }
     );
+}
 
 
-// ========================================
-// Storage Key
-// ========================================
+function cloneData(
+    data
+) {
 
-const STORAGE_KEY =
-    "gridBoardData";
+    return JSON.parse(
+        JSON.stringify(data)
+    );
+}
 
 
-// ========================================
-// Save Board
-// ========================================
+function getIndexedDBBoard() {
 
-export function saveBoard() {
+    return openDatabase()
+        .then(
+            db => {
 
-    /*
-     * IMPORTANT:
-     *
-     * Do NOT save undoStack or redoStack here.
-     *
-     * Those stacks can contain multiple copies of
-     * large base64 image strings. This can very
-     * quickly exceed the browser's localStorage
-     * quota, especially with images imported from
-     * MyAnimeList.
-     *
-     * Undo/redo still works during the current
-     * session. The stacks simply aren't persisted
-     * across a page refresh.
-     */
+                return new Promise(
+                    (resolve, reject) => {
 
-    const boardData = {
+                        const transaction =
+                            db.transaction(
+                                STORE_NAME,
+                                "readonly"
+                            );
+
+                        const store =
+                            transaction.objectStore(
+                                STORE_NAME
+                            );
+
+                        const request =
+                            store.get(
+                                BOARD_KEY
+                            );
+
+                        request.onsuccess =
+                            () => {
+
+                                resolve(
+                                    request.result ||
+                                    null
+                                );
+                            };
+
+                        request.onerror =
+                            () => {
+
+                                reject(
+                                    request.error
+                                );
+                            };
+
+                        transaction.oncomplete =
+                            () => {
+
+                                db.close();
+                            };
+                    }
+                );
+            }
+        );
+}
+
+
+function saveIndexedDBBoard(
+    boardData
+) {
+
+    return openDatabase()
+        .then(
+            db => {
+
+                return new Promise(
+                    (resolve, reject) => {
+
+                        const transaction =
+                            db.transaction(
+                                STORE_NAME,
+                                "readwrite"
+                            );
+
+                        const store =
+                            transaction.objectStore(
+                                STORE_NAME
+                            );
+
+                        store.put(
+                            boardData,
+                            BOARD_KEY
+                        );
+
+                        transaction.oncomplete =
+                            () => {
+
+                                db.close();
+
+                                resolve();
+                            };
+
+                        transaction.onerror =
+                            () => {
+
+                                db.close();
+
+                                reject(
+                                    transaction.error
+                                );
+                            };
+                    }
+                );
+            }
+        );
+}
+
+
+function deleteIndexedDBBoard() {
+
+    return openDatabase()
+        .then(
+            db => {
+
+                return new Promise(
+                    (resolve, reject) => {
+
+                        const transaction =
+                            db.transaction(
+                                STORE_NAME,
+                                "readwrite"
+                            );
+
+                        const store =
+                            transaction.objectStore(
+                                STORE_NAME
+                            );
+
+                        store.delete(
+                            BOARD_KEY
+                        );
+
+                        transaction.oncomplete =
+                            () => {
+
+                                db.close();
+
+                                resolve();
+                            };
+
+                        transaction.onerror =
+                            () => {
+
+                                db.close();
+
+                                reject(
+                                    transaction.error
+                                );
+                            };
+                    }
+                );
+            }
+        );
+}
+
+
+function createBoardData() {
+
+    const rowsInput =
+        document.getElementById(
+            "rows"
+        );
+
+    const columnsInput =
+        document.getElementById(
+            "columns"
+        );
+
+    const imageRatioInput =
+        document.getElementById(
+            "imageRatio"
+        );
+
+    return {
 
         rows:
             rowsInput.value,
@@ -72,312 +262,165 @@ export function saveBoard() {
             appState.backgroundColor,
 
         images:
-            appState.savedImages
-    };
+            cloneData(
+                appState.savedImages
+            ),
 
+        undoStack:
+            cloneData(
+                appState.undoStack
+            ),
 
-    try {
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(boardData)
-        );
-
-
-        return true;
-
-    } catch (error) {
-
-        /*
-         * If the images themselves are too large,
-         * localStorage may still exceed its quota.
-         *
-         * Do not allow this error to break actions
-         * such as Apply/Crop.
-         */
-
-        if (
-            error instanceof DOMException &&
-            (
-                error.name === "QuotaExceededError" ||
-                error.code === 22 ||
-                error.code === 1014
+        redoStack:
+            cloneData(
+                appState.redoStack
             )
-        ) {
-
-            console.warn(
-                "Board could not be saved because browser storage is full."
-            );
-
-
-            /*
-             * Try one more time with a lightweight
-             * version of the image data.
-             *
-             * originalSource is only needed to restore
-             * the completely original image after a
-             * page reload. The current edited source
-             * remains available.
-             */
-
-            try {
-
-                const lightweightImages =
-                    appState.savedImages.map(
-                        (image) => {
-
-                            if (!image) {
-                                return image;
-                            }
-
-
-                            const {
-                                originalSource,
-                                ...rest
-                            } = image;
-
-
-                            return rest;
-                        }
-                    );
-
-
-                const lightweightBoardData = {
-
-                    rows:
-                        rowsInput.value,
-
-                    columns:
-                        columnsInput.value,
-
-                    ratio:
-                        imageRatioInput.value,
-
-                    spacing:
-                        appState.spacing,
-
-                    backgroundColor:
-                        appState.backgroundColor,
-
-                    images:
-                        lightweightImages
-                };
-
-
-                localStorage.setItem(
-                    STORAGE_KEY,
-                    JSON.stringify(
-                        lightweightBoardData
-                    )
-                );
-
-
-                console.warn(
-                    "Board saved without original image sources to reduce storage usage."
-                );
-
-
-                return true;
-
-            } catch (fallbackError) {
-
-                /*
-                 * The browser storage is completely full
-                 * or the images themselves are too large.
-                 *
-                 * Remove the saved board so that the
-                 * application can continue functioning.
-                 */
-
-                console.error(
-                    "Unable to save board to browser storage:",
-                    fallbackError
-                );
-
-
-                try {
-
-                    localStorage.removeItem(
-                        STORAGE_KEY
-                    );
-
-                } catch (removeError) {
-
-                    console.error(
-                        "Unable to clear full board storage:",
-                        removeError
-                    );
-                }
-
-
-                return false;
-            }
-
-        }
-
-
-        console.error(
-            "Could not save board:",
-            error
-        );
-
-
-        return false;
-    }
+    };
 }
 
 
-// ========================================
-// Load Board
-// ========================================
+function applyBoardData(
+    boardData
+) {
 
-export function loadBoard() {
-
-    const savedData =
-        localStorage.getItem(
-            STORAGE_KEY
+    const rowsInput =
+        document.getElementById(
+            "rows"
         );
 
+    const columnsInput =
+        document.getElementById(
+            "columns"
+        );
 
-    if (!savedData) {
-        return false;
-    }
+    const imageRatioInput =
+        document.getElementById(
+            "imageRatio"
+        );
 
+    rowsInput.value =
+        boardData.rows;
+
+    columnsInput.value =
+        boardData.columns;
+
+    imageRatioInput.value =
+        boardData.ratio;
+
+    appState.spacing =
+        boardData.spacing ?? 0;
+
+    appState.backgroundColor =
+        boardData.backgroundColor ??
+        "#ffffff";
+
+    appState.savedImages =
+        cloneData(
+            boardData.images || []
+        );
+
+    appState.undoStack =
+        cloneData(
+            boardData.undoStack || []
+        );
+
+    appState.redoStack =
+        cloneData(
+            boardData.redoStack || []
+        );
+}
+
+
+export function saveBoard() {
+
+    const boardData =
+        createBoardData();
+
+    /*
+     * Queue saves so multiple rapid
+     * changes are written in order.
+     */
+    saveQueue =
+        saveQueue
+            .then(
+                () => {
+
+                    return saveIndexedDBBoard(
+                        boardData
+                    );
+                }
+            )
+            .catch(
+                error => {
+
+                    console.error(
+                        "IndexedDB save failed:",
+                        error
+                    );
+                }
+            );
+
+    return saveQueue;
+}
+
+
+export async function loadBoard() {
 
     try {
 
         const boardData =
-            JSON.parse(savedData);
+            await getIndexedDBBoard();
 
-
-        // ========================================
-        // Board Settings
-        // ========================================
-
-        if (
-            boardData.rows !== undefined
-        ) {
-
-            rowsInput.value =
-                boardData.rows;
+        if (!boardData) {
+            return false;
         }
 
-
-        if (
-            boardData.columns !== undefined
-        ) {
-
-            columnsInput.value =
-                boardData.columns;
-        }
-
-
-        if (
-            boardData.ratio !== undefined
-        ) {
-
-            imageRatioInput.value =
-                boardData.ratio;
-        }
-
-
-        // ========================================
-        // Spacing
-        // ========================================
-
-        appState.spacing =
-            Number(
-                boardData.spacing ?? 0
-            );
-
-
-        spacingInput.value =
-            appState.spacing;
-
-
-        // ========================================
-        // Background
-        // ========================================
-
-        appState.backgroundColor =
-            boardData.backgroundColor ||
-            "#ffffff";
-
-
-        backgroundColorInput.value =
-            appState.backgroundColor;
-
-
-        // ========================================
-        // Images
-        // ========================================
-
-        appState.savedImages =
-            Array.isArray(
-                boardData.images
-            )
-                ? boardData.images
-                : [];
-
-
-        /*
-         * Undo/redo history is intentionally reset
-         * when the board is loaded.
-         *
-         * History is session-based rather than
-         * persistent because storing image-heavy
-         * history can exceed localStorage limits.
-         */
-
-        appState.undoStack =
-            [];
-
-        appState.redoStack =
-            [];
-
+        applyBoardData(
+            boardData
+        );
 
         return true;
 
     } catch (error) {
 
         console.error(
-            "Could not load saved board:",
+            "Unable to load board from IndexedDB:",
             error
         );
-
 
         return false;
     }
 }
 
 
-// ========================================
-// Clear Saved Board
-// ========================================
-
 export function clearSavedBoard() {
-
-    localStorage.removeItem(
-        STORAGE_KEY
-    );
-
 
     appState.savedImages =
         [];
 
-
-    appState.spacing =
-        0;
-
-
-    appState.backgroundColor =
-        "#ffffff";
-
-
     appState.undoStack =
         [];
 
-
     appState.redoStack =
         [];
+
+    saveQueue =
+        saveQueue
+            .then(
+                () => {
+
+                    return deleteIndexedDBBoard();
+                }
+            )
+            .catch(
+                error => {
+
+                    console.error(
+                        "Unable to clear IndexedDB board:",
+                        error
+                    );
+                }
+            );
+
+    return saveQueue;
 }
