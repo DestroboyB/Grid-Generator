@@ -161,10 +161,6 @@ export function openCropForFile(
 }
 
 
-// ========================================
-// Open Cropper For URL
-// ========================================
-
 export function openCropForURL(
     imageURL,
     element
@@ -178,32 +174,107 @@ export function openCropForURL(
     cleanupObjectURL();
 
 
+    // ========================================
+    // Destroy Existing Cropper
+    // ========================================
+
+    if (appState.cropper) {
+
+        appState.cropper.destroy();
+
+        appState.cropper =
+            null;
+    }
+
+
+    // ========================================
+    // CORS
+    // ========================================
+
     cropImage.crossOrigin =
         "anonymous";
 
 
-    cropImage.src =
-        imageURL;
-
+    // ========================================
+    // Show Modal
+    // ========================================
 
     cropModal.style.display =
         "flex";
 
 
-    createCropper(
-        cropImage,
-        imageRatioInput
-    );
+    // ========================================
+    // Wait For Remote Image
+    // ========================================
+
+    cropImage.onload =
+        () => {
+
+            cropImage.onload =
+                null;
+
+            cropImage.onerror =
+                null;
+
+
+            // ========================================
+            // Create Cropper After Image Loads
+            // ========================================
+
+            createCropper(
+                cropImage,
+                imageRatioInput
+            );
+
+
+            // ========================================
+            // Restore Default Adjustments
+            // ========================================
+
+            restoreAdjustments();
+
+            applyAdjustments();
+
+        };
 
 
     // ========================================
-    // Restore Default Adjustments
+    // Image Load Error
     // ========================================
 
-    restoreAdjustments();
+    cropImage.onerror =
+        () => {
 
-    applyAdjustments();
+            cropImage.onload =
+                null;
 
+            cropImage.onerror =
+                null;
+
+            console.error(
+                "Unable to load MAL image:",
+                imageURL
+            );
+
+            alert(
+                "Unable to load this image. Please try another image."
+            );
+
+            closeCropper(
+                cropModal,
+                cropImage
+            );
+
+        };
+
+
+    // ========================================
+    // IMPORTANT:
+    // Set crossOrigin BEFORE src
+    // ========================================
+
+    cropImage.src =
+        imageURL;
 }
 
 

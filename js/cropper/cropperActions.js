@@ -32,6 +32,10 @@ export function applyCrop(
         !appState.cropper ||
         !appState.selectedDiv
     ) {
+        console.error(
+            "Cannot apply crop: cropper or selected image is missing."
+        );
+
         return;
     }
 
@@ -49,6 +53,11 @@ export function applyCrop(
 
 
     if (boxIndex === -1) {
+
+        console.error(
+            "Cannot apply crop: selected board element was not found."
+        );
+
         return;
     }
 
@@ -65,22 +74,63 @@ export function applyCrop(
     // Generate Final Cropped Image
     // ========================================
 
-    const canvas =
-        appState.cropper.getCroppedCanvas({
-            imageSmoothingEnabled: true,
-            imageSmoothingQuality: "high"
-        });
+    let canvas;
+
+    let source;
 
 
-    if (!canvas) {
+    try {
+
+        canvas =
+            appState.cropper.getCroppedCanvas({
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: "high"
+            });
+
+
+        if (!canvas) {
+
+            console.error(
+                "CropperJS did not return a canvas."
+            );
+
+            return;
+        }
+
+
+        source =
+            canvas.toDataURL(
+                "image/png"
+            );
+
+    } catch (error) {
+
+        console.error(
+            "Unable to create cropped image:",
+            error
+        );
+
+
+        if (
+            error.name ===
+            "SecurityError"
+        ) {
+
+            alert(
+                "This MyAnimeList image cannot be edited because the image server does not allow browser image editing. Please try another image."
+            );
+
+        } else {
+
+            alert(
+                "Unable to apply the crop. Please try another image."
+            );
+
+        }
+
+
         return;
     }
-
-
-    const source =
-        canvas.toDataURL(
-            "image/png"
-        );
 
 
     // ========================================
@@ -122,23 +172,9 @@ export function applyCrop(
         boxIndex
     ] = {
 
-        // ========================================
-        // Final Display Image
-        // ========================================
-
         source,
 
-
-        // ========================================
-        // Full Original Image
-        // ========================================
-
         originalSource,
-
-
-        // ========================================
-        // Crop Information
-        // ========================================
 
         crop: {
 
@@ -156,11 +192,6 @@ export function applyCrop(
 
         },
 
-
-        // ========================================
-        // Transform Information
-        // ========================================
-
         rotation:
             cropperState.rotation,
 
@@ -170,18 +201,8 @@ export function applyCrop(
         flipY:
             cropperState.flipY,
 
-
-        // ========================================
-        // Filter Information
-        // ========================================
-
         filterName:
             cropperState.filterName ?? "none",
-
-
-        // ========================================
-        // Adjustment Information
-        // ========================================
 
         brightness:
             cropperState.brightness,
@@ -204,11 +225,6 @@ export function applyCrop(
         hueRotate:
             cropperState.hueRotate,
 
-
-        // ========================================
-        // Existing Position / Zoom
-        // ========================================
-
         x:
             oldImage?.x ?? 0,
 
@@ -217,6 +233,7 @@ export function applyCrop(
 
         zoom:
             oldImage?.zoom ?? 1
+
     };
 
 
