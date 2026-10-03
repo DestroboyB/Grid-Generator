@@ -209,75 +209,117 @@ export function updateBoardStyle() {
     board.style.backgroundColor =
         appState.backgroundColor;
 
-        renderAllImages();
+    renderAllImages();
 }
 
 
-export function renderImage(div, imageData) {
+export function renderImage(
+    div,
+    imageData
+) {
 
     div.innerHTML = "";
 
-    div.classList.add("has-image");
+    div.classList.add(
+        "has-image"
+    );
 
-    div.style.position = "relative";
-    div.style.overflow = "hidden";
+    div.style.position =
+        "relative";
+
+    div.style.overflow =
+        "hidden";
 
 
     const img =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
 
 
     // ========================================
-    // New Image Data Model
+    // Image Source
     // ========================================
 
-    if (typeof imageData === "object") {
+    if (
+        typeof imageData === "object"
+    ) {
 
         img.src =
             imageData.source;
 
 
+        // ====================================
+        // Fill Board Box
+        // ====================================
+
         img.style.position =
             "absolute";
 
+        img.style.left =
+            "0";
 
-        img.style.maxWidth =
-            "none";
+        img.style.top =
+            "0";
 
+        img.style.width =
+            "100%";
 
-        img.style.maxHeight =
-            "none";
+        img.style.height =
+            "100%";
 
+        img.style.objectFit =
+            "cover";
 
-        img.onload = () => {
-
-            applyImageCrop(
-                div,
-                img,
-                imageData
-            );
-
-        };
-
-
-        if (img.complete) {
-
-            applyImageCrop(
-                div,
-                img,
-                imageData
-            );
-
-        }
-
-    }
+        img.style.objectPosition =
+            "center";
 
 
-    // ========================================
-    // Legacy Image Data
-    // ========================================
+        // ====================================
+        // Apply Adjustments
+        // ====================================
 
-    else {
+        const brightness =
+            imageData.brightness ?? 100;
+
+        const contrast =
+            imageData.contrast ?? 100;
+
+        const saturation =
+            imageData.saturation ?? 100;
+
+        const blur =
+            imageData.blur ?? 0;
+
+        const grayscale =
+            imageData.grayscale ?? 0;
+
+        const sepia =
+            imageData.sepia ?? 0;
+
+        const hueRotate =
+            imageData.hueRotate ?? 0;
+
+
+        img.style.filter =
+            `
+                brightness(${brightness}%)
+                contrast(${contrast}%)
+                saturate(${saturation}%)
+                blur(${blur}px)
+                grayscale(${grayscale}%)
+                sepia(${sepia}%)
+                hue-rotate(${hueRotate}deg)
+            `
+            .replace(/\s+/g, " ")
+            .trim();
+
+
+    } else {
+
+        // ====================================
+        // Legacy Image
+        // ====================================
 
         img.src =
             imageData;
@@ -296,126 +338,17 @@ export function renderImage(div, imageData) {
     }
 
 
-    div.appendChild(img);
-
-    div.draggable = true;
-}
-
-function applyImageCrop(
-    div,
-    img,
-    imageData
-) {
-
-    const crop =
-        imageData.crop;
-
-
-    if (!crop) {
-        return;
-    }
-
-
-    const naturalWidth =
-        img.naturalWidth;
-
-    const naturalHeight =
-        img.naturalHeight;
-
-
-    if (
-        !naturalWidth ||
-        !naturalHeight
-    ) {
-        return;
-    }
-
-
     // ========================================
-    // Calculate Image Scale
+    // Add Image
     // ========================================
 
-    const scaleX =
-        div.clientWidth /
-        crop.width;
-
-    const scaleY =
-        div.clientHeight /
-        crop.height;
+    div.appendChild(
+        img
+    );
 
 
-    const scale =
-        Math.max(
-            scaleX,
-            scaleY
-        );
-
-
-    const displayWidth =
-        naturalWidth * scale;
-
-    const displayHeight =
-        naturalHeight * scale;
-
-
-    img.style.width =
-        `${displayWidth}px`;
-
-    img.style.height =
-        `${displayHeight}px`;
-
-
-    // ========================================
-    // Position Image
-    // ========================================
-
-    const cropCenterX =
-        crop.x +
-        (crop.width / 2);
-
-    const cropCenterY =
-        crop.y +
-        (crop.height / 2);
-
-
-    const boxCenterX =
-        div.clientWidth / 2;
-
-    const boxCenterY =
-        div.clientHeight / 2;
-
-
-    img.style.left =
-        `${boxCenterX - (cropCenterX * scale)}px`;
-
-    img.style.top =
-        `${boxCenterY - (cropCenterY * scale)}px`;
-
-
-    // ========================================
-    // Transform
-    // ========================================
-
-    const rotation =
-        imageData.rotation ?? 0;
-
-    const flipX =
-        imageData.flipX
-            ? -1
-            : 1;
-
-    const flipY =
-        imageData.flipY
-            ? -1
-            : 1;
-
-
-    img.style.transform =
-        `rotate(${rotation}deg) scale(${flipX}, ${flipY})`;
-
-
-    img.style.transformOrigin =
-        "center center";
+    div.draggable =
+        true;
 }
 
 
@@ -431,9 +364,10 @@ export function clearImageBox(
     div.innerHTML =
         "";
 
-       div.classList.remove(
+    div.classList.remove(
         "has-image"
     );
+
     div.style.position =
         "";
 
@@ -499,7 +433,8 @@ export function generateBoard() {
         Number(columnsInput.value);
 
     const totalBoxes =
-        rows * columns;
+        rows *
+        columns;
 
 
     // ========================================
@@ -571,5 +506,25 @@ export function generateBoard() {
     // Apply Dimensions / Styling
     // ========================================
 
-    updateBoardStyle();
+    const dimensions =
+        calculateBoardDimensions();
+
+
+    board.style.width =
+        `${dimensions.boardWidth}px`;
+
+    board.style.height =
+        `${dimensions.boardHeight}px`;
+
+    board.style.gridTemplateColumns =
+        `repeat(${columns}, ${dimensions.boxWidth}px)`;
+
+    board.style.gridTemplateRows =
+        `repeat(${rows}, ${dimensions.boxHeight}px)`;
+
+    board.style.gap =
+        `${appState.spacing}px`;
+
+    board.style.backgroundColor =
+        appState.backgroundColor;
 }

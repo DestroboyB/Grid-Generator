@@ -9,6 +9,9 @@ import {
     fitRotatedImage
 } from "./cropperTransforms.js";
 
+import {
+    applyAdjustments
+} from "./cropperAdjust.js";
 
 // ========================================
 // Create Cropper
@@ -197,7 +200,7 @@ export function createCropper(
                             -1
                         );
                     }
-
+                    applyAdjustments();
                 }
             }
         );

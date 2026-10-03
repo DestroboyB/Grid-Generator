@@ -1,17 +1,21 @@
 import { appState } from "../state.js";
 
 import {
+    cropperState,
+    resetCropperState
+} from "./cropperState.js";
+
+import {
     saveHistoryState
 } from "../history.js";
 
 import {
-    renderImage
-} from "../board.js";
+    saveBoard
+} from "../storage.js";
 
 import {
-    cropperState,
-    resetCropperState
-} from "./cropperState.js";
+    renderImage
+} from "../board.js";
 
 
 // ========================================
@@ -33,7 +37,7 @@ export function applyCrop(
 
 
     // ========================================
-    // Find Box
+    // Determine Box Index
     // ========================================
 
     const boxIndex =
@@ -58,189 +62,162 @@ export function applyCrop(
 
 
     // ========================================
-    // Get Crop Box Data
+    // Generate Final Cropped Image
     // ========================================
 
-    const cropBoxData =
-        appState.cropper.getCropBoxData();
+    const canvas =
+        appState.cropper.getCroppedCanvas({
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: "high"
+        });
+
+
+    if (!canvas) {
+        return;
+    }
+
+
+    const source =
+        canvas.toDataURL(
+            "image/png"
+        );
 
 
     // ========================================
-    // Update Existing Image
+    // Preserve Full Original Image
     // ========================================
+
+    let originalSource;
+
 
     if (
         cropperState.editingImageData
     ) {
 
-        appState.savedImages[
-            boxIndex
-        ] = {
+        originalSource =
+            cropperState.editingImageData.originalSource ||
+            cropperState.editingImageData.source;
 
-            source:
-                cropperState
-                    .editingImageData
-                    .source,
+    } else {
 
-
-            crop: {
-
-                x:
-                    cropData.x,
-
-                y:
-                    cropData.y,
-
-                width:
-                    cropData.width,
-
-                height:
-                    cropData.height
-
-            },
-
-
-            cropBox: {
-
-                left:
-                    cropBoxData.left,
-
-                top:
-                    cropBoxData.top,
-
-                width:
-                    cropBoxData.width,
-
-                height:
-                    cropBoxData.height
-
-            },
-
-
-            // ========================================
-            // Transform
-            // ========================================
-
-            rotation:
-                cropperState.rotation,
-
-            flipX:
-                cropperState.flipX,
-
-            flipY:
-                cropperState.flipY,
-
-
-            // ========================================
-            // Existing Position Data
-            // ========================================
-
-            x:
-                cropperState
-                    .editingImageData
-                    .x ?? 0,
-
-            y:
-                cropperState
-                    .editingImageData
-                    .y ?? 0,
-
-            zoom:
-                cropperState
-                    .editingImageData
-                    .zoom ?? 1
-
-        };
-
-    }
-
-
-    // ========================================
-    // Create New Image
-    // ========================================
-
-    else {
-
-        const source =
+        originalSource =
             cropImage.src;
 
-
-        if (!source) {
-            return;
-        }
+    }
 
 
-        appState.savedImages[
-            boxIndex
-        ] = {
+    // ========================================
+    // Preserve Existing Position Data
+    // ========================================
 
-            source,
-
-
-            crop: {
-
-                x:
-                    cropData.x,
-
-                y:
-                    cropData.y,
-
-                width:
-                    cropData.width,
-
-                height:
-                    cropData.height
-
-            },
+    const oldImage =
+        cropperState.editingImageData;
 
 
-            cropBox: {
+    // ========================================
+    // Save Image Data
+    // ========================================
 
-                left:
-                    cropBoxData.left,
+    appState.savedImages[
+        boxIndex
+    ] = {
 
-                top:
-                    cropBoxData.top,
+        // ========================================
+        // Final Display Image
+        // ========================================
 
-                width:
-                    cropBoxData.width,
-
-                height:
-                    cropBoxData.height
-
-            },
+        source,
 
 
-            // ========================================
-            // Transform
-            // ========================================
+        // ========================================
+        // Full Original Image
+        // ========================================
 
-            rotation:
-                cropperState.rotation,
-
-            flipX:
-                cropperState.flipX,
-
-            flipY:
-                cropperState.flipY,
+        originalSource,
 
 
-            // ========================================
-            // Default Position Data
-            // ========================================
+        // ========================================
+        // Crop Information
+        // ========================================
+
+        crop: {
 
             x:
-                0,
+                cropData.x,
 
             y:
-                0,
+                cropData.y,
 
-            zoom:
-                1
+            width:
+                cropData.width,
 
-        };
+            height:
+                cropData.height
 
-    }
+        },
+
+
+        // ========================================
+        // Transform Information
+        // ========================================
+
+        rotation:
+            cropperState.rotation,
+
+        flipX:
+            cropperState.flipX,
+
+        flipY:
+            cropperState.flipY,
+
+
+        // ========================================
+        // Filter Information
+        // ========================================
+
+        filterName:
+            cropperState.filterName ?? "none",
+
+
+        // ========================================
+        // Adjustment Information
+        // ========================================
+
+        brightness:
+            cropperState.brightness,
+
+        contrast:
+            cropperState.contrast,
+
+        saturation:
+            cropperState.saturation,
+
+        blur:
+            cropperState.blur,
+
+        grayscale:
+            cropperState.grayscale,
+
+        sepia:
+            cropperState.sepia,
+
+        hueRotate:
+            cropperState.hueRotate,
+
+
+        // ========================================
+        // Existing Position / Zoom
+        // ========================================
+
+        x:
+            oldImage?.x ?? 0,
+
+        y:
+            oldImage?.y ?? 0,
+
+        zoom:
+            oldImage?.zoom ?? 1
+    };
 
 
     // ========================================
@@ -251,7 +228,14 @@ export function applyCrop(
 
 
     // ========================================
-    // Display Image
+    // Save Board
+    // ========================================
+
+    saveBoard();
+
+
+    // ========================================
+    // Update Board Image
     // ========================================
 
     renderImage(
@@ -261,19 +245,18 @@ export function applyCrop(
 
 
     // ========================================
-    // Close
+    // Close Cropper
     // ========================================
 
     closeCropper(
         cropModal,
         cropImage
     );
-
 }
 
 
 // ========================================
-// Cancel / Close Cropper
+// Close Cropper
 // ========================================
 
 export function closeCropper(
@@ -291,6 +274,7 @@ export function closeCropper(
 
         appState.cropper =
             null;
+
     }
 
 
@@ -311,7 +295,7 @@ export function closeCropper(
 
 
 // ========================================
-// Cleanup Temporary Object URL
+// Cleanup Object URL
 // ========================================
 
 export function cleanupObjectURL() {
@@ -324,9 +308,9 @@ export function cleanupObjectURL() {
             appState.currentObjectURL
         );
 
-
         appState.currentObjectURL =
             null;
+
     }
 
 }

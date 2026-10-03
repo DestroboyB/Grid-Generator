@@ -191,21 +191,18 @@
 ======================================== */
 
 .editor-panel-container {
-    min-height: 120px;
-
-    padding: 18px 20px;
+    max-height: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
-
 
 .editor-panel {
     display: none;
 }
 
-
 .editor-panel.active {
     display: block;
 }
-
 
 .editor-panel-title {
     font-size: 15px;
@@ -384,4 +381,24 @@
 
 .editor-apply:hover {
     background: #1d4ed8;
+}
+
+
+.adjust-controls {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+}
+
+.adjust-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.adjust-controls input[type="range"] {
+    width: 100%;
 }

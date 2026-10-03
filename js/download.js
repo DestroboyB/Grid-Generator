@@ -1,3 +1,12 @@
+import {
+    appState
+} from "./state.js";
+
+
+// ========================================
+// Elements
+// ========================================
+
 const board =
     document.getElementById("board");
 
@@ -27,7 +36,10 @@ export async function downloadBoard(format) {
         board.getBoundingClientRect();
 
 
-    // Higher resolution export
+    // ========================================
+    // Export Resolution
+    // ========================================
+
     const scale = 2;
 
 
@@ -53,12 +65,19 @@ export async function downloadBoard(format) {
         canvas.getContext("2d");
 
 
+    if (!ctx) {
+        return;
+    }
+
+
     // ========================================
     // Background
     // ========================================
 
     ctx.fillStyle =
-    getComputedStyle(board).backgroundColor;
+        getComputedStyle(
+            board
+        ).backgroundColor;
 
 
     ctx.fillRect(
@@ -69,7 +88,10 @@ export async function downloadBoard(format) {
     );
 
 
-    // Work in normal board coordinates
+    // ========================================
+    // Work In Board Coordinates
+    // ========================================
+
     ctx.scale(
         scale,
         scale
@@ -91,7 +113,15 @@ export async function downloadBoard(format) {
     // Draw Each Box
     // ========================================
 
-    for (const box of boxes) {
+    for (
+        let index = 0;
+        index < boxes.length;
+        index++
+    ) {
+
+        const box =
+            boxes[index];
+
 
         const img =
             box.querySelector("img");
@@ -120,7 +150,7 @@ export async function downloadBoard(format) {
 
 
         // ========================================
-        // Draw Border
+        // Draw Box Border
         // ========================================
 
         ctx.strokeStyle =
@@ -149,8 +179,33 @@ export async function downloadBoard(format) {
 
 
         // ========================================
-        // Image Dimensions
+        // Get Saved Image Data
         // ========================================
+
+        const imageData =
+            appState.savedImages[index];
+
+
+        if (
+            !imageData ||
+            typeof imageData !== "object"
+        ) {
+            continue;
+        }
+
+
+        // ========================================
+        // Make Sure Image Is Loaded
+        // ========================================
+
+        if (
+            !img.complete ||
+            !img.naturalWidth ||
+            !img.naturalHeight
+        ) {
+            continue;
+        }
+
 
         const imageWidth =
             img.naturalWidth;
@@ -159,6 +214,80 @@ export async function downloadBoard(format) {
         const imageHeight =
             img.naturalHeight;
 
+
+        // ========================================
+        // Save Canvas State
+        // ========================================
+
+        ctx.save();
+
+
+        // ========================================
+        // Clip To Image Box
+        // ========================================
+
+        ctx.beginPath();
+
+        ctx.rect(
+            x,
+            y,
+            width,
+            height
+        );
+
+        ctx.clip();
+
+
+        // ========================================
+        // Apply Saved Filters
+        // ========================================
+
+        const brightness =
+            imageData.brightness ??
+            100;
+
+        const contrast =
+            imageData.contrast ??
+            100;
+
+        const saturation =
+            imageData.saturation ??
+            100;
+
+        const blur =
+            imageData.blur ??
+            0;
+
+        const grayscale =
+            imageData.grayscale ??
+            0;
+
+        const sepia =
+            imageData.sepia ??
+            0;
+
+        const hueRotate =
+            imageData.hueRotate ??
+            0;
+
+
+        ctx.filter =
+            `
+                brightness(${brightness}%)
+                contrast(${contrast}%)
+                saturate(${saturation}%)
+                blur(${blur}px)
+                grayscale(${grayscale}%)
+                sepia(${sepia}%)
+                hue-rotate(${hueRotate}deg)
+            `
+            .replace(/\s+/g, " ")
+            .trim();
+
+
+        // ========================================
+        // Calculate Cover Crop
+        // ========================================
 
         const imageRatio =
             imageWidth /
@@ -170,78 +299,87 @@ export async function downloadBoard(format) {
             height;
 
 
-        // ========================================
-        // Calculate Cover Crop
-        // ========================================
+        let drawWidth =
+            width;
 
-        let sourceX =
-            0;
-
-        let sourceY =
-            0;
-
-        let sourceWidth =
-            imageWidth;
-
-        let sourceHeight =
-            imageHeight;
+        let drawHeight =
+            height;
 
 
-        // Image is wider than box
         if (
             imageRatio >
             boxRatio
         ) {
 
-            sourceWidth =
-                imageHeight *
-                boxRatio;
+            // Image is wider than the box
 
+            drawHeight =
+                height;
 
-            sourceX =
-                (
-                    imageWidth -
-                    sourceWidth
-                ) / 2;
+            drawWidth =
+                height *
+                imageRatio;
 
-        }
+        } else {
 
-        // Image is taller than box
-        else {
+            // Image is taller than the box
 
-            sourceHeight =
-                imageWidth /
-                boxRatio;
+            drawWidth =
+                width;
 
-
-            sourceY =
-                (
-                    imageHeight -
-                    sourceHeight
-                ) / 2;
+            drawHeight =
+                width /
+                imageRatio;
         }
 
 
         // ========================================
-        // Draw Image
+        // Center Image In Box
+        // ========================================
+
+        const drawX =
+            x +
+            (
+                width -
+                drawWidth
+            ) / 2;
+
+
+        const drawY =
+            y +
+            (
+                height -
+                drawHeight
+            ) / 2;
+
+
+        // ========================================
+        // Draw Final Saved Image
         // ========================================
 
         ctx.drawImage(
 
             img,
 
-            sourceX,
-            sourceY,
+            0,
+            0,
+            imageWidth,
+            imageHeight,
 
-            sourceWidth,
-            sourceHeight,
+            drawX,
+            drawY,
+            drawWidth,
+            drawHeight
 
-            x,
-            y,
-
-            width,
-            height
         );
+
+
+        // ========================================
+        // Restore Canvas State
+        // ========================================
+
+        ctx.restore();
+
     }
 
 
@@ -250,6 +388,7 @@ export async function downloadBoard(format) {
     // ========================================
 
     let mimeType;
+
     let extension;
 
 
@@ -315,7 +454,9 @@ export async function downloadBoard(format) {
     // ========================================
 
     const link =
-        document.createElement("a");
+        document.createElement(
+            "a"
+        );
 
 
     link.download =

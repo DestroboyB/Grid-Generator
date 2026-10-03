@@ -6,7 +6,6 @@ import {
 } from "./cropperState.js";
 
 import {
-    getCropRatio,
     rotateImage,
     fitRotatedImage,
     toggleFlipX,
@@ -22,6 +21,15 @@ import {
     closeCropper,
     cleanupObjectURL
 } from "./cropperActions.js";
+
+import {
+    setupAdjustments,
+    restoreAdjustments,
+    applyAdjustments,
+    setupFilters
+} from "./cropperAdjust.js";
+
+
 
 
 // ========================================
@@ -45,6 +53,15 @@ const board =
 
 const imageRatioInput =
     document.getElementById("imageRatio");
+
+
+// ========================================
+// Adjustment Controls
+// ========================================
+
+setupAdjustments();
+
+setupFilters();
 
 
 // ========================================
@@ -114,6 +131,15 @@ export function openCropForFile(
             cropImage,
             imageRatioInput
         );
+
+
+        // ========================================
+        // Restore Default Adjustments
+        // ========================================
+
+        restoreAdjustments();
+
+        applyAdjustments();
     };
 
 
@@ -156,6 +182,15 @@ export function openCropForURL(
         cropImage,
         imageRatioInput
     );
+
+
+    // ========================================
+    // Restore Default Adjustments
+    // ========================================
+
+    restoreAdjustments();
+
+    applyAdjustments();
 }
 
 
@@ -170,7 +205,10 @@ export function openCropForExistingImage(
 
     if (
         !imageData ||
-        !imageData.source
+        !(
+            imageData.originalSource ||
+            imageData.source
+        )
     ) {
         return;
     }
@@ -198,13 +236,52 @@ export function openCropForExistingImage(
         imageData.flipY ?? false;
 
 
+    // ========================================
+    // Restore Filter State
+    // ========================================
+
+    cropperState.filterName =
+        imageData.filterName ?? "none";
+
+
+    // ========================================
+    // Restore Adjustment State
+    // ========================================
+
+    cropperState.brightness =
+        imageData.brightness ?? 100;
+
+    cropperState.contrast =
+        imageData.contrast ?? 100;
+
+    cropperState.saturation =
+        imageData.saturation ?? 100;
+
+    cropperState.blur =
+        imageData.blur ?? 0;
+
+    cropperState.grayscale =
+        imageData.grayscale ?? 0;
+
+    cropperState.sepia =
+        imageData.sepia ?? 0;
+
+    cropperState.hueRotate =
+        imageData.hueRotate ?? 0;
+
+
     cleanupObjectURL();
 
+
+    // ========================================
+    // Use Full Original Image When Available
+    // ========================================
 
     cropImage.crossOrigin =
         null;
 
     cropImage.src =
+        imageData.originalSource ||
         imageData.source;
 
 
@@ -216,6 +293,15 @@ export function openCropForExistingImage(
         cropImage,
         imageRatioInput
     );
+
+
+    // ========================================
+    // Restore Adjustment Controls
+    // ========================================
+
+    restoreAdjustments();
+
+    applyAdjustments();
 }
 
 
