@@ -320,7 +320,7 @@ cropModal.style.visibility =
                 null;
 
             console.error(
-                "Unable to load MAL image:",
+                "Unable to load searched image:",
                 imageURL
             );
 

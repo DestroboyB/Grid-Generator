@@ -39,6 +39,38 @@ body {
     margin: 0 auto;
 }
 
+/* ========================================
+   App Header
+======================================== */
+
+.app-header {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 4px 2px 16px;
+
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #d1d5db;
+}
+
+.app-title {
+    margin: 0;
+
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 650;
+
+    color: #111827;
+    letter-spacing: -0.02em;
+}
+
+.app-header .library-button {
+    flex-shrink: 0;
+}
 
 /* ========================================
    Buttons

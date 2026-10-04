@@ -17,39 +17,83 @@ import {
     openMalSearch
 } from "./malSearch.js";
 
+import {
+    openImageSearch
+} from "./imageSearch.js";
+
 
 // ========================================
 // Elements
 // ========================================
 
 const board =
-    document.getElementById("board");
+    document.getElementById(
+        "board"
+    );
 
 const imageMenu =
-    document.getElementById("imageMenu");
+    document.getElementById(
+        "imageMenu"
+    );
 
 const addImageMenu =
-    document.getElementById("addImageMenu");
+    document.getElementById(
+        "addImageMenu"
+    );
+
+const imageSourceMenu =
+    document.getElementById(
+        "imageSourceMenu"
+    );
+
+const replaceImageSourceMenu =
+    document.getElementById(
+        "replaceImageSourceMenu"
+    );
+
+
+// ========================================
+// Empty Image Menu
+// ========================================
+
+const openImageSourceMenuButton =
+    document.getElementById(
+        "openImageSourceMenuButton"
+    );
+
+const backToAddImageMenuButton =
+    document.getElementById(
+        "backToAddImageMenuButton"
+    );
 
 const uploadImageButton =
-    document.getElementById("uploadImageButton");
+    document.getElementById(
+        "uploadImageButton"
+    );
 
 const searchMalButton =
-    document.getElementById("searchMalButton");
+    document.getElementById(
+        "searchMalButton"
+    );
+
+const imageSearchButton =
+    document.getElementById(
+        "imageSearchButton"
+    );
 
 const closeAddImageMenuButton =
     document.getElementById(
         "closeAddImageMenuButton"
     );
 
+
+// ========================================
+// Existing Image Menu
+// ========================================
+
 const updateImageButton =
     document.getElementById(
         "updateImageButton"
-    );
-
-const replaceWithMalButton =
-    document.getElementById(
-        "replaceWithMalButton"
     );
 
 const replaceImageButton =
@@ -69,6 +113,52 @@ const closeMenuButton =
 
 
 // ========================================
+// Replace Image Menu
+// ========================================
+
+const backToImageMenuButton =
+    document.getElementById(
+        "backToImageMenuButton"
+    );
+
+const replaceUploadImageButton =
+    document.getElementById(
+        "replaceUploadImageButton"
+    );
+
+const replaceWithMalButton =
+    document.getElementById(
+        "replaceWithMalButton"
+    );
+
+const replaceImageSearchButton =
+    document.getElementById(
+        "replaceImageSearchButton"
+    );
+
+
+// ========================================
+// Close All Menus
+// ========================================
+
+function closeAllMenus() {
+
+    imageMenu.style.display =
+        "none";
+
+    addImageMenu.style.display =
+        "none";
+
+    imageSourceMenu.style.display =
+        "none";
+
+    replaceImageSourceMenu.style.display =
+        "none";
+
+}
+
+
+// ========================================
 // Open File Selector
 // ========================================
 
@@ -79,16 +169,20 @@ export function openFileSelector(
     appState.selectedDiv =
         element;
 
+
     const fileInput =
         document.createElement(
             "input"
         );
 
+
     fileInput.type =
         "file";
 
+
     fileInput.accept =
         "image/jpeg, image/png, image/webp";
+
 
     fileInput.addEventListener(
         "change",
@@ -97,65 +191,84 @@ export function openFileSelector(
             const file =
                 fileInput.files[0];
 
+
             if (!file) {
+
                 return;
+
             }
+
 
             openCropForFile(
                 file,
                 element
             );
+
         }
     );
 
+
     fileInput.click();
+
 }
 
 
 // ========================================
-// Show Image Menu
+// Show Existing Image Menu
 // ========================================
 
 export function showImageMenu(
     element
 ) {
 
+    closeAllMenus();
+
+
     appState.menuDiv =
         element;
 
+
     imageMenu.style.display =
         "flex";
+
 
     positionMenu(
         imageMenu,
         element
     );
+
 }
 
 
 // ========================================
-// Show Add Image Menu
+// Show Empty Image Menu
 // ========================================
 
 export function showAddImageMenu(
     element
 ) {
 
+    closeAllMenus();
+
+
     appState.menuDiv =
         element;
 
+
     addImageMenu.style.display =
         "flex";
+
 
     positionMenu(
         addImageMenu,
         element
     );
+
 }
 
 
 // ========================================
-// Position Menu Near Box
+// Position Menu
 // ========================================
 
 function positionMenu(
@@ -166,33 +279,29 @@ function positionMenu(
     menu.style.transform =
         "none";
 
+
     const boxRect =
         element.getBoundingClientRect();
+
 
     const menuRect =
         menu.getBoundingClientRect();
 
+
     const margin =
         10;
 
-
-    // ========================================
-    // Default Position
-    // ========================================
 
     let left =
         boxRect.left +
         (boxRect.width / 2) -
         (menuRect.width / 2);
 
+
     let top =
         boxRect.bottom +
         margin;
 
-
-    // ========================================
-    // Keep Inside Left Edge
-    // ========================================
 
     if (
         left < margin
@@ -200,12 +309,9 @@ function positionMenu(
 
         left =
             margin;
+
     }
 
-
-    // ========================================
-    // Keep Inside Right Edge
-    // ========================================
 
     if (
         left + menuRect.width >
@@ -216,13 +322,9 @@ function positionMenu(
             window.innerWidth -
             menuRect.width -
             margin;
+
     }
 
-
-    // ========================================
-    // If Not Enough Room Below,
-    // Put It Above The Box
-    // ========================================
 
     if (
         top + menuRect.height >
@@ -233,12 +335,9 @@ function positionMenu(
             boxRect.top -
             menuRect.height -
             margin;
+
     }
 
-
-    // ========================================
-    // Keep Inside Top Edge
-    // ========================================
 
     if (
         top < margin
@@ -246,19 +345,85 @@ function positionMenu(
 
         top =
             margin;
+
     }
 
-
-    // ========================================
-    // Apply Position
-    // ========================================
 
     menu.style.left =
         `${left}px`;
 
     menu.style.top =
         `${top}px`;
+
 }
+
+
+// ========================================
+// Open Image Source Menu
+// ========================================
+
+openImageSourceMenuButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !appState.menuDiv
+        ) {
+
+            return;
+
+        }
+
+
+        addImageMenu.style.display =
+            "none";
+
+
+        imageSourceMenu.style.display =
+            "flex";
+
+
+        positionMenu(
+            imageSourceMenu,
+            appState.menuDiv
+        );
+
+    }
+);
+
+
+// ========================================
+// Back To Add Image Menu
+// ========================================
+
+backToAddImageMenuButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !appState.menuDiv
+        ) {
+
+            return;
+
+        }
+
+
+        imageSourceMenu.style.display =
+            "none";
+
+
+        addImageMenu.style.display =
+            "flex";
+
+
+        positionMenu(
+            addImageMenu,
+            appState.menuDiv
+        );
+
+    }
+);
 
 
 // ========================================
@@ -269,22 +434,30 @@ uploadImageButton.addEventListener(
     "click",
     () => {
 
-        if (!appState.menuDiv) {
+        if (
+            !appState.menuDiv
+        ) {
+
             return;
+
         }
+
 
         const div =
             appState.menuDiv;
 
-        addImageMenu.style.display =
-            "none";
+
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
 
+
         openFileSelector(
             div
         );
+
     }
 );
 
@@ -297,22 +470,67 @@ searchMalButton.addEventListener(
     "click",
     () => {
 
-        if (!appState.menuDiv) {
+        if (
+            !appState.menuDiv
+        ) {
+
             return;
+
         }
+
 
         const div =
             appState.menuDiv;
 
-        addImageMenu.style.display =
-            "none";
+
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
 
+
         openMalSearch(
             div
         );
+
+    }
+);
+
+
+// ========================================
+// Image Search
+// ========================================
+
+imageSearchButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !appState.menuDiv
+        ) {
+
+            return;
+
+        }
+
+
+        const div =
+            appState.menuDiv;
+
+
+        imageSourceMenu.style.display =
+            "none";
+
+
+        appState.menuDiv =
+            null;
+
+
+        openImageSearch(
+            div
+        );
+
     }
 );
 
@@ -325,67 +543,86 @@ closeAddImageMenuButton.addEventListener(
     "click",
     () => {
 
-        addImageMenu.style.display =
-            "none";
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
+
     }
 );
 
 
 // ========================================
-// Update Existing Image
+// Edit Existing Image
 // ========================================
 
 updateImageButton.addEventListener(
     "click",
     () => {
 
-        if (!appState.menuDiv) {
+        if (
+            !appState.menuDiv
+        ) {
+
             return;
+
         }
+
 
         const div =
             appState.menuDiv;
+
 
         const boxIndex =
             Number(
                 div.dataset.index
             );
 
+
         if (
             !Number.isInteger(
                 boxIndex
             ) ||
             boxIndex < 0 ||
-            boxIndex >= board.children.length
+            boxIndex >=
+                board.children.length
         ) {
+
             return;
+
         }
+
 
         const imageData =
             appState.savedImages[
                 boxIndex
             ];
 
+
         if (
             !imageData ||
-            typeof imageData !== "object"
+            typeof imageData !==
+                "object"
         ) {
+
             return;
+
         }
 
-        imageMenu.style.display =
-            "none";
+
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
+
 
         openCropForExistingImage(
             imageData,
             div
         );
+
     }
 );
 
@@ -398,50 +635,171 @@ replaceImageButton.addEventListener(
     "click",
     () => {
 
-        if (!appState.menuDiv) {
+        if (
+            !appState.menuDiv
+        ) {
+
             return;
+
         }
 
-        const div =
-            appState.menuDiv;
 
         imageMenu.style.display =
             "none";
 
-        appState.menuDiv =
-            null;
 
-        openFileSelector(
-            div
+        replaceImageSourceMenu.style.display =
+            "flex";
+
+
+        positionMenu(
+            replaceImageSourceMenu,
+            appState.menuDiv
         );
+
     }
 );
 
 
 // ========================================
-// Replace Image With MyAnimeList
+// Back To Existing Image Menu
+// ========================================
+
+backToImageMenuButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !appState.menuDiv
+        ) {
+
+            return;
+
+        }
+
+
+        replaceImageSourceMenu.style.display =
+            "none";
+
+
+        imageMenu.style.display =
+            "flex";
+
+
+        positionMenu(
+            imageMenu,
+            appState.menuDiv
+        );
+
+    }
+);
+
+
+// ========================================
+// Replace With Uploaded Image
+// ========================================
+
+replaceUploadImageButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !appState.menuDiv
+        ) {
+
+            return;
+
+        }
+
+
+        const div =
+            appState.menuDiv;
+
+
+        closeAllMenus();
+
+
+        appState.menuDiv =
+            null;
+
+
+        openFileSelector(
+            div
+        );
+
+    }
+);
+
+
+// ========================================
+// Replace With MyAnimeList
 // ========================================
 
 replaceWithMalButton.addEventListener(
     "click",
     () => {
 
-        if (!appState.menuDiv) {
+        if (
+            !appState.menuDiv
+        ) {
+
             return;
+
         }
+
 
         const div =
             appState.menuDiv;
 
-        imageMenu.style.display =
-            "none";
+
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
 
+
         openMalSearch(
             div
         );
+
+    }
+);
+
+
+// ========================================
+// Replace With Image Search
+// ========================================
+
+replaceImageSearchButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !appState.menuDiv
+        ) {
+
+            return;
+
+        }
+
+
+        const div =
+            appState.menuDiv;
+
+
+        replaceImageSourceMenu.style.display =
+            "none";
+
+
+        appState.menuDiv =
+            null;
+
+
+        openImageSearch(
+            div
+        );
+
     }
 );
 
@@ -454,83 +812,97 @@ deleteImageButton.addEventListener(
     "click",
     () => {
 
-        if (!appState.menuDiv) {
+        if (
+            !appState.menuDiv
+        ) {
+
             return;
+
         }
+
 
         const div =
             appState.menuDiv;
+
 
         const boxIndex =
             Number(
                 div.dataset.index
             );
 
+
         if (
             !Number.isInteger(
                 boxIndex
             ) ||
             boxIndex < 0 ||
-            boxIndex >= board.children.length
+            boxIndex >=
+                board.children.length
         ) {
+
             return;
+
         }
 
-        // Remove saved image
+
         appState.savedImages[
             boxIndex
         ] = null;
 
-        // Clear visual box
+
         clearImageBox(
             div,
             boxIndex
         );
 
-        // Save completed state
+
         saveHistoryState();
 
-        imageMenu.style.display =
-            "none";
+
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
+
     }
 );
 
 
 // ========================================
-// Close Image Menu
+// Close Existing Image Menu
 // ========================================
 
 closeMenuButton.addEventListener(
     "click",
     () => {
 
-        imageMenu.style.display =
-            "none";
+        closeAllMenus();
+
 
         appState.menuDiv =
             null;
+
     }
 );
 
 
 // ========================================
-// Click On Board
+// Board Click
 // ========================================
 
 board.addEventListener(
     "click",
-    (event) => {
+    event => {
 
-        // Ignore buttons inside menus
         if (
             event.target.closest(
                 "button"
             )
         ) {
+
             return;
+
         }
 
 
@@ -540,42 +912,26 @@ board.addEventListener(
             );
 
 
-        // ========================================
-        // Clicked Outside An Image Box
-        // ========================================
-
         if (!div) {
 
-            imageMenu.style.display =
-                "none";
+            closeAllMenus();
 
-            addImageMenu.style.display =
-                "none";
 
             appState.menuDiv =
                 null;
 
+
             return;
+
         }
 
 
-        // ========================================
-        // Close Any Existing Menu
-        // ========================================
+        closeAllMenus();
 
-        imageMenu.style.display =
-            "none";
-
-        addImageMenu.style.display =
-            "none";
 
         appState.menuDiv =
             null;
 
-
-        // ========================================
-        // Existing Image
-        // ========================================
 
         if (
             div.querySelector(
@@ -588,16 +944,14 @@ board.addEventListener(
             );
 
             return;
+
         }
 
-
-        // ========================================
-        // Empty Box
-        // ========================================
 
         showAddImageMenu(
             div
         );
+
     }
 );
 
@@ -608,39 +962,50 @@ board.addEventListener(
 
 document.addEventListener(
     "click",
-    (event) => {
+    event => {
 
-        // Click was inside one of the menus
         if (
             imageMenu.contains(
                 event.target
             ) ||
             addImageMenu.contains(
                 event.target
+            ) ||
+            imageSourceMenu.contains(
+                event.target
+            ) ||
+            replaceImageSourceMenu.contains(
+                event.target
             )
         ) {
+
             return;
+
         }
 
 
-        // Click was handled by the board
+        /*
+         * Don't close menus when clicking
+         * somewhere on the board. The board
+         * click handler manages those menus.
+         */
+
         if (
             board.contains(
                 event.target
             )
         ) {
+
             return;
+
         }
 
 
-        // Clicked somewhere else
-        imageMenu.style.display =
-            "none";
+        closeAllMenus();
 
-        addImageMenu.style.display =
-            "none";
 
         appState.menuDiv =
             null;
+
     }
 );

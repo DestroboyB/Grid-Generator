@@ -1,252 +1,234 @@
-/* ========================================
-   IMAGE EDITOR
-======================================== */
+ /* Image Editor */
 
-.editor-modal {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.65);
-    z-index: 1000;
-    padding: 20px;
-}
-
-.editor-window {
+.image-editor {
     width: min(1000px, 95vw);
-    max-height: 95vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     background: #ffffff;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    box-sizing: border-box;
 }
+
+/* Header */
 
 .editor-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 14px 20px;
     border-bottom: 1px solid #e5e7eb;
+    background: #ffffff;
+    flex-shrink: 0;
 }
 
 .editor-header h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
+    color: #1f2937;
 }
 
 .editor-close {
+    width: 32px;
+    height: 32px;
+    padding: 0;
     border: none;
     background: transparent;
-    font-size: 28px;
-    line-height: 1;
     color: #6b7280;
+    font-size: 24px;
+    line-height: 1;
     cursor: pointer;
-    padding: 2px 6px;
+    border-radius: 6px;
 }
 
 .editor-close:hover {
-    color: #111827;
+    background: #f3f4f6;
+    color: #1f2937;
 }
 
-
-/* ========================================
-   Editor Content
-======================================== */
-
-.editor-content {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    flex: 1;
-}
-
-
-/* ========================================
-   Preview
-======================================== */
+/* Preview */
 
 .editor-preview {
-    position: relative;
-    width: 100%;
     height: 55vh;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1f2937;
+    min-height: 350px;
+    flex-shrink: 1;
+    background: #111827;
     overflow: hidden;
-    flex-shrink: 0;
-}
-
-.editor-preview img {
-    max-width: 100%;
-    max-height: 100%;
+    position: relative;
 }
 
 .editor-preview .cropper-container {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none;
-    max-height: none;
+    width: 100%;
+    height: 100%;
 }
 
-
-/* ========================================
-   Editor Tabs
-======================================== */
+/* Tool tabs */
 
 .editor-tools {
     display: flex;
-    flex-shrink: 0;
+    align-items: stretch;
     border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
+    background: #ffffff;
+    flex-shrink: 0;
+    padding-top: 6px;
 }
 
 .editor-tool {
     flex: 1;
-    padding: 12px 16px;
+    min-height: 44px;
+    padding: 10px 16px;
     border: none;
-    background: transparent;
+    border-right: 1px solid #e5e7eb;
+    background: #ffffff;
     color: #6b7280;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    border-bottom: 3px solid transparent;
 }
 
 .editor-tool:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #f9fafb;
+    color: #374151;
 }
 
 .editor-tool.active {
+    background: #eff6ff;
     color: #2563eb;
-    border-bottom-color: #2563eb;
-    background: #ffffff;
+    box-shadow: inset 0 -2px 0 #2563eb;
 }
 
+/* Restore Original */
 
-/* ========================================
-   Editor Panels
-======================================== */
-
-.editor-panel-container {
+.restore-original-tab {
+    flex: 0 0 130px;
+    min-height: 44px;
+    margin-left: 6px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 7px 7px 0 0;
     background: #ffffff;
-    flex-shrink: 0;
-    max-height: 180px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
 }
+
+.restore-original-tab:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Editor panels */
 
 .editor-panel {
     display: none;
+    height: 90px;
+    min-height: 90px;
+    max-height: 90px;
+    padding: 12px 20px;
+    box-sizing: border-box;
     background: #ffffff;
-    padding: 16px 20px;
+    overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .editor-panel.active {
     display: block;
-    background: #ffffff;
 }
 
-.editor-panel-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: #1f2937;
-}
+/* Transform buttons */
 
-.editor-panel-description {
-    color: #6b7280;
-    font-size: 13px;
-    margin-bottom: 15px;
-}
-
-
-/* ========================================
-   Editor Buttons
-======================================== */
-
-.editor-controls {
+.editor-button-row {
+    height: 100%;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    align-items: center;
+    justify-content: space-around;
+    gap: clamp(8px, 1vw, 16px);
 }
 
-.editor-action {
-    padding: 8px 12px;
+.editor-button-row button {
+    width: clamp(110px, 12vw, 180px);
+    padding: clamp(7px, 0.7vw, 12px)
+             clamp(8px, 1vw, 16px);
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 7px;
     background: #ffffff;
     color: #374151;
+    font-size: clamp(12px, 1.1vw, 18px);
+    font-weight: 500;
     cursor: pointer;
 }
 
-.editor-action:hover {
+.editor-button-row button:hover {
     background: #f3f4f6;
+    border-color: #9ca3af;
 }
 
-
-/* ========================================
-   Adjustment Controls
-======================================== */
+/* Adjustments */
 
 .adjust-controls {
+    height: 100%;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 24px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
+    align-content: center;
 }
 
-.adjust-controls label {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.editor-control {
+    display: grid;
+    grid-template-columns: 90px 1fr 48px;
+    align-items: center;
+    gap: 10px;
+}
+
+.editor-control label {
     font-size: 13px;
-    color: #374151;
+    font-weight: 600;
+    color: #4b5563;
 }
 
-.adjust-controls input[type="range"] {
+.editor-control input[type="range"] {
     width: 100%;
 }
 
-
-/* ========================================
-   Filter Controls
-======================================== */
-
-.filter-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+.editor-control span {
+    font-size: 12px;
+    color: #6b7280;
+    text-align: right;
 }
 
-.filter-button {
-    padding: 8px 12px;
+/* Filters */
+
+.filter-buttons {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: clamp(6px, 1vw, 14px);
+}
+
+.filter-buttons button {
+    width: clamp(75px, 9vw, 130px);
+    padding: clamp(6px, 0.6vw, 10px)
+             clamp(6px, 0.8vw, 12px);
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 7px;
     background: #ffffff;
     color: #374151;
+    font-size: clamp(11px, 0.9vw, 14px);
+    font-weight: 500;
     cursor: pointer;
 }
 
-.filter-button:hover {
+.filter-buttons button:hover {
     background: #f3f4f6;
+    border-color: #9ca3af;
 }
 
-.filter-button.active {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #2563eb;
-}
-
-
-/* ========================================
-   Editor Footer
-======================================== */
+/* Footer */
 
 .editor-footer {
     display: flex;
@@ -254,60 +236,44 @@
     gap: 10px;
     padding: 14px 20px;
     border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
+    background: #ffffff;
     flex-shrink: 0;
 }
 
-.editor-cancel,
-.editor-apply {
-    padding: 9px 18px;
-    border-radius: 6px;
+.editor-footer button {
+    min-width: 80px;
+    padding: 9px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #374151;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
 }
 
-.editor-cancel {
-    border: 1px solid #d1d5db;
-    background: #ffffff;
-    color: #374151;
-}
-
-.editor-cancel:hover {
+.editor-footer button:hover {
     background: #f3f4f6;
 }
 
-.editor-apply {
-    border: 1px solid #2563eb;
+.editor-footer #cropButton {
+    border-color: #2563eb;
     background: #2563eb;
     color: #ffffff;
 }
 
-.editor-apply:hover {
+.editor-footer #cropButton:hover {
+    border-color: #1d4ed8;
     background: #1d4ed8;
 }
 
-
-/* ========================================
-   Cropper Modal Compatibility
-======================================== */
-
-/*
-   The current editor uses the cropper.css
-   layout rather than the older editor-preview
-   layout.
-
-   These rules are intentionally scoped to
-   the old editor-preview structure so they
-   do not interfere with Cropper.js.
-*/
-
-
-/* ========================================
-   Mobile
-======================================== */
+/* Smaller screens */
 
 @media (max-width: 700px) {
+    .image-editor {
+        width: 95vw;
+        max-height: 95vh;
+    }
 
     .editor-preview {
         min-height: 300px;
@@ -325,4 +291,85 @@
         grid-template-columns: 1fr;
     }
 
+    .editor-control {
+        grid-template-columns: 90px 1fr 48px;
+    }
+
+    .restore-original-tab {
+        flex: 0 0 120px;
+    }
+
+    .filter-buttons {
+        gap: 5px;
+    }
+
+    .filter-buttons button {
+        width: clamp(70px, 16vw, 110px);
+        padding: 6px 5px;
+        font-size: clamp(10px, 2vw, 13px);
+    }
+}
+
+/* Phone */
+
+@media (max-width: 500px) {
+    .image-editor {
+        width: 96vw;
+        max-height: 95vh;
+        border-radius: 10px;
+    }
+
+    .editor-header {
+        padding: 12px 16px;
+    }
+
+    .editor-preview {
+        min-height: 260px;
+    }
+
+    .editor-panel {
+        height: 90px;
+        min-height: 90px;
+        max-height: 90px;
+        padding: 12px 16px;
+    }
+
+    .editor-footer {
+        padding: 12px 16px;
+    }
+
+    .editor-footer button {
+        flex: 1;
+    }
+
+    .editor-control {
+        grid-template-columns: 80px 1fr 45px;
+        gap: 8px;
+    }
+
+    .restore-original-tab {
+        flex: 0 0 120px;
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+
+    .editor-button-row {
+        gap: 4px;
+    }
+
+    .editor-button-row button {
+        width: clamp(75px, 21vw, 120px);
+        padding: 7px 6px;
+        font-size: clamp(10px, 2.5vw, 14px);
+    }
+
+    .filter-buttons {
+        gap: 3px;
+    }
+
+    .filter-buttons button {
+        width: clamp(58px, 17vw, 90px);
+        padding: 6px 3px;
+        font-size: clamp(9px, 2.4vw, 12px);
+    }
 }

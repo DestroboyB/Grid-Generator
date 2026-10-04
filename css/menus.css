@@ -223,3 +223,97 @@
 .add-image-menu button:hover {
     background: #f3f4f6;
 }
+
+/* ========================================
+   Image Source Menu
+======================================== */
+
+.image-source-menu {
+    display: none;
+
+    position: fixed;
+
+    background: #ffffff;
+
+    padding: 8px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    box-shadow:
+        0 8px 24px
+        rgba(0, 0, 0, 0.16);
+
+    z-index: 2000;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 190px;
+}
+
+
+.image-source-menu button {
+    width: 100%;
+
+    border: none;
+
+    border-radius: 5px;
+
+    text-align: left;
+
+    background: #ffffff;
+
+    padding: 9px 12px;
+
+    cursor: pointer;
+
+    color: #1f2937;
+
+    font-size: 14px;
+}
+
+
+.image-source-menu button:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+
+.image-source-menu button:disabled {
+    opacity: 0.45;
+
+    cursor: not-allowed;
+}
+
+
+.image-source-menu .menu-back-button {
+    font-weight: 600;
+
+    color: #374151;
+}
+
+
+.image-source-menu .menu-back-button:hover {
+    background: #f3f4f6;
+}
+
+
+.image-source-menu .menu-divider {
+    height: 1px;
+
+    background: #e5e7eb;
+
+    margin: 3px 0;
+}
+
+
+.menu-arrow {
+    float: right;
+
+    font-size: 18px;
+
+    line-height: 14px;
+
+    color: #9ca3af;
+}
