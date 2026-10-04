@@ -2,7 +2,7 @@ import { appState } from "./state.js";
 
 import {
     saveBoard
-} from "./storage.js";
+} from "./storage/grids.js";
 
 import {
     generateBoard,

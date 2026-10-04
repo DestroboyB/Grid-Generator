@@ -1,5 +1,5 @@
 /* ========================================
-   Download
+   Download Container
 ======================================== */
 
 .download-container {
@@ -8,10 +8,50 @@
     width: fit-content;
 
     margin: 24px auto 0;
+
+    display: flex;
+
+    justify-content: center;
 }
+
+
+/* ========================================
+   Download Button
+======================================== */
 
 .download-button {
     min-width: 130px;
+
+    padding: 10px 20px;
+
+    border: 1px solid #2563eb;
+
+    border-radius: 7px;
+
+    background: #2563eb;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.download-button:hover {
+    background: #1d4ed8;
+
+    border-color: #1d4ed8;
+}
+
+.download-button:active {
+    transform: scale(0.97);
 }
 
 
@@ -25,6 +65,7 @@
     position: absolute;
 
     bottom: calc(100% + 8px);
+
     left: 50%;
 
     transform: translateX(-50%);
@@ -32,6 +73,7 @@
     background: #ffffff;
 
     border: 1px solid #d1d5db;
+
     border-radius: 8px;
 
     padding: 5px;
@@ -48,6 +90,7 @@
 
 .download-menu button {
     border: none;
+
     border-radius: 5px;
 
     background: #ffffff;
@@ -59,6 +102,10 @@
     text-align: left;
 
     white-space: nowrap;
+
+    color: #1f2937;
+
+    font-size: 14px;
 }
 
 .download-menu button:hover {
@@ -80,6 +127,7 @@
     padding: 8px;
 
     border: 1px solid #d1d5db;
+
     border-radius: 8px;
 
     box-shadow:
@@ -98,11 +146,20 @@
     width: 100%;
 
     border: none;
+
     border-radius: 5px;
 
     text-align: left;
 
     background: #ffffff;
+
+    padding: 9px 12px;
+
+    cursor: pointer;
+
+    color: #1f2937;
+
+    font-size: 14px;
 }
 
 .image-menu button:hover {
@@ -112,6 +169,7 @@
 .image-menu .danger-button:hover {
     background: #fef2f2;
 }
+
 
 /* ========================================
    Add Image Menu
@@ -127,6 +185,7 @@
     padding: 8px;
 
     border: 1px solid #d1d5db;
+
     border-radius: 8px;
 
     box-shadow:
@@ -145,6 +204,7 @@
     width: 100%;
 
     border: none;
+
     border-radius: 5px;
 
     text-align: left;
@@ -154,6 +214,10 @@
     padding: 9px 12px;
 
     cursor: pointer;
+
+    color: #1f2937;
+
+    font-size: 14px;
 }
 
 .add-image-menu button:hover {

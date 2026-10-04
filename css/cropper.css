@@ -2,7 +2,7 @@
    Cropper Modal
 ======================================== */
 
-.cropper-modal {
+.image-editor-modal {
     display: none;
 
     position: fixed;
@@ -492,7 +492,7 @@
 
 @media (max-width: 700px) {
 
-    .cropper-modal {
+    .image-editor-modal {
         padding: 10px;
     }
 
@@ -549,3 +549,4 @@
     }
 
 }
+

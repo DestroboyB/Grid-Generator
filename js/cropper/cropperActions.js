@@ -11,7 +11,7 @@ import {
 
 import {
     saveBoard
-} from "../storage.js";
+} from "../storage/grids.js";
 
 import {
     renderImage

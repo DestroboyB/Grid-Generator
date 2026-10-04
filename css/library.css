@@ -1,25 +1,36 @@
 /* ========================================
-   Grid Library
+   Library Button
 ======================================== */
 
 .library-button {
+
     position: fixed;
+
     top: 20px;
     left: 20px;
 
     z-index: 900;
 
-    padding: 10px 16px;
+    padding:
+        10px 16px;
 
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    border:
+        1px solid #ccc;
 
-    background: white;
+    border-radius:
+        8px;
 
-    font-size: 14px;
-    font-weight: 600;
+    background:
+        white;
 
-    cursor: pointer;
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
 
     transition:
         background 0.15s ease,
@@ -27,19 +38,24 @@
 }
 
 .library-button:hover {
-    background: #f3f3f3;
+
+    background:
+        #f3f3f3;
 }
 
 .library-button:active {
-    transform: scale(0.97);
+
+    transform:
+        scale(0.97);
 }
 
 
 /* ========================================
-   Panel
+   Library Panel
 ======================================== */
 
 .library-panel {
+
     position: fixed;
 
     top: 0;
@@ -47,6 +63,7 @@
 
     width: 320px;
     max-width: 85vw;
+
     height: 100vh;
 
     z-index: 1100;
@@ -54,258 +71,537 @@
     display: flex;
     flex-direction: column;
 
-    background: #ffffff;
+    background:
+        #ffffff;
 
     box-shadow:
-        4px 0 20px rgba(0, 0, 0, 0.15);
+        4px 0 20px
+        rgba(0, 0, 0, 0.15);
 
-    transform: translateX(-100%);
+    transform:
+        translateX(-100%);
 
     transition:
         transform 0.25s ease;
 }
 
 .library-panel.open {
-    transform: translateX(0);
+
+    transform:
+        translateX(0);
 }
 
 
 /* ========================================
-   Overlay
+   Library Overlay
 ======================================== */
 
 .library-overlay {
+
     position: fixed;
 
     inset: 0;
 
     z-index: 1050;
 
-    background: rgba(0, 0, 0, 0.35);
+    background:
+        rgba(0, 0, 0, 0.35);
 
     opacity: 0;
 
-    pointer-events: none;
+    pointer-events:
+        none;
 
     transition:
         opacity 0.25s ease;
 }
 
 .library-overlay.visible {
+
     opacity: 1;
-    pointer-events: auto;
+
+    pointer-events:
+        auto;
 }
 
 
 /* ========================================
-   Header
+   Library Header
 ======================================== */
 
 .library-header {
+
     display: flex;
 
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items:
+        flex-start;
 
-    padding: 20px;
+    justify-content:
+        space-between;
 
-    border-bottom: 1px solid #e5e5e5;
+    padding:
+        20px;
+
+    border-bottom:
+        1px solid #e5e5e5;
 }
 
 .library-header h2 {
-    margin: 0;
 
-    font-size: 20px;
+    margin:
+        0;
+
+    font-size:
+        20px;
 }
 
 .current-grid-name {
-    margin-top: 4px;
 
-    color: #777;
+    margin-top:
+        4px;
 
-    font-size: 13px;
+    color:
+        #777;
+
+    font-size:
+        13px;
 }
 
-
 .library-close-button {
-    width: 32px;
-    height: 32px;
 
-    padding: 0;
+    width:
+        32px;
 
-    border: none;
-    border-radius: 6px;
+    height:
+        32px;
 
-    background: transparent;
+    padding:
+        0;
 
-    font-size: 24px;
+    border:
+        none;
 
-    cursor: pointer;
+    border-radius:
+        6px;
+
+    background:
+        transparent;
+
+    font-size:
+        24px;
+
+    cursor:
+        pointer;
 }
 
 .library-close-button:hover {
-    background: #f0f0f0;
+
+    background:
+        #f0f0f0;
 }
 
 
 /* ========================================
-   Actions
+   Library Actions
 ======================================== */
 
 .library-actions {
+
     display: flex;
 
-    gap: 8px;
+    gap:
+        8px;
 
-    padding: 14px 16px;
+    padding:
+        14px 16px;
 
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom:
+        1px solid #e5e5e5;
 }
 
 .library-actions button {
-    flex: 1;
 
-    min-width: 0;
+    flex:
+        1;
 
-    padding: 9px 10px;
+    min-width:
+        0;
 
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding:
+        9px 10px;
 
-    background: white;
+    border:
+        1px solid #ccc;
 
-    cursor: pointer;
+    border-radius:
+        6px;
 
-    font-size: 13px;
+    background:
+        white;
+
+    cursor:
+        pointer;
+
+    font-size:
+        13px;
 }
 
-.library-actions .primary-button {
-    border-color: transparent;
+.library-actions button:hover {
+
+    background:
+        #f3f3f3;
+}
+
+.library-actions
+.primary-button {
+
+    border-color:
+        transparent;
 }
 
 
 /* ========================================
-   Content
+   Library Content
 ======================================== */
 
 .library-content {
-    flex: 1;
 
-    overflow-y: auto;
+    flex:
+        1;
 
-    padding: 12px;
+    overflow-y:
+        auto;
+
+    padding:
+        12px;
+}
+
+.library-empty {
+
+    padding:
+        30px 15px;
+
+    text-align:
+        center;
+
+    color:
+        #777;
+
+    font-size:
+        14px;
 }
 
 
 /* ========================================
-   Library Items
+   Categories
 ======================================== */
 
-.library-empty {
-    padding: 30px 15px;
-
-    text-align: center;
-
-    color: #777;
-
-    font-size: 14px;
-}
-
-
 .library-category {
-    margin-bottom: 4px;
-}
 
+    margin-bottom:
+        4px;
+}
 
 .library-category-header {
-    display: flex;
 
-    align-items: center;
+    display:
+        flex;
 
-    gap: 6px;
+    align-items:
+        center;
 
-    padding: 7px 8px;
+    gap:
+        6px;
 
-    border-radius: 6px;
+    padding:
+        7px 8px;
 
-    cursor: pointer;
+    border-radius:
+        6px;
 
-    user-select: none;
+    cursor:
+        pointer;
+
+    user-select:
+        none;
 }
 
 .library-category-header:hover {
-    background: #f3f3f3;
-}
 
+    background:
+        #f3f3f3;
+}
 
 .library-category-arrow {
-    width: 16px;
 
-    font-size: 11px;
+    width:
+        16px;
 
-    color: #777;
+    font-size:
+        11px;
 
-    text-align: center;
+    color:
+        #777;
+
+    text-align:
+        center;
 }
-
 
 .library-category-name {
-    flex: 1;
 
-    font-size: 14px;
-    font-weight: 600;
+    flex:
+        1;
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
 }
-
 
 .library-category-children {
-    margin-left: 18px;
+
+    margin-left:
+        18px;
 }
 
 
+/* ========================================
+   Grids
+======================================== */
+
 .library-grid {
-    display: flex;
 
-    align-items: center;
+    display:
+        flex;
 
-    gap: 7px;
+    align-items:
+        center;
 
-    padding: 7px 8px;
+    gap:
+        7px;
 
-    border-radius: 6px;
+    padding:
+        7px 8px;
 
-    cursor: pointer;
+    border-radius:
+        6px;
 
-    font-size: 14px;
+    cursor:
+        pointer;
+
+    font-size:
+        14px;
 }
 
 .library-grid:hover {
-    background: #f3f3f3;
+
+    background:
+        #f3f3f3;
 }
 
 .library-grid.active {
-    background: #e8f0fe;
 
-    font-weight: 600;
+    background:
+        #e8f0fe;
+
+    font-weight:
+        600;
 }
-
 
 .library-grid-icon {
-    width: 16px;
 
-    text-align: center;
+    width:
+        16px;
 
-    color: #777;
+    text-align:
+        center;
+
+    color:
+        #777;
+}
+
+.library-grid-name {
+
+    flex:
+        1;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
 }
 
 
-.library-grid-name {
-    flex: 1;
+/* ========================================
+   New Grid Modal
+======================================== */
 
-    overflow: hidden;
+.library-modal {
 
-    text-overflow: ellipsis;
+    position: fixed;
 
-    white-space: nowrap;
+    inset: 0;
+
+    z-index: 1300;
+
+    display: flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    background:
+        rgba(0, 0, 0, 0.4);
+
+    opacity:
+        0;
+
+    pointer-events:
+        none;
+
+    transition:
+        opacity 0.2s ease;
+}
+
+.library-modal.open {
+
+    opacity:
+        1;
+
+    pointer-events:
+        auto;
+}
+
+.library-modal-content {
+
+    width:
+        360px;
+
+    max-width:
+        calc(100vw - 32px);
+
+    padding:
+        22px;
+
+    border-radius:
+        10px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 10px 35px
+        rgba(0, 0, 0, 0.2);
+}
+
+.library-modal-content h2 {
+
+    margin:
+        0 0 18px;
+
+    font-size:
+        20px;
+}
+
+.library-modal-content label {
+
+    display:
+        block;
+
+    margin-bottom:
+        6px;
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+}
+
+.library-modal-content input {
+
+    box-sizing:
+        border-box;
+
+    width:
+        100%;
+
+    padding:
+        10px 12px;
+
+    border:
+        1px solid #ccc;
+
+    border-radius:
+        6px;
+
+    font-size:
+        14px;
+}
+
+.library-modal-content input:focus {
+
+    outline:
+        none;
+
+    border-color:
+        #777;
+}
+
+.library-modal-actions {
+
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        8px;
+
+    margin-top:
+        18px;
+}
+
+.library-modal-actions button {
+
+    padding:
+        9px 14px;
+
+    border:
+        1px solid #ccc;
+
+    border-radius:
+        6px;
+
+    background:
+        #ffffff;
+
+    cursor:
+        pointer;
+
+    font-size:
+        14px;
+}
+
+.library-modal-actions button:hover {
+
+    background:
+        #f3f3f3;
+}
+
+.library-modal-actions
+.primary-button {
+
+    border-color:
+        transparent;
 }
 
 
@@ -316,16 +612,32 @@
 @media (max-width: 600px) {
 
     .library-button {
-        top: 10px;
-        left: 10px;
 
-        padding: 8px 12px;
+        top:
+            10px;
 
-        font-size: 13px;
+        left:
+            10px;
+
+        padding:
+            8px 12px;
+
+        font-size:
+            13px;
     }
 
     .library-panel {
-        width: 300px;
+
+        width:
+            300px;
     }
 
+    .library-modal-content {
+
+        width:
+            320px;
+
+        max-width:
+            calc(100vw - 24px);
+    }
 }

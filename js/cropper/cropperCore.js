@@ -14,13 +14,10 @@ import {
 } from "./cropperAdjust.js";
 
 
-// ========================================
-// Create Cropper
-// ========================================
-
 export function createCropper(
     cropImage,
-    imageRatioInput
+    imageRatioInput,
+    onReady = null
 ) {
 
     // ========================================
@@ -33,12 +30,11 @@ export function createCropper(
 
         appState.cropper =
             null;
-
     }
 
 
     // ========================================
-    // Get Crop Ratio
+    // Determine Crop Ratio
     // ========================================
 
     const cropRatio =
@@ -48,7 +44,7 @@ export function createCropper(
 
 
     // ========================================
-    // Create CropperJS
+    // Create Cropper
     // ========================================
 
     appState.cropper =
@@ -76,7 +72,7 @@ export function createCropper(
                 ready() {
 
                     // ========================================
-                    // Restore Existing Image Data
+                    // Restore Saved Editing State
                     // ========================================
 
                     if (
@@ -88,7 +84,7 @@ export function createCropper(
 
 
                         // ========================================
-                        // Restore Crop
+                        // Restore Crop Data
                         // ========================================
 
                         if (
@@ -99,21 +95,21 @@ export function createCropper(
                                 imageData.crop;
 
 
-                            this.cropper.setData({
+                            this.cropper.setData(
+                                {
+                                    x:
+                                        crop.x,
 
-                                x:
-                                    crop.x,
+                                    y:
+                                        crop.y,
 
-                                y:
-                                    crop.y,
+                                    width:
+                                        crop.width,
 
-                                width:
-                                    crop.width,
-
-                                height:
-                                    crop.height
-
-                            });
+                                    height:
+                                        crop.height
+                                }
+                            );
 
                         }
 
@@ -126,21 +122,21 @@ export function createCropper(
                             imageData.cropBox
                         ) {
 
-                            this.cropper.setCropBoxData({
+                            this.cropper.setCropBoxData(
+                                {
+                                    left:
+                                        imageData.cropBox.left,
 
-                                left:
-                                    imageData.cropBox.left,
+                                    top:
+                                        imageData.cropBox.top,
 
-                                top:
-                                    imageData.cropBox.top,
+                                    width:
+                                        imageData.cropBox.width,
 
-                                width:
-                                    imageData.cropBox.width,
-
-                                height:
-                                    imageData.cropBox.height
-
-                            });
+                                    height:
+                                        imageData.cropBox.height
+                                }
+                            );
 
                         }
 
@@ -211,10 +207,23 @@ export function createCropper(
 
 
                     // ========================================
-                    // Apply Saved Adjustments
+                    // Apply Adjustments
                     // ========================================
 
                     applyAdjustments();
+
+
+                    // ========================================
+                    // Tell Caller Cropper Is Ready
+                    // ========================================
+
+                    if (
+                        onReady
+                    ) {
+
+                        onReady();
+
+                    }
 
                 }
 
