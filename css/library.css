@@ -1,0 +1,331 @@
+/* ========================================
+   Grid Library
+======================================== */
+
+.library-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+
+    z-index: 900;
+
+    padding: 10px 16px;
+
+    border: 1px solid #ccc;
+    border-radius: 8px;
+
+    background: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+.library-button:hover {
+    background: #f3f3f3;
+}
+
+.library-button:active {
+    transform: scale(0.97);
+}
+
+
+/* ========================================
+   Panel
+======================================== */
+
+.library-panel {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 320px;
+    max-width: 85vw;
+    height: 100vh;
+
+    z-index: 1100;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+
+    box-shadow:
+        4px 0 20px rgba(0, 0, 0, 0.15);
+
+    transform: translateX(-100%);
+
+    transition:
+        transform 0.25s ease;
+}
+
+.library-panel.open {
+    transform: translateX(0);
+}
+
+
+/* ========================================
+   Overlay
+======================================== */
+
+.library-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1050;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.25s ease;
+}
+
+.library-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+/* ========================================
+   Header
+======================================== */
+
+.library-header {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    padding: 20px;
+
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.library-header h2 {
+    margin: 0;
+
+    font-size: 20px;
+}
+
+.current-grid-name {
+    margin-top: 4px;
+
+    color: #777;
+
+    font-size: 13px;
+}
+
+
+.library-close-button {
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 6px;
+
+    background: transparent;
+
+    font-size: 24px;
+
+    cursor: pointer;
+}
+
+.library-close-button:hover {
+    background: #f0f0f0;
+}
+
+
+/* ========================================
+   Actions
+======================================== */
+
+.library-actions {
+    display: flex;
+
+    gap: 8px;
+
+    padding: 14px 16px;
+
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.library-actions button {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 9px 10px;
+
+    border: 1px solid #ccc;
+    border-radius: 6px;
+
+    background: white;
+
+    cursor: pointer;
+
+    font-size: 13px;
+}
+
+.library-actions .primary-button {
+    border-color: transparent;
+}
+
+
+/* ========================================
+   Content
+======================================== */
+
+.library-content {
+    flex: 1;
+
+    overflow-y: auto;
+
+    padding: 12px;
+}
+
+
+/* ========================================
+   Library Items
+======================================== */
+
+.library-empty {
+    padding: 30px 15px;
+
+    text-align: center;
+
+    color: #777;
+
+    font-size: 14px;
+}
+
+
+.library-category {
+    margin-bottom: 4px;
+}
+
+
+.library-category-header {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 7px 8px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    user-select: none;
+}
+
+.library-category-header:hover {
+    background: #f3f3f3;
+}
+
+
+.library-category-arrow {
+    width: 16px;
+
+    font-size: 11px;
+
+    color: #777;
+
+    text-align: center;
+}
+
+
+.library-category-name {
+    flex: 1;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.library-category-children {
+    margin-left: 18px;
+}
+
+
+.library-grid {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 7px 8px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+.library-grid:hover {
+    background: #f3f3f3;
+}
+
+.library-grid.active {
+    background: #e8f0fe;
+
+    font-weight: 600;
+}
+
+
+.library-grid-icon {
+    width: 16px;
+
+    text-align: center;
+
+    color: #777;
+}
+
+
+.library-grid-name {
+    flex: 1;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* ========================================
+   Mobile
+======================================== */
+
+@media (max-width: 600px) {
+
+    .library-button {
+        top: 10px;
+        left: 10px;
+
+        padding: 8px 12px;
+
+        font-size: 13px;
+    }
+
+    .library-panel {
+        width: 300px;
+    }
+
+}

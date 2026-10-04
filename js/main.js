@@ -25,7 +25,7 @@ import "./images/imageDragDrop.js";
 import {
     loadBoard,
     saveBoard
-} from "./storage.js";
+} from "./storage/grids.js";
 
 import {
     downloadBoard
@@ -33,6 +33,7 @@ import {
 
 import { appState } from "./state.js";
 
+import "./library/library.js";
 
 // ========================================
 // Elements

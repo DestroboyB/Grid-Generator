@@ -112,3 +112,50 @@
 .image-menu .danger-button:hover {
     background: #fef2f2;
 }
+
+/* ========================================
+   Add Image Menu
+======================================== */
+
+.add-image-menu {
+    display: none;
+
+    position: fixed;
+
+    background: #ffffff;
+
+    padding: 8px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.16);
+
+    z-index: 2000;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 170px;
+}
+
+.add-image-menu button {
+    width: 100%;
+
+    border: none;
+    border-radius: 5px;
+
+    text-align: left;
+
+    background: #ffffff;
+
+    padding: 9px 12px;
+
+    cursor: pointer;
+}
+
+.add-image-menu button:hover {
+    background: #f3f4f6;
+}

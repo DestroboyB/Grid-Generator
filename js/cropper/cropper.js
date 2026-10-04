@@ -35,25 +35,39 @@ import {
 // ========================================
 
 const cropModal =
-    document.getElementById("cropModal");
+    document.getElementById(
+        "cropModal"
+    );
 
 const cropImage =
-    document.getElementById("cropImage");
+    document.getElementById(
+        "cropImage"
+    );
 
 const cropButton =
-    document.getElementById("cropButton");
+    document.getElementById(
+        "cropButton"
+    );
 
 const cancelButton =
-    document.getElementById("cancelButton");
+    document.getElementById(
+        "cancelButton"
+    );
+
 const editorCloseButton =
     document.querySelector(
         ".editor-close"
     );
+
 const board =
-    document.getElementById("board");
+    document.getElementById(
+        "board"
+    );
 
 const imageRatioInput =
-    document.getElementById("imageRatio");
+    document.getElementById(
+        "imageRatio"
+    );
 
 
 // ========================================
@@ -125,41 +139,64 @@ export function openCropForFile(
         new FileReader();
 
 
-    reader.onload = () => {
+    reader.onload =
+        () => {
 
-        cropImage.crossOrigin =
-            null;
+            cropImage.crossOrigin =
+                null;
 
-        cropImage.src =
-            reader.result;
-
-
-        cropModal.style.display =
-            "flex";
+            cropImage.src =
+                reader.result;
 
 
-        createCropper(
-            cropImage,
-            imageRatioInput
-        );
+            cropModal.style.display =
+    "flex";
+
+cropModal.style.visibility =
+    "hidden";
 
 
-        // ========================================
-        // Restore Default Adjustments
-        // ========================================
+            // ========================================
+            // Create Cropper
+            // ========================================
 
-        restoreAdjustments();
+            createCropper(
+                cropImage,
+                imageRatioInput,
+                () => {
 
-        applyAdjustments();
+                    // ========================================
+                    // Restore Default Adjustments
+                    // ========================================
 
-    };
+                    restoreAdjustments();
+
+                    applyAdjustments();
+
+
+                    // ========================================
+                    // Show Editor
+                    // ========================================
+
+                    cropModal.style.visibility =
+    "visible";
+
+                }
+            );
+
+        };
 
 
     reader.readAsDataURL(
         file
     );
+
 }
 
+
+// ========================================
+// Open Cropper For URL
+// ========================================
 
 export function openCropForURL(
     imageURL,
@@ -178,13 +215,31 @@ export function openCropForURL(
     // Destroy Existing Cropper
     // ========================================
 
-    if (appState.cropper) {
+    if (
+        appState.cropper
+    ) {
 
         appState.cropper.destroy();
 
         appState.cropper =
             null;
+
     }
+
+
+    // ========================================
+    // Clear Previous Image
+    // ========================================
+
+    cropImage.onload =
+        null;
+
+    cropImage.onerror =
+        null;
+
+    cropImage.removeAttribute(
+        "src"
+    );
 
 
     // ========================================
@@ -196,11 +251,14 @@ export function openCropForURL(
 
 
     // ========================================
-    // Show Modal
+    // Keep Editor Hidden While Loading
     // ========================================
 
-    cropModal.style.display =
-        "flex";
+     cropModal.style.display =
+    "flex";
+
+cropModal.style.visibility =
+    "hidden";
 
 
     // ========================================
@@ -218,22 +276,32 @@ export function openCropForURL(
 
 
             // ========================================
-            // Create Cropper After Image Loads
+            // Create Cropper
             // ========================================
 
             createCropper(
                 cropImage,
-                imageRatioInput
+                imageRatioInput,
+                () => {
+
+                    // ========================================
+                    // Restore Default Adjustments
+                    // ========================================
+
+                    restoreAdjustments();
+
+                    applyAdjustments();
+
+
+                    // ========================================
+                    // Show Editor
+                    // ========================================
+
+                    cropModal.style.visibility =
+    "visible";
+
+                }
             );
-
-
-            // ========================================
-            // Restore Default Adjustments
-            // ========================================
-
-            restoreAdjustments();
-
-            applyAdjustments();
 
         };
 
@@ -275,6 +343,7 @@ export function openCropForURL(
 
     cropImage.src =
         imageURL;
+
 }
 
 
@@ -294,7 +363,9 @@ export function openCropForExistingImage(
             imageData.source
         )
     ) {
+
         return;
+
     }
 
 
@@ -308,7 +379,6 @@ export function openCropForExistingImage(
 
     cropperState.editingImageData =
         imageData;
-
 
     cropperState.rotation =
         imageData.rotation ?? 0;
@@ -325,7 +395,8 @@ export function openCropForExistingImage(
     // ========================================
 
     cropperState.filterName =
-        imageData.filterName ?? "none";
+        imageData.filterName ??
+        "none";
 
 
     // ========================================
@@ -333,32 +404,39 @@ export function openCropForExistingImage(
     // ========================================
 
     cropperState.brightness =
-        imageData.brightness ?? 100;
+        imageData.brightness ??
+        100;
 
     cropperState.contrast =
-        imageData.contrast ?? 100;
+        imageData.contrast ??
+        100;
 
     cropperState.saturation =
-        imageData.saturation ?? 100;
+        imageData.saturation ??
+        100;
 
     cropperState.blur =
-        imageData.blur ?? 0;
+        imageData.blur ??
+        0;
 
     cropperState.grayscale =
-        imageData.grayscale ?? 0;
+        imageData.grayscale ??
+        0;
 
     cropperState.sepia =
-        imageData.sepia ?? 0;
+        imageData.sepia ??
+        0;
 
     cropperState.hueRotate =
-        imageData.hueRotate ?? 0;
+        imageData.hueRotate ??
+        0;
 
 
     cleanupObjectURL();
 
 
     // ========================================
-    // Use Full Original Image When Available
+    // Use Full Original Image
     // ========================================
 
     cropImage.crossOrigin =
@@ -369,23 +447,44 @@ export function openCropForExistingImage(
         imageData.source;
 
 
-    cropModal.style.display =
-        "flex";
+    // ========================================
+    // Keep Editor Hidden Until Ready
+    // ========================================
 
+     cropModal.style.display =
+    "flex";
+
+cropModal.style.visibility =
+    "hidden";
+
+
+    // ========================================
+    // Create Cropper
+    // ========================================
 
     createCropper(
         cropImage,
-        imageRatioInput
+        imageRatioInput,
+        () => {
+
+            // ========================================
+            // Restore Adjustment Controls
+            // ========================================
+
+            restoreAdjustments();
+
+            applyAdjustments();
+
+
+            // ========================================
+            // Show Editor
+            // ========================================
+
+            cropModal.style.visibility =
+    "visible";
+
+        }
     );
-
-
-    // ========================================
-    // Restore Adjustment Controls
-    // ========================================
-
-    restoreAdjustments();
-
-    applyAdjustments();
 
 }
 
@@ -401,13 +500,23 @@ function restoreOriginalImage() {
     // ========================================
 
     const originalSource =
-        cropperState.editingImageData?.originalSource ||
-        cropperState.editingImageData?.source ||
+        cropperState
+            .editingImageData
+            ?.originalSource ||
+
+        cropperState
+            .editingImageData
+            ?.source ||
+
         cropImage.src;
 
 
-    if (!originalSource) {
+    if (
+        !originalSource
+    ) {
+
         return;
+
     }
 
 
@@ -434,7 +543,9 @@ function restoreOriginalImage() {
     // Replace With Original Image
     // ========================================
 
-    if (appState.cropper) {
+    if (
+        appState.cropper
+    ) {
 
         appState.cropper.replace(
             originalSource
@@ -471,7 +582,9 @@ function restoreOriginalImage() {
 // Restore Original Button
 // ========================================
 
-if (restoreOriginalButton) {
+if (
+    restoreOriginalButton
+) {
 
     restoreOriginalButton.addEventListener(
         "click",
@@ -514,13 +627,17 @@ function handleRotate(
 // Rotate Left
 // ========================================
 
-if (rotateLeftButton) {
+if (
+    rotateLeftButton
+) {
 
     rotateLeftButton.addEventListener(
         "click",
         () => {
 
-            handleRotate(-90);
+            handleRotate(
+                -90
+            );
 
         }
     );
@@ -532,13 +649,17 @@ if (rotateLeftButton) {
 // Rotate Right
 // ========================================
 
-if (rotateRightButton) {
+if (
+    rotateRightButton
+) {
 
     rotateRightButton.addEventListener(
         "click",
         () => {
 
-            handleRotate(90);
+            handleRotate(
+                90
+            );
 
         }
     );
@@ -550,7 +671,9 @@ if (rotateRightButton) {
 // Flip Horizontal
 // ========================================
 
-if (flipHorizontalButton) {
+if (
+    flipHorizontalButton
+) {
 
     flipHorizontalButton.addEventListener(
         "click",
@@ -570,7 +693,9 @@ if (flipHorizontalButton) {
 // Flip Vertical
 // ========================================
 
-if (flipVerticalButton) {
+if (
+    flipVerticalButton
+) {
 
     flipVerticalButton.addEventListener(
         "click",
@@ -619,11 +744,15 @@ cancelButton.addEventListener(
 
     }
 );
+
+
 // ========================================
 // Editor Close Button
 // ========================================
 
-if (editorCloseButton) {
+if (
+    editorCloseButton
+) {
 
     editorCloseButton.addEventListener(
         "click",
@@ -639,6 +768,7 @@ if (editorCloseButton) {
 
 }
 
+
 // ========================================
 // Change Crop Ratio While Open
 // ========================================
@@ -647,8 +777,12 @@ imageRatioInput.addEventListener(
     "change",
     () => {
 
-        if (!appState.cropper) {
+        if (
+            !appState.cropper
+        ) {
+
             return;
+
         }
 
 
@@ -658,7 +792,9 @@ imageRatioInput.addEventListener(
         ] =
             imageRatioInput.value
                 .split(":")
-                .map(Number);
+                .map(
+                    Number
+                );
 
 
         const cropRatio =
@@ -682,7 +818,6 @@ const editorTools =
     document.querySelectorAll(
         ".editor-tool"
     );
-
 
 const editorPanels =
     document.querySelectorAll(
@@ -734,7 +869,9 @@ editorTools.forEach(
                     );
 
 
-                if (panel) {
+                if (
+                    panel
+                ) {
 
                     panel.classList.add(
                         "active"

@@ -1,6 +1,18 @@
 export const appState = {
 
+    // ========================================
+    // Grid Library
+    // ========================================
+
+    currentGridId: null,
+
+    currentGridName: "Untitled Grid",
+
+
+    // ========================================
     // Cropper
+    // ========================================
+
     cropper: null,
 
     selectedDiv: null,
@@ -14,24 +26,41 @@ export const appState = {
     // Images
     // ========================================
 
+    // Each entry is either null or:
+    //
+    // {
+    //     source: original image data URL,
+    //     originalSource: original image data URL,
+    //
+    //     crop: {
+    //         x,
+    //         y,
+    //         width,
+    //         height
+    //     },
+    //
+    //     rotation: 0,
+    //
+    //     flip: {
+    //         horizontal: false,
+    //         vertical: false
+    //     },
+    //
+    //     filter: "none",
+    //
+    //     adjustments: {
+    //         brightness: 0,
+    //         contrast: 0,
+    //         saturation: 0,
+    //         blur: 0
+    //     },
+    //
+    //     x: 0,
+    //     y: 0,
+    //     zoom: 1
+    // }
 
-
-// Each entry is either null or:
-//
-// {
-//     source: original image data URL,
-//     crop: {
-//         x,
-//         y,
-//         width,
-//         height
-//     },
-//     x: 0,
-//     y: 0,
-//     zoom: 1
-// }
-
-savedImages: [],
+    savedImages: [],
 
 
     // ========================================

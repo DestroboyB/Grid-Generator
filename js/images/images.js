@@ -17,6 +17,7 @@ import {
     openMalSearch
 } from "./malSearch.js";
 
+
 // ========================================
 // Elements
 // ========================================
@@ -37,35 +38,51 @@ const searchMalButton =
     document.getElementById("searchMalButton");
 
 const closeAddImageMenuButton =
-    document.getElementById("closeAddImageMenuButton");
+    document.getElementById(
+        "closeAddImageMenuButton"
+    );
 
 const updateImageButton =
-    document.getElementById("updateImageButton");
+    document.getElementById(
+        "updateImageButton"
+    );
 
 const replaceWithMalButton =
-    document.getElementById("replaceWithMalButton");
+    document.getElementById(
+        "replaceWithMalButton"
+    );
 
 const replaceImageButton =
-    document.getElementById("replaceImageButton");
+    document.getElementById(
+        "replaceImageButton"
+    );
 
 const deleteImageButton =
-    document.getElementById("deleteImageButton");
+    document.getElementById(
+        "deleteImageButton"
+    );
 
 const closeMenuButton =
-    document.getElementById("closeMenuButton");
+    document.getElementById(
+        "closeImageMenuButton"
+    );
 
 
 // ========================================
 // Open File Selector
 // ========================================
 
-export function openFileSelector(element) {
+export function openFileSelector(
+    element
+) {
 
     appState.selectedDiv =
         element;
 
     const fileInput =
-        document.createElement("input");
+        document.createElement(
+            "input"
+        );
 
     fileInput.type =
         "file";
@@ -99,7 +116,9 @@ export function openFileSelector(element) {
 // Show Image Menu
 // ========================================
 
-export function showImageMenu(element) {
+export function showImageMenu(
+    element
+) {
 
     appState.menuDiv =
         element;
@@ -118,7 +137,9 @@ export function showImageMenu(element) {
 // Show Add Image Menu
 // ========================================
 
-export function showAddImageMenu(element) {
+export function showAddImageMenu(
+    element
+) {
 
     appState.menuDiv =
         element;
@@ -131,6 +152,8 @@ export function showAddImageMenu(element) {
         element
     );
 }
+
+
 // ========================================
 // Position Menu Near Box
 // ========================================
@@ -140,20 +163,14 @@ function positionMenu(
     element
 ) {
 
-    // Remove the old centered transform
     menu.style.transform =
         "none";
 
-
-    // Get the clicked box's position
     const boxRect =
         element.getBoundingClientRect();
 
-
-    // Get the menu's dimensions
     const menuRect =
         menu.getBoundingClientRect();
-
 
     const margin =
         10;
@@ -167,7 +184,6 @@ function positionMenu(
         boxRect.left +
         (boxRect.width / 2) -
         (menuRect.width / 2);
-
 
     let top =
         boxRect.bottom +
@@ -244,6 +260,7 @@ function positionMenu(
         `${top}px`;
 }
 
+
 // ========================================
 // Upload Image From Add Menu
 // ========================================
@@ -265,7 +282,9 @@ uploadImageButton.addEventListener(
         appState.menuDiv =
             null;
 
-        openFileSelector(div);
+        openFileSelector(
+            div
+        );
     }
 );
 
@@ -296,6 +315,7 @@ searchMalButton.addEventListener(
         );
     }
 );
+
 
 // ========================================
 // Close Add Image Menu
@@ -330,16 +350,24 @@ updateImageButton.addEventListener(
             appState.menuDiv;
 
         const boxIndex =
-            Array.from(
-                board.children
-            ).indexOf(div);
+            Number(
+                div.dataset.index
+            );
 
-        if (boxIndex === -1) {
+        if (
+            !Number.isInteger(
+                boxIndex
+            ) ||
+            boxIndex < 0 ||
+            boxIndex >= board.children.length
+        ) {
             return;
         }
 
         const imageData =
-            appState.savedImages[boxIndex];
+            appState.savedImages[
+                boxIndex
+            ];
 
         if (
             !imageData ||
@@ -348,14 +376,12 @@ updateImageButton.addEventListener(
             return;
         }
 
-        // Close the image menu
         imageMenu.style.display =
             "none";
 
         appState.menuDiv =
             null;
 
-        // Open existing image in Cropper
         openCropForExistingImage(
             imageData,
             div
@@ -385,9 +411,12 @@ replaceImageButton.addEventListener(
         appState.menuDiv =
             null;
 
-        openFileSelector(div);
+        openFileSelector(
+            div
+        );
     }
 );
+
 
 // ========================================
 // Replace Image With MyAnimeList
@@ -416,6 +445,7 @@ replaceWithMalButton.addEventListener(
     }
 );
 
+
 // ========================================
 // Delete Image
 // ========================================
@@ -432,11 +462,17 @@ deleteImageButton.addEventListener(
             appState.menuDiv;
 
         const boxIndex =
-            Array.from(
-                board.children
-            ).indexOf(div);
+            Number(
+                div.dataset.index
+            );
 
-        if (boxIndex === -1) {
+        if (
+            !Number.isInteger(
+                boxIndex
+            ) ||
+            boxIndex < 0 ||
+            boxIndex >= board.children.length
+        ) {
             return;
         }
 
@@ -445,7 +481,7 @@ deleteImageButton.addEventListener(
             boxIndex
         ] = null;
 
-        // Clear the visual box
+        // Clear visual box
         clearImageBox(
             div,
             boxIndex
@@ -488,9 +524,11 @@ board.addEventListener(
     "click",
     (event) => {
 
-        // Don't process clicks on popup buttons
+        // Ignore buttons inside menus
         if (
-            event.target.closest("button")
+            event.target.closest(
+                "button"
+            )
         ) {
             return;
         }
@@ -502,8 +540,10 @@ board.addEventListener(
             );
 
 
-        // Clicked somewhere inside the board
-        // but not on an image box
+        // ========================================
+        // Clicked Outside An Image Box
+        // ========================================
+
         if (!div) {
 
             imageMenu.style.display =
@@ -519,46 +559,8 @@ board.addEventListener(
         }
 
 
-        // Image already exists
-        if (
-            div.querySelector("img")
-        ) {
-
-            showImageMenu(div);
-
-        } else {
-
-            showAddImageMenu(div);
-        }
-    }
-);
-
-
-// ========================================
-// Click On Board
-// ========================================
-
-board.addEventListener(
-    "click",
-    (event) => {
-
-        // Don't process clicks on buttons
-        // inside the menus.
-        if (
-            event.target.closest("button")
-        ) {
-            return;
-        }
-
-
-        const div =
-            event.target.closest(
-                ".image"
-            );
-
-
         // ========================================
-        // Close Existing Menus First
+        // Close Any Existing Menu
         // ========================================
 
         imageMenu.style.display =
@@ -572,28 +574,30 @@ board.addEventListener(
 
 
         // ========================================
-        // Not an Image Box
+        // Existing Image
         // ========================================
 
-        if (!div) {
+        if (
+            div.querySelector(
+                "img"
+            )
+        ) {
+
+            showImageMenu(
+                div
+            );
+
             return;
         }
 
 
         // ========================================
-        // Open Appropriate Menu
+        // Empty Box
         // ========================================
 
-        if (
-            div.querySelector("img")
-        ) {
-
-            showImageMenu(div);
-
-        } else {
-
-            showAddImageMenu(div);
-        }
+        showAddImageMenu(
+            div
+        );
     }
 );
 
@@ -608,8 +612,12 @@ document.addEventListener(
 
         // Click was inside one of the menus
         if (
-            imageMenu.contains(event.target) ||
-            addImageMenu.contains(event.target)
+            imageMenu.contains(
+                event.target
+            ) ||
+            addImageMenu.contains(
+                event.target
+            )
         ) {
             return;
         }
@@ -617,14 +625,15 @@ document.addEventListener(
 
         // Click was handled by the board
         if (
-            board.contains(event.target)
+            board.contains(
+                event.target
+            )
         ) {
             return;
         }
 
 
-        // Click was somewhere completely
-        // outside the board and menus
+        // Clicked somewhere else
         imageMenu.style.display =
             "none";
 
