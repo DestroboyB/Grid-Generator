@@ -19,6 +19,41 @@ const imageRatioInput =
 
 
 // ========================================
+// Apply Cell Border
+// ========================================
+
+function applyCellBorder(div) {
+
+    const borderSize =
+        Number(appState.borderSize) || 0;
+
+    const borderColor =
+        appState.borderColor || "#9ca3af";
+
+    // Empty boxes always use the configured border.
+    // Image boxes can additionally be disabled by the Borders toggle.
+    const isImageBox =
+        div.classList.contains("has-image");
+
+    const shouldShowBorder =
+        borderSize > 0 &&
+        (!isImageBox || appState.borderEnabled);
+
+    div.style.setProperty(
+        "--cell-border-size",
+        shouldShowBorder
+            ? `${borderSize}px`
+            : "0px"
+    );
+
+    div.style.setProperty(
+        "--cell-border-color",
+        borderColor
+    );
+}
+
+
+// ========================================
 // Board Dimensions
 // ========================================
 
@@ -30,6 +65,7 @@ function calculateBoardDimensions() {
     const columns =
         Number(columnsInput.value);
 
+
     const [
         ratioWidth,
         ratioHeight
@@ -38,9 +74,11 @@ function calculateBoardDimensions() {
             .split(":")
             .map(Number);
 
+
     const boxRatio =
         ratioWidth /
         ratioHeight;
+
 
     const spacing =
         Number(
@@ -54,8 +92,10 @@ function calculateBoardDimensions() {
             1200
         );
 
+
     const maxBoardHeight =
         window.innerHeight * 0.80;
+
 
     const boardPadding =
         20;
@@ -64,6 +104,7 @@ function calculateBoardDimensions() {
     const availableWidth =
         maxBoardWidth -
         (boardPadding * 2);
+
 
     const availableHeight =
         maxBoardHeight -
@@ -78,6 +119,7 @@ function calculateBoardDimensions() {
                 (columns - 1)
             )
         ) / columns;
+
 
     let boxHeight =
         boxWidth /
@@ -106,6 +148,7 @@ function calculateBoardDimensions() {
                 )
             ) / rows;
 
+
         boxWidth =
             boxHeight *
             boxRatio;
@@ -133,6 +176,7 @@ function calculateBoardDimensions() {
                     )
                 ) / columns;
 
+
             boxHeight =
                 boxWidth /
                 boxRatio;
@@ -146,6 +190,7 @@ function calculateBoardDimensions() {
             spacing *
             (columns - 1)
         );
+
 
     const finalHeight =
         (boxHeight * rows) +
@@ -194,24 +239,42 @@ export function updateBoardStyle() {
     board.style.width =
         `${dimensions.boardWidth}px`;
 
+
     board.style.height =
         `${dimensions.boardHeight}px`;
+
 
     board.style.gridTemplateColumns =
         `repeat(${columns}, ${dimensions.boxWidth}px)`;
 
+
     board.style.gridTemplateRows =
         `repeat(${rows}, ${dimensions.boxHeight}px)`;
+
 
     board.style.gap =
         `${appState.spacing}px`;
 
+
     board.style.backgroundColor =
         appState.backgroundColor;
+
+
+    /*
+     * Re-rendering also reapplies
+     * the current border state.
+     *
+     * Only image boxes receive
+     * the configurable border.
+     */
 
     renderAllImages();
 }
 
+
+// ========================================
+// Render Image
+// ========================================
 
 export function renderImage(
     div,
@@ -220,12 +283,15 @@ export function renderImage(
 
     div.innerHTML = "";
 
+
     div.classList.add(
         "has-image"
     );
 
+
     div.style.position =
         "relative";
+
 
     div.style.overflow =
         "hidden";
@@ -256,20 +322,26 @@ export function renderImage(
         img.style.position =
             "absolute";
 
+
         img.style.left =
             "0";
+
 
         img.style.top =
             "0";
 
+
         img.style.width =
             "100%";
+
 
         img.style.height =
             "100%";
 
+
         img.style.objectFit =
             "cover";
+
 
         img.style.objectPosition =
             "center";
@@ -314,7 +386,6 @@ export function renderImage(
             .replace(/\s+/g, " ")
             .trim();
 
-
     } else {
 
         // ====================================
@@ -324,14 +395,18 @@ export function renderImage(
         img.src =
             imageData;
 
+
         img.style.width =
             "100%";
+
 
         img.style.height =
             "100%";
 
+
         img.style.objectFit =
             "cover";
+
 
         img.style.objectPosition =
             "center";
@@ -349,6 +424,20 @@ export function renderImage(
 
     div.draggable =
         true;
+
+
+    // ========================================
+    // Apply Border
+    // ========================================
+
+    /*
+     * This is intentionally only called
+     * when an image is being rendered.
+     */
+
+    applyCellBorder(
+        div
+    );
 }
 
 
@@ -356,29 +445,20 @@ export function renderImage(
 // Clear Single Image Box
 // ========================================
 
-export function clearImageBox(
-    div,
-    index
-) {
+export function clearImageBox(div, index) {
 
-    div.innerHTML =
-        "";
+    div.innerHTML = "";
 
-    div.classList.remove(
-        "has-image"
-    );
+    div.classList.remove("has-image");
 
-    div.style.position =
-        "";
+    div.style.position = "";
+    div.style.overflow = "";
 
-    div.style.overflow =
-        "";
+    div.textContent = index + 1;
 
-    div.textContent =
-        index + 1;
+    div.draggable = false;
 
-    div.draggable =
-        false;
+    applyCellBorder(div);
 }
 
 
@@ -432,6 +512,7 @@ export function generateBoard() {
     const columns =
         Number(columnsInput.value);
 
+
     const totalBoxes =
         rows *
         columns;
@@ -470,13 +551,16 @@ export function generateBoard() {
                 "div"
             );
 
+
         div.classList.add(
             "image"
         );
 
+
         div.dataset.index =
-    i;
-    
+            i;
+
+
         const imageData =
             appState.savedImages[i];
 
@@ -493,8 +577,15 @@ export function generateBoard() {
             div.textContent =
                 i + 1;
 
+
             div.draggable =
                 false;
+
+
+            /*
+             * Empty boxes intentionally
+             * have no configurable border.
+             */
         }
 
 
@@ -515,18 +606,30 @@ export function generateBoard() {
     board.style.width =
         `${dimensions.boardWidth}px`;
 
+
     board.style.height =
         `${dimensions.boardHeight}px`;
+
 
     board.style.gridTemplateColumns =
         `repeat(${columns}, ${dimensions.boxWidth}px)`;
 
+
     board.style.gridTemplateRows =
         `repeat(${rows}, ${dimensions.boxHeight}px)`;
+
 
     board.style.gap =
         `${appState.spacing}px`;
 
+
     board.style.backgroundColor =
         appState.backgroundColor;
+
+
+    // ========================================
+    // Final Render
+    // ========================================
+
+    renderAllImages();
 }

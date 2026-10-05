@@ -110,6 +110,25 @@ export async function downloadBoard(format) {
 
 
     // ========================================
+    // Border Settings
+    // ========================================
+
+    const borderSize =
+        Number(
+            appState.borderSize
+        ) || 0;
+
+
+    const borderColor =
+        appState.borderColor ||
+        "#9ca3af";
+
+
+    const bordersEnabled =
+        appState.borderEnabled !== false;
+
+
+    // ========================================
     // Draw Each Box
     // ========================================
 
@@ -150,23 +169,28 @@ export async function downloadBoard(format) {
 
 
         // ========================================
-        // Draw Box Border
+        // Determine Border Visibility
         // ========================================
 
-        ctx.strokeStyle =
-            "black";
+        const isImageBox =
+            !!img;
 
 
-        ctx.lineWidth =
-            2;
+        /*
+         * Empty boxes always have borders.
+         *
+         * Image boxes only have borders when
+         * Borders are enabled.
+         *
+         * A border size of 0 disables all borders.
+         */
 
-
-        ctx.strokeRect(
-            x,
-            y,
-            width,
-            height
-        );
+        const shouldDrawBorder =
+            borderSize > 0 &&
+            (
+                !isImageBox ||
+                bordersEnabled
+            );
 
 
         // ========================================
@@ -174,6 +198,34 @@ export async function downloadBoard(format) {
         // ========================================
 
         if (!img) {
+
+            if (shouldDrawBorder) {
+
+                ctx.save();
+
+                ctx.strokeStyle =
+                    borderColor;
+
+                ctx.lineWidth =
+                    borderSize;
+
+                ctx.strokeRect(
+                    x +
+                    borderSize / 2,
+
+                    y +
+                    borderSize / 2,
+
+                    width -
+                    borderSize,
+
+                    height -
+                    borderSize
+                );
+
+                ctx.restore();
+            }
+
             continue;
         }
 
@@ -379,6 +431,38 @@ export async function downloadBoard(format) {
         // ========================================
 
         ctx.restore();
+
+
+        // ========================================
+        // Draw Border On Top Of Image
+        // ========================================
+
+        if (shouldDrawBorder) {
+
+            ctx.save();
+
+            ctx.strokeStyle =
+                borderColor;
+
+            ctx.lineWidth =
+                borderSize;
+
+            ctx.strokeRect(
+                x +
+                borderSize / 2,
+
+                y +
+                borderSize / 2,
+
+                width -
+                borderSize,
+
+                height -
+                borderSize
+            );
+
+            ctx.restore();
+        }
 
     }
 

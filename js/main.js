@@ -35,6 +35,7 @@ import { appState } from "./state.js";
 
 import "./library/library.js";
 
+
 // ========================================
 // Elements
 // ========================================
@@ -85,6 +86,51 @@ const backgroundColorInput =
         "backgroundColor"
     );
 
+
+// ========================================
+// Border Controls
+// ========================================
+
+const borderEnabledInput =
+    document.getElementById(
+        "borderEnabled"
+    );
+
+const borderColorInput =
+    document.getElementById(
+        "borderColor"
+    );
+
+const borderSizeInput =
+    document.getElementById(
+        "borderSize"
+    );
+
+const borderSizeValue =
+    document.getElementById(
+        "borderSizeValue"
+    );
+
+
+// ========================================
+// Board Settings
+// ========================================
+
+const boardSettingsButton =
+    document.getElementById(
+        "boardSettingsButton"
+    );
+
+const boardSettingsPanel =
+    document.getElementById(
+        "boardSettingsPanel"
+    );
+
+
+// ========================================
+// History / Actions
+// ========================================
+
 const undoButton =
     document.getElementById(
         "undoButton"
@@ -102,12 +148,151 @@ const clearBoardButton =
 
 
 // ========================================
+// Board Settings Menu
+// ========================================
+
+function closeBoardSettings() {
+
+    boardSettingsPanel.classList.remove(
+        "open"
+    );
+
+    boardSettingsButton.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+}
+
+
+function toggleBoardSettings() {
+
+    const isOpen =
+        boardSettingsPanel.classList.contains(
+            "open"
+        );
+
+
+    if (isOpen) {
+
+        closeBoardSettings();
+
+    } else {
+
+        boardSettingsPanel.classList.add(
+            "open"
+        );
+
+        boardSettingsButton.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+    }
+}
+
+
+boardSettingsButton.addEventListener(
+    "click",
+    event => {
+
+        event.stopPropagation();
+
+        toggleBoardSettings();
+    }
+);
+
+
+// ========================================
+// Close Settings When Clicking Outside
+// ========================================
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            !boardSettingsPanel.contains(
+                event.target
+            ) &&
+            !boardSettingsButton.contains(
+                event.target
+            )
+        ) {
+
+            closeBoardSettings();
+        }
+    }
+);
+
+
+// ========================================
 // Load Saved Project
 // ========================================
 
 const loaded =
     await loadBoard();
 
+
+// ========================================
+// Default Missing Settings
+// ========================================
+
+/*
+ * These defaults allow older saved grids
+ * to continue working after adding new
+ * board settings.
+ */
+
+if (
+    appState.borderEnabled === undefined ||
+    appState.borderEnabled === null
+) {
+
+    appState.borderEnabled =
+        true;
+}
+
+
+if (
+    !appState.borderColor
+) {
+
+    appState.borderColor =
+        "#9ca3af";
+}
+
+
+if (
+    appState.borderSize === undefined ||
+    appState.borderSize === null
+) {
+
+    appState.borderSize =
+        2;
+}
+
+
+if (
+    !appState.backgroundColor
+) {
+
+    appState.backgroundColor =
+        "#ffffff";
+}
+
+
+if (
+    appState.spacing === undefined ||
+    appState.spacing === null
+) {
+
+    appState.spacing =
+        0;
+}
+
+
+// ========================================
+// Generate / Load Board
+// ========================================
 
 if (!loaded) {
 
@@ -125,8 +310,30 @@ if (!loaded) {
 // Update Controls After Loading
 // ========================================
 
+spacingInput.value =
+    appState.spacing;
+
 spacingValue.textContent =
     `${appState.spacing} px`;
+
+
+backgroundColorInput.value =
+    appState.backgroundColor;
+
+
+borderEnabledInput.checked =
+    appState.borderEnabled;
+
+
+borderColorInput.value =
+    appState.borderColor;
+
+
+borderSizeInput.value =
+    appState.borderSize;
+
+borderSizeValue.textContent =
+    `${appState.borderSize} px`;
 
 
 // ========================================
@@ -222,6 +429,79 @@ backgroundColorInput.addEventListener(
 
 
 // ========================================
+// Border Enabled
+// ========================================
+
+borderEnabledInput.addEventListener(
+    "change",
+    () => {
+
+        appState.borderEnabled =
+            borderEnabledInput.checked;
+
+        updateBoardStyle();
+
+        saveHistoryState();
+    }
+);
+
+
+// ========================================
+// Border Color
+// ========================================
+
+borderColorInput.addEventListener(
+    "input",
+    () => {
+
+        appState.borderColor =
+            borderColorInput.value;
+
+        updateBoardStyle();
+    }
+);
+
+
+borderColorInput.addEventListener(
+    "change",
+    () => {
+
+        saveHistoryState();
+    }
+);
+
+
+// ========================================
+// Border Size
+// ========================================
+
+borderSizeInput.addEventListener(
+    "input",
+    () => {
+
+        appState.borderSize =
+            Number(
+                borderSizeInput.value
+            );
+
+        borderSizeValue.textContent =
+            `${appState.borderSize} px`;
+
+        updateBoardStyle();
+    }
+);
+
+
+borderSizeInput.addEventListener(
+    "change",
+    () => {
+
+        saveHistoryState();
+    }
+);
+
+
+// ========================================
 // Bulk Import
 // ========================================
 
@@ -265,8 +545,6 @@ clearBoardButton.addEventListener(
     "click",
     () => {
 
-        // Don't create a history entry
-        // if the board is already empty.
         const hasImages =
             appState.savedImages.some(
                 image => image !== null
@@ -278,17 +556,13 @@ clearBoardButton.addEventListener(
         }
 
 
-        // Clear all images
         appState.savedImages =
             [];
 
 
-        // Rebuild the board
         generateBoard();
 
 
-        // Save the cleared board
-        // as a new history state
         saveHistoryState();
     }
 );
@@ -300,7 +574,7 @@ clearBoardButton.addEventListener(
 
 downloadButton.addEventListener(
     "click",
-    (event) => {
+    event => {
 
         event.stopPropagation();
 
@@ -324,7 +598,7 @@ downloadButton.addEventListener(
 
 downloadMenu.addEventListener(
     "click",
-    (event) => {
+    event => {
 
         const button =
             event.target.closest(
@@ -361,7 +635,7 @@ downloadMenu.addEventListener(
 
 document.addEventListener(
     "click",
-    (event) => {
+    event => {
 
         if (
             !downloadMenu.contains(
@@ -413,15 +687,20 @@ window.addEventListener(
 
 document.addEventListener(
     "keydown",
-    (event) => {
+    event => {
 
         const activeElement =
             document.activeElement;
 
 
         const isTyping =
-            activeElement.tagName === "INPUT" &&
-            activeElement.type === "text";
+            activeElement &&
+            (
+                activeElement.tagName ===
+                    "INPUT" ||
+                activeElement.tagName ===
+                    "TEXTAREA"
+            );
 
 
         if (isTyping) {

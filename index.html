@@ -54,13 +54,8 @@
 
                 <select id="rows">
 
-                    <option value="1">
-                        1
-                    </option>
-
-                    <option value="2">
-                        2
-                    </option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
 
                     <option
                         value="3"
@@ -69,33 +64,13 @@
                         3
                     </option>
 
-                    <option value="4">
-                        4
-                    </option>
-
-                    <option value="5">
-                        5
-                    </option>
-
-                    <option value="6">
-                        6
-                    </option>
-
-                    <option value="7">
-                        7
-                    </option>
-
-                    <option value="8">
-                        8
-                    </option>
-
-                    <option value="9">
-                        9
-                    </option>
-
-                    <option value="10">
-                        10
-                    </option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
 
                 </select>
 
@@ -119,13 +94,8 @@
 
                 <select id="columns">
 
-                    <option value="1">
-                        1
-                    </option>
-
-                    <option value="2">
-                        2
-                    </option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
 
                     <option
                         value="3"
@@ -134,33 +104,13 @@
                         3
                     </option>
 
-                    <option value="4">
-                        4
-                    </option>
-
-                    <option value="5">
-                        5
-                    </option>
-
-                    <option value="6">
-                        6
-                    </option>
-
-                    <option value="7">
-                        7
-                    </option>
-
-                    <option value="8">
-                        8
-                    </option>
-
-                    <option value="9">
-                        9
-                    </option>
-
-                    <option value="10">
-                        10
-                    </option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
 
                 </select>
 
@@ -210,51 +160,169 @@
             </div>
 
 
-            <!-- Spacing -->
+            <!-- ========================================
+                 Board Settings
+            ========================================= -->
 
-            <div class="control-group spacing-control">
+            <div class="board-settings-wrapper">
 
-                <label for="spacing">
-                    Spacing
-                </label>
+                <button
+                    id="boardSettingsButton"
+                    type="button"
+                    class="board-settings-button"
+                    aria-expanded="false"
+                    aria-controls="boardSettingsPanel"
+                >
+                    Board Settings
 
-                <div class="range-control">
-
-                    <input
-                        type="range"
-                        id="spacing"
-                        min="0"
-                        max="50"
-                        value="0"
-                    >
-
-                    <span id="spacingValue">
-                        0 px
+                    <span class="board-settings-arrow">
+                        ▾
                     </span>
+
+                </button>
+
+
+                <div
+                    id="boardSettingsPanel"
+                    class="board-settings-panel"
+                >
+
+
+                    <!-- ====================================
+                         Spacing
+                    ==================================== -->
+
+                    <div class="board-setting">
+
+                        <div class="board-setting-header">
+
+                            <label for="spacing">
+                                Spacing
+                            </label>
+
+                            <span id="spacingValue">
+                                0 px
+                            </span>
+
+                        </div>
+
+                        <input
+                            type="range"
+                            id="spacing"
+                            min="0"
+                            max="50"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <!-- ====================================
+                         Background
+                    ==================================== -->
+
+                    <div class="board-setting">
+
+                        <label for="backgroundColor">
+                            Background
+                        </label>
+
+                        <input
+                            type="color"
+                            id="backgroundColor"
+                            value="#ffffff"
+                        >
+
+                    </div>
+
+
+                    <!-- ====================================
+                         Borders
+                    ==================================== -->
+
+                    <div class="board-setting">
+
+                        <div class="board-setting-header">
+
+                            <label for="borderEnabled">
+                                Borders for images
+                            </label>
+
+
+                            <label class="toggle-switch">
+
+                                <input
+                                    type="checkbox"
+                                    id="borderEnabled"
+                                    checked
+                                >
+
+                                <span class="toggle-slider"></span>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ====================================
+                         Border Color
+                    ==================================== -->
+
+                    <div class="board-setting">
+
+                        <label for="borderColor">
+                            Border Color
+                        </label>
+
+                        <input
+                            type="color"
+                            id="borderColor"
+                            value="#9ca3af"
+                        >
+
+                    </div>
+
+
+                    <!-- ====================================
+                         Border Size
+                    ==================================== -->
+
+                    <div class="board-setting">
+
+                        <div class="board-setting-header">
+
+                            <label for="borderSize">
+                                Border Size
+                            </label>
+
+                            <span id="borderSizeValue">
+                                2 px
+                            </span>
+
+                        </div>
+
+                        <input
+                            type="range"
+                            id="borderSize"
+                            min="0"
+                            max="10"
+                            step="1"
+                            value="2"
+                        >
+
+                    </div>
+
 
                 </div>
 
             </div>
 
 
-            <!-- Background -->
-
-            <div class="control-group">
-
-                <label for="backgroundColor">
-                    Background
-                </label>
-
-                <input
-                    type="color"
-                    id="backgroundColor"
-                    value="#ffffff"
-                >
-
-            </div>
-
-
-            <!-- Control Actions -->
+            <!-- ========================================
+                 Control Actions
+            ========================================= -->
 
             <div class="control-actions">
 
@@ -497,8 +565,6 @@
 
         <div class="image-editor">
 
-            <!-- Header -->
-
             <div class="editor-header">
 
                 <h2>
@@ -516,8 +582,6 @@
             </div>
 
 
-            <!-- Preview -->
-
             <div class="editor-preview">
 
                 <img
@@ -528,8 +592,6 @@
 
             </div>
 
-
-            <!-- Tools -->
 
             <div class="editor-tools">
 
@@ -567,8 +629,6 @@
 
             </div>
 
-
-            <!-- Transform Panel -->
 
             <div
                 class="editor-panel active"
@@ -610,17 +670,12 @@
             </div>
 
 
-            <!-- Adjust Panel -->
-
             <div
                 class="editor-panel"
                 data-panel="adjust"
             >
 
                 <div class="adjust-controls">
-
-
-                    <!-- Brightness -->
 
                     <div class="editor-control">
 
@@ -643,8 +698,6 @@
                     </div>
 
 
-                    <!-- Contrast -->
-
                     <div class="editor-control">
 
                         <label for="contrastInput">
@@ -666,8 +719,6 @@
                     </div>
 
 
-                    <!-- Saturation -->
-
                     <div class="editor-control">
 
                         <label for="saturationInput">
@@ -688,8 +739,6 @@
 
                     </div>
 
-
-                    <!-- Blur -->
 
                     <div class="editor-control">
 
@@ -715,8 +764,6 @@
 
             </div>
 
-
-            <!-- Filters Panel -->
 
             <div
                 class="editor-panel"
@@ -789,8 +836,6 @@
             </div>
 
 
-            <!-- Editor Footer -->
-
             <div class="editor-footer">
 
                 <button
@@ -835,7 +880,11 @@
             type="button"
         >
             Replace Image
-            <span class="menu-arrow">›</span>
+
+            <span class="menu-arrow">
+                ›
+            </span>
+
         </button>
 
         <button
@@ -858,7 +907,6 @@
 
     <!-- ========================================
          Replace Image Source Menu
-         IMPORTANT: This is a sibling of imageMenu.
     ========================================= -->
 
     <div
@@ -922,7 +970,11 @@
             type="button"
         >
             Add Image
-            <span class="menu-arrow">›</span>
+
+            <span class="menu-arrow">
+                ›
+            </span>
+
         </button>
 
         <button
@@ -997,9 +1049,6 @@
 
         <div class="mal-search-container">
 
-
-            <!-- Header -->
-
             <div class="mal-search-header">
 
                 <h2>
@@ -1016,8 +1065,6 @@
 
             </div>
 
-
-            <!-- Tabs -->
 
             <div class="mal-search-tabs">
 
@@ -1039,8 +1086,6 @@
             </div>
 
 
-            <!-- Search Controls -->
-
             <div class="mal-search-controls">
 
                 <input
@@ -1048,6 +1093,7 @@
                     type="text"
                     placeholder="Search for a character..."
                     autocomplete="off"
+                    spellcheck="false"
                 >
 
                 <button
@@ -1060,15 +1106,11 @@
             </div>
 
 
-            <!-- Status -->
-
             <div
                 id="malSearchStatus"
                 class="mal-search-status"
             ></div>
 
-
-            <!-- Results -->
 
             <div
                 id="malSearchResults"
@@ -1076,39 +1118,38 @@
             ></div>
 
 
-            <!-- Back -->
-
             <div class="mal-search-navigation">
 
-    <button
-        id="malSearchPreviousButton"
-        type="button"
-        disabled
-    >
-        Previous
-    </button>
+                <button
+                    id="malSearchPreviousButton"
+                    type="button"
+                    disabled
+                >
+                    Previous
+                </button>
 
-    <span id="malSearchPageIndicator">
-        Page 1
-    </span>
+                <span id="malSearchPageIndicator">
+                    Page 1
+                </span>
 
-    <button
-        id="malSearchNextButton"
-        type="button"
-        disabled
-    >
-        Next
-    </button>
+                <button
+                    id="malSearchNextButton"
+                    type="button"
+                    disabled
+                >
+                    Next
+                </button>
 
-</div>
+            </div>
 
-<button
-    id="malSearchBackButton"
-    type="button"
-    class="mal-search-back-button"
->
-    Back
-</button>
+
+            <button
+                id="malSearchBackButton"
+                type="button"
+                class="mal-search-back-button"
+            >
+                Back
+            </button>
 
         </div>
 
@@ -1125,9 +1166,6 @@
     >
 
         <div class="image-search-window">
-
-
-            <!-- Header -->
 
             <div class="image-search-header">
 
@@ -1146,8 +1184,6 @@
 
             </div>
 
-
-            <!-- Search Controls -->
 
             <div class="image-search-controls">
 
@@ -1168,23 +1204,17 @@
             </div>
 
 
-            <!-- Status -->
-
             <div
                 id="imageSearchStatus"
                 class="image-search-status"
             ></div>
 
 
-            <!-- Results -->
-
             <div
                 id="imageSearchResults"
                 class="image-search-results"
             ></div>
 
-
-            <!-- Pagination -->
 
             <div class="image-search-pagination">
 
@@ -1210,77 +1240,96 @@
 
     </div>
 
-    <div id="urlImageModal" class="url-image-modal">
-    <div class="url-image-container">
 
-        <div class="url-image-header">
-            <h2>Add Image from URL</h2>
+    <!-- ========================================
+         URL Image Modal
+    ========================================= -->
 
-            <button
-                id="urlImageCloseButton"
-                type="button"
-                aria-label="Close URL image dialog"
+    <div
+        id="urlImageModal"
+        class="url-image-modal"
+    >
+
+        <div class="url-image-container">
+
+            <div class="url-image-header">
+
+                <h2>
+                    Add Image from URL
+                </h2>
+
+                <button
+                    id="urlImageCloseButton"
+                    type="button"
+                    aria-label="Close URL image dialog"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="url-image-controls">
+
+                <input
+                    id="urlImageInput"
+                    type="url"
+                    placeholder="Paste an image URL..."
+                    autocomplete="off"
+                >
+
+                <button
+                    id="urlImageLoadButton"
+                    type="button"
+                >
+                    Preview
+                </button>
+
+            </div>
+
+
+            <div
+                id="urlImageStatus"
+                class="url-image-status"
+            ></div>
+
+
+            <div
+                id="urlImagePreview"
+                class="url-image-preview"
             >
-                ×
-            </button>
-        </div>
 
-        <div class="url-image-controls">
+                <img
+                    id="urlImagePreviewImage"
+                    src=""
+                    alt="Image preview"
+                >
 
-            <input
-                id="urlImageInput"
-                type="url"
-                placeholder="Paste an image URL..."
-                autocomplete="off"
-            >
+            </div>
 
-            <button
-                id="urlImageLoadButton"
-                type="button"
-            >
-                Preview
-            </button>
 
-        </div>
+            <div class="url-image-footer">
 
-        <div
-            id="urlImageStatus"
-            class="url-image-status"
-        ></div>
+                <button
+                    id="urlImageCancelButton"
+                    type="button"
+                >
+                    Cancel
+                </button>
 
-        <div
-            id="urlImagePreview"
-            class="url-image-preview"
-        >
-            <img
-                id="urlImagePreviewImage"
-                src=""
-                alt="Image preview"
-            >
-        </div>
+                <button
+                    id="urlImageUseButton"
+                    type="button"
+                    disabled
+                >
+                    Use Image
+                </button>
 
-        <div class="url-image-footer">
-
-            <button
-                id="urlImageCancelButton"
-                type="button"
-            >
-                Cancel
-            </button>
-
-            <button
-                id="urlImageUseButton"
-                type="button"
-                disabled
-            >
-                Use Image
-            </button>
+            </div>
 
         </div>
 
     </div>
-</div>
-</div>
 
 
     <!-- ========================================

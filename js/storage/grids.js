@@ -71,6 +71,15 @@ export function createGridData() {
         backgroundColor:
             appState.backgroundColor,
 
+        borderEnabled:
+            appState.borderEnabled,
+
+        borderSize:
+            appState.borderSize,
+
+        borderColor:
+            appState.borderColor,
+
         images:
             cloneData(
                 appState.savedImages
@@ -146,6 +155,15 @@ export function createEmptyGridData() {
 
         backgroundColor:
             appState.backgroundColor,
+
+        borderEnabled:
+            appState.borderEnabled,
+
+        borderSize:
+            appState.borderSize,
+
+        borderColor:
+            appState.borderColor,
 
         images:
             [],
@@ -469,6 +487,18 @@ export function applyGridData(
         grid.backgroundColor ??
         "#ffffff";
 
+    appState.borderEnabled =
+        grid.borderEnabled ??
+        true;
+
+    appState.borderSize =
+        grid.borderSize ??
+        2;
+
+    appState.borderColor =
+        grid.borderColor ??
+        "#9ca3af";
+
     appState.undoStack =
         cloneData(
             grid.undoStack ?? []
@@ -509,6 +539,21 @@ export function applyGridData(
             "backgroundColor"
         );
 
+    const borderEnabledInput =
+        document.getElementById(
+            "borderEnabled"
+        );
+
+    const borderColorInput =
+        document.getElementById(
+            "borderColor"
+        );
+
+    const borderSizeInput =
+        document.getElementById(
+            "borderSize"
+        );
+
 
     if (rowsInput) {
 
@@ -539,6 +584,24 @@ export function applyGridData(
 
         backgroundInput.value =
             grid.backgroundColor;
+    }
+
+    if (borderEnabledInput) {
+
+        borderEnabledInput.checked =
+            appState.borderEnabled;
+    }
+
+    if (borderColorInput) {
+
+        borderColorInput.value =
+            appState.borderColor;
+    }
+
+    if (borderSizeInput) {
+
+        borderSizeInput.value =
+            appState.borderSize;
     }
 }
 
@@ -667,6 +730,15 @@ export async function saveCurrentGrid() {
 
     grid.backgroundColor =
         appState.backgroundColor;
+
+    grid.borderEnabled =
+        appState.borderEnabled;
+
+    grid.borderSize =
+        appState.borderSize;
+
+    grid.borderColor =
+        appState.borderColor;
 
     grid.undoStack =
         cloneData(

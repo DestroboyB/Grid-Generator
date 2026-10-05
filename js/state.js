@@ -71,6 +71,12 @@ export const appState = {
 
     backgroundColor: "#ffffff",
 
+    borderEnabled: true,
+
+    borderSize: 2,
+
+    borderColor: "#9ca3af",
+
 
     // ========================================
     // Undo / Redo

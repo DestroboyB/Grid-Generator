@@ -59,7 +59,16 @@ export function getCurrentState() {
             appState.spacing,
 
         backgroundColor:
-            appState.backgroundColor
+            appState.backgroundColor,
+
+        borderEnabled:
+            appState.borderEnabled,
+
+        borderSize:
+            appState.borderSize,
+
+        borderColor:
+            appState.borderColor
     };
 }
 
@@ -198,6 +207,19 @@ function restoreState(
     appState.backgroundColor =
         state.backgroundColor;
 
+    appState.borderEnabled =
+        state.borderEnabled ??
+        true;
+
+    appState.borderSize =
+        state.borderSize ??
+        2;
+
+    appState.borderColor =
+        state.borderColor ??
+        "#9ca3af";
+
+
     const spacingInput =
         document.getElementById(
             "spacing"
@@ -212,6 +234,27 @@ function restoreState(
         document.getElementById(
             "backgroundColor"
         );
+
+    const borderEnabledInput =
+        document.getElementById(
+            "borderEnabled"
+        );
+
+    const borderColorInput =
+        document.getElementById(
+            "borderColor"
+        );
+
+    const borderSizeInput =
+        document.getElementById(
+            "borderSize"
+        );
+
+    const borderSizeValue =
+        document.getElementById(
+            "borderSizeValue"
+        );
+
 
     if (spacingInput) {
 
@@ -230,6 +273,31 @@ function restoreState(
         backgroundColorInput.value =
             appState.backgroundColor;
     }
+
+    if (borderEnabledInput) {
+
+        borderEnabledInput.checked =
+            appState.borderEnabled;
+    }
+
+    if (borderColorInput) {
+
+        borderColorInput.value =
+            appState.borderColor;
+    }
+
+    if (borderSizeInput) {
+
+        borderSizeInput.value =
+            appState.borderSize;
+    }
+
+    if (borderSizeValue) {
+
+        borderSizeValue.textContent =
+            `${appState.borderSize} px`;
+    }
+
 
     const gridChanged =
         previousRows !==
