@@ -1,0 +1,241 @@
+/* ========================================
+   URL Image Import
+======================================== */
+
+.url-image-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.url-image-container {
+    width: min(600px, 100%);
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+
+/* ========================================
+   Header
+======================================== */
+
+.url-image-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.url-image-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.url-image-header button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #6b7280;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.url-image-header button:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+
+/* ========================================
+   URL Input
+======================================== */
+
+.url-image-controls {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+}
+
+.url-image-controls input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    color: #1f2937;
+    font-size: 14px;
+    outline: none;
+}
+
+.url-image-controls input:focus {
+    border-color: #2563eb;
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.url-image-controls button {
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border: 1px solid #2563eb;
+    border-radius: 7px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.url-image-controls button:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+
+/* ========================================
+   Status
+======================================== */
+
+.url-image-status {
+    min-height: 20px;
+    padding: 0 20px 10px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+
+/* ========================================
+   Image Preview
+======================================== */
+
+.url-image-preview {
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 180px;
+    max-height: 300px;
+
+    margin: 0 20px 16px;
+    padding: 12px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    background: #f3f4f6;
+
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.url-image-preview img {
+    display: block;
+
+    max-width: 100%;
+    max-height: 270px;
+
+    object-fit: contain;
+
+    border-radius: 5px;
+}
+
+
+/* ========================================
+   Footer
+======================================== */
+
+.url-image-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    padding: 14px 20px;
+
+    border-top: 1px solid #e5e7eb;
+}
+
+.url-image-footer button {
+    min-width: 80px;
+    padding: 9px 16px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    background: #ffffff;
+    color: #374151;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.url-image-footer button:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+
+/* Use Image Button */
+
+.url-image-footer #urlImageUseButton {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.url-image-footer #urlImageUseButton:hover:not(:disabled) {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+}
+
+.url-image-footer #urlImageUseButton:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+
+/* ========================================
+   Mobile
+======================================== */
+
+@media (max-width: 500px) {
+
+    .url-image-modal {
+        padding: 10px;
+    }
+
+    .url-image-controls {
+        flex-direction: column;
+    }
+
+    .url-image-controls button {
+        width: 100%;
+    }
+
+    .url-image-preview {
+        min-height: 150px;
+        max-height: 240px;
+
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+
+    .url-image-preview img {
+        max-height: 210px;
+    }
+
+}

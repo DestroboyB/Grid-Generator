@@ -901,7 +901,6 @@
         <button
             id="replaceUrlImageButton"
             type="button"
-            disabled
         >
             URL
         </button>
@@ -980,7 +979,6 @@
         <button
             id="urlImageButton"
             type="button"
-            disabled
         >
             URL
         </button>
@@ -1080,13 +1078,37 @@
 
             <!-- Back -->
 
-            <button
-                id="malSearchBackButton"
-                type="button"
-                class="mal-search-back-button"
-            >
-                Back
-            </button>
+            <div class="mal-search-navigation">
+
+    <button
+        id="malSearchPreviousButton"
+        type="button"
+        disabled
+    >
+        Previous
+    </button>
+
+    <span id="malSearchPageIndicator">
+        Page 1
+    </span>
+
+    <button
+        id="malSearchNextButton"
+        type="button"
+        disabled
+    >
+        Next
+    </button>
+
+</div>
+
+<button
+    id="malSearchBackButton"
+    type="button"
+    class="mal-search-back-button"
+>
+    Back
+</button>
 
         </div>
 
@@ -1187,6 +1209,78 @@
         </div>
 
     </div>
+
+    <div id="urlImageModal" class="url-image-modal">
+    <div class="url-image-container">
+
+        <div class="url-image-header">
+            <h2>Add Image from URL</h2>
+
+            <button
+                id="urlImageCloseButton"
+                type="button"
+                aria-label="Close URL image dialog"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="url-image-controls">
+
+            <input
+                id="urlImageInput"
+                type="url"
+                placeholder="Paste an image URL..."
+                autocomplete="off"
+            >
+
+            <button
+                id="urlImageLoadButton"
+                type="button"
+            >
+                Preview
+            </button>
+
+        </div>
+
+        <div
+            id="urlImageStatus"
+            class="url-image-status"
+        ></div>
+
+        <div
+            id="urlImagePreview"
+            class="url-image-preview"
+        >
+            <img
+                id="urlImagePreviewImage"
+                src=""
+                alt="Image preview"
+            >
+        </div>
+
+        <div class="url-image-footer">
+
+            <button
+                id="urlImageCancelButton"
+                type="button"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="urlImageUseButton"
+                type="button"
+                disabled
+            >
+                Use Image
+            </button>
+
+        </div>
+
+    </div>
+</div>
+</div>
 
 
     <!-- ========================================

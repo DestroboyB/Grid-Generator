@@ -732,4 +732,73 @@
         margin-right: 16px;
     }
 
+    #malSearchModal .mal-search-navigation {
+    padding: 10px 16px;
+}
+
+#malSearchModal .mal-search-navigation button {
+    min-width: 75px;
+}
+
+}
+
+/* ========================================
+   Search Pagination
+======================================== */
+
+#malSearchModal .mal-search-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    width: 100%;
+
+    padding: 12px 20px;
+
+    border-top: 1px solid #e5e7eb;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+
+    flex-shrink: 0;
+}
+
+#malSearchModal .mal-search-navigation button {
+    min-width: 80px;
+
+    padding: 8px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    background: #ffffff;
+    color: #374151;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+#malSearchModal .mal-search-navigation button:hover:not(:disabled) {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+#malSearchModal .mal-search-navigation button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+#malSearchModal #malSearchPageIndicator {
+    min-width: 70px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-align: center;
 }

@@ -7,38 +7,88 @@ import {
    API
 ======================================== */
 
-const API_BASE = "https://jikan.lucashdo.com/v1";
+const API_BASE =
+    "https://jikan.lucashdo.com/v1";
+
+const RESULTS_PER_PAGE = 12;
+
+const API_RESULTS_PER_PAGE = 50;
+
+
+/*
+ * Only allow a few character-anime
+ * requests at the same time.
+ *
+ * This helps prevent hitting the
+ * MyAnimeList API rate limit when
+ * displaying a page of characters.
+ */
+const CHARACTER_ANIME_CONCURRENCY = 3;
 
 
 /* ========================================
    DOM Elements
 ======================================== */
 
-const modal = document.getElementById("malSearchModal");
+const modal =
+    document.getElementById(
+        "malSearchModal"
+    );
 
 const closeButton =
-    document.getElementById("malSearchCloseButton");
+    document.getElementById(
+        "malSearchCloseButton"
+    );
 
 const characterTab =
-    document.getElementById("malCharacterTab");
+    document.getElementById(
+        "malCharacterTab"
+    );
 
 const animeTab =
-    document.getElementById("malAnimeTab");
+    document.getElementById(
+        "malAnimeTab"
+    );
 
 const searchInput =
-    document.getElementById("malSearchInput");
+    document.getElementById(
+        "malSearchInput"
+    );
 
 const searchButton =
-    document.getElementById("malSearchButton");
+    document.getElementById(
+        "malSearchButton"
+    );
 
 const statusElement =
-    document.getElementById("malSearchStatus");
+    document.getElementById(
+        "malSearchStatus"
+    );
 
 const resultsElement =
-    document.getElementById("malSearchResults");
+    document.getElementById(
+        "malSearchResults"
+    );
 
 const backButton =
-    document.getElementById("malSearchBackButton");
+    document.getElementById(
+        "malSearchBackButton"
+    );
+
+const previousButton =
+    document.getElementById(
+        "malSearchPreviousButton"
+    );
+
+const nextButton =
+    document.getElementById(
+        "malSearchNextButton"
+    );
+
+const pageIndicator =
+    document.getElementById(
+        "malSearchPageIndicator"
+    );
 
 
 /* ========================================
@@ -47,11 +97,93 @@ const backButton =
 
 let targetElement = null;
 
-let currentMode = "character";
+let currentMode =
+    "character";
 
 let currentResults = [];
 
 let currentQuery = "";
+
+let currentPage = 1;
+
+let hasNextPage = false;
+
+let isSearching = false;
+
+let currentApiResultCount = 0;
+
+
+/* ========================================
+   Character Anime Cache
+======================================== */
+
+/*
+ * Stores the primary anime title for each
+ * character we have already looked up.
+ *
+ * Key:
+ *     MAL character ID
+ *
+ * Value:
+ *     Anime title
+ */
+
+const characterAnimeCache =
+    new Map();
+
+
+/* ========================================
+   Character Anime Request Queue
+======================================== */
+
+/*
+ * Keeps character anime requests from
+ * all firing at once.
+ */
+
+let activeCharacterAnimeRequests = 0;
+
+const characterAnimeQueue = [];
+
+
+function queueCharacterAnimeRequest(
+    character,
+    typeElement
+) {
+
+    characterAnimeQueue.push({
+        character,
+        typeElement
+    });
+
+    processCharacterAnimeQueue();
+}
+
+
+function processCharacterAnimeQueue() {
+
+    while (
+        activeCharacterAnimeRequests <
+            CHARACTER_ANIME_CONCURRENCY &&
+        characterAnimeQueue.length > 0
+    ) {
+
+        const request =
+            characterAnimeQueue.shift();
+
+        activeCharacterAnimeRequests++;
+
+        loadCharacterAnime(
+            request.character,
+            request.typeElement
+        ).finally(() => {
+
+            activeCharacterAnimeRequests--;
+
+            processCharacterAnimeQueue();
+        });
+    }
+}
 
 
 /* ========================================
@@ -62,23 +194,38 @@ export function openMalSearch(element) {
 
     targetElement = element;
 
-    currentMode = "character";
+    currentMode =
+        "character";
 
     currentResults = [];
 
     currentQuery = "";
 
+    currentPage = 1;
+
+    hasNextPage = false;
+
+    isSearching = false;
+
+    currentApiResultCount = 0;
+
     searchInput.value = "";
 
-    modal.style.display = "flex";
+    modal.style.display =
+        "flex";
 
     updateTabs();
 
     showSearchView();
 
-    setTimeout(() => {
-        searchInput.focus();
-    }, 50);
+    updatePagination();
+
+    setTimeout(
+        () => {
+            searchInput.focus();
+        },
+        50
+    );
 }
 
 
@@ -88,7 +235,8 @@ export function openMalSearch(element) {
 
 function closeMalSearch() {
 
-    modal.style.display = "none";
+    modal.style.display =
+        "none";
 
     targetElement = null;
 
@@ -96,13 +244,24 @@ function closeMalSearch() {
 
     currentQuery = "";
 
+    currentPage = 1;
+
+    hasNextPage = false;
+
+    isSearching = false;
+
+    currentApiResultCount = 0;
+
     searchInput.value = "";
 
     resultsElement.innerHTML = "";
 
     statusElement.textContent = "";
 
-    backButton.style.display = "none";
+    backButton.style.display =
+        "none";
+
+    updatePagination();
 }
 
 
@@ -120,17 +279,31 @@ characterTab.addEventListener(
     "click",
     () => {
 
-        if (currentMode === "character") {
+        if (
+            currentMode ===
+            "character"
+        ) {
             return;
         }
 
-        currentMode = "character";
+        currentMode =
+            "character";
 
         currentResults = [];
+
+        currentQuery = "";
+
+        currentPage = 1;
+
+        hasNextPage = false;
+
+        currentApiResultCount = 0;
 
         updateTabs();
 
         showSearchView();
+
+        updatePagination();
     }
 );
 
@@ -139,17 +312,31 @@ animeTab.addEventListener(
     "click",
     () => {
 
-        if (currentMode === "anime") {
+        if (
+            currentMode ===
+            "anime"
+        ) {
             return;
         }
 
-        currentMode = "anime";
+        currentMode =
+            "anime";
 
         currentResults = [];
+
+        currentQuery = "";
+
+        currentPage = 1;
+
+        hasNextPage = false;
+
+        currentApiResultCount = 0;
 
         updateTabs();
 
         showSearchView();
+
+        updatePagination();
     }
 );
 
@@ -158,16 +345,21 @@ function updateTabs() {
 
     characterTab.classList.toggle(
         "active",
-        currentMode === "character"
+        currentMode ===
+            "character"
     );
 
     animeTab.classList.toggle(
         "active",
-        currentMode === "anime"
+        currentMode ===
+            "anime"
     );
 
 
-    if (currentMode === "character") {
+    if (
+        currentMode ===
+        "character"
+    ) {
 
         searchInput.placeholder =
             "Search for a character...";
@@ -181,20 +373,25 @@ function updateTabs() {
 
 
 /* ========================================
-   Search
+   Search Events
 ======================================== */
 
 searchButton.addEventListener(
     "click",
-    performSearch
+    () => {
+        performSearch();
+    }
 );
 
 
 searchInput.addEventListener(
     "keydown",
-    (event) => {
+    event => {
 
-        if (event.key === "Enter") {
+        if (
+            event.key ===
+            "Enter"
+        ) {
 
             event.preventDefault();
 
@@ -204,7 +401,29 @@ searchInput.addEventListener(
 );
 
 
-async function performSearch() {
+/* ========================================
+   Perform Search
+======================================== */
+
+/*
+ * requestedPage is separate from currentPage.
+ *
+ * This is important:
+ *
+ * currentPage = page currently displayed
+ *
+ * requestedPage = page we are attempting
+ * to load
+ *
+ * This prevents the UI from becoming
+ * stuck on page 8 if the page-8 request
+ * fails.
+ */
+
+async function performSearch(
+    keepResults = false,
+    requestedPage = currentPage
+) {
 
     const query =
         searchInput.value.trim();
@@ -219,46 +438,95 @@ async function performSearch() {
     }
 
 
-    currentQuery = query;
+    /*
+     * A new search always starts
+     * on page 1.
+     */
 
-    currentResults = [];
+    if (
+        query !== currentQuery
+    ) {
 
-    showSearchView();
+        requestedPage = 1;
 
+        keepResults = false;
+    }
+
+
+    currentQuery =
+        query;
+
+
+    /*
+     * Only clear results when this
+     * is a completely new search.
+     *
+     * Pagination keeps the current
+     * page visible while loading.
+     */
+
+    if (!keepResults) {
+
+        currentResults = [];
+
+        resultsElement.innerHTML = "";
+    }
+
+
+    hasNextPage = false;
+
+    currentApiResultCount = 0;
+
+    isSearching = true;
 
     statusElement.textContent =
         `Searching ${
-            currentMode === "character"
+            currentMode ===
+            "character"
                 ? "characters"
                 : "anime"
         }...`;
 
+    searchButton.disabled =
+        true;
 
-    searchButton.disabled = true;
+    updatePagination();
 
 
     try {
 
         const endpoint =
-            currentMode === "character"
+            currentMode ===
+            "character"
                 ? "characters"
                 : "anime";
 
 
         const url =
             `${API_BASE}/${endpoint}?q=${
-                encodeURIComponent(query)
-            }&page=1`;
-
-
-        console.log(
-            "MAL search:",
-            url
-        );
+                encodeURIComponent(
+                    query
+                )
+            }&page=${requestedPage}`;
 
 
         const response =
             await fetch(url);
+
+
+        /* ========================================
+           Handle Rate Limit
+        ======================================== */
+
+        if (
+            response.status ===
+            429
+        ) {
+
+            throw new Error(
+                "RATE_LIMITED"
+            );
+        }
 
 
         if (!response.ok) {
@@ -273,33 +541,116 @@ async function performSearch() {
             await response.json();
 
 
-        currentResults =
-            Array.isArray(json.data)
-                ? json.data.slice(0, 12)
+        /* ========================================
+           Search Results
+        ======================================== */
+
+        const apiResults =
+            Array.isArray(
+                json.data
+            )
+                ? json.data
                 : [];
 
 
-        if (!currentResults.length) {
+        currentApiResultCount =
+            apiResults.length;
+
+
+        /*
+         * Only now do we officially
+         * change the current page.
+         *
+         * If the request had failed,
+         * currentPage would still be
+         * the previous page.
+         */
+
+        currentPage =
+            requestedPage;
+
+
+        currentResults =
+            apiResults.slice(
+                0,
+                RESULTS_PER_PAGE
+            );
+
+
+        /* ========================================
+           Pagination
+        ======================================== */
+
+        const pagination =
+            json.meta &&
+            json.meta.pagination
+                ? json.meta.pagination
+                : null;
+
+
+        if (
+            pagination &&
+            typeof
+                pagination.hasNextPage ===
+                "boolean"
+        ) {
+
+            hasNextPage =
+                pagination.hasNextPage;
+
+        } else {
+
+            hasNextPage =
+                apiResults.length >=
+                API_RESULTS_PER_PAGE;
+        }
+
+
+        /* ========================================
+           No Results
+        ======================================== */
+
+        if (
+            !currentResults.length
+        ) {
+
+            resultsElement.innerHTML = "";
 
             statusElement.textContent =
                 "No results found.";
 
-            resultsElement.innerHTML = "";
+            hasNextPage =
+                false;
+
+            isSearching = false;
+
+            updatePagination();
 
             return;
         }
 
 
-        statusElement.textContent =
-            `Found ${
-                currentResults.length
-            } result${
-                currentResults.length === 1
-                    ? ""
-                    : "s"
-            }.`;
+        /* ========================================
+           Display Results
+        ======================================== */
 
         renderSearchResults();
+
+
+        if (
+            currentApiResultCount >=
+            API_RESULTS_PER_PAGE
+        ) {
+
+            statusElement.textContent =
+                `Found 50+ results — Page ${currentPage}.`;
+
+        } else {
+
+            statusElement.textContent =
+                `Found ${currentApiResultCount} results — Page ${currentPage}.`;
+        }
+
 
     } catch (error) {
 
@@ -309,16 +660,144 @@ async function performSearch() {
         );
 
 
-        statusElement.textContent =
-            "Unable to search MyAnimeList right now.";
+        /*
+         * Do NOT change currentPage here.
+         *
+         * This means if page 8 fails,
+         * the interface remains on page 7.
+         */
 
-        resultsElement.innerHTML = "";
+        if (!keepResults) {
+
+            resultsElement.innerHTML = "";
+        }
+
+
+        if (
+            error.message ===
+            "RATE_LIMITED"
+        ) {
+
+            statusElement.textContent =
+                "MyAnimeList is temporarily rate limited. Please wait a few seconds and try again.";
+
+        } else {
+
+            statusElement.textContent =
+                "Unable to search MyAnimeList right now.";
+        }
+
+
+        /*
+         * Don't permanently disable
+         * the Next button because a
+         * temporary request failed.
+         *
+         * If the previous page had another
+         * page available, restore that state.
+         */
+
+        hasNextPage =
+            currentPage < requestedPage
+                ? true
+                : hasNextPage;
 
     } finally {
 
-        searchButton.disabled = false;
+        isSearching = false;
+
+        searchButton.disabled =
+            false;
+
+        updatePagination();
     }
 }
+
+
+/* ========================================
+   Pagination
+======================================== */
+
+function updatePagination() {
+
+    if (
+        !previousButton ||
+        !nextButton ||
+        !pageIndicator
+    ) {
+        return;
+    }
+
+
+    pageIndicator.textContent =
+        `Page ${currentPage}`;
+
+
+    previousButton.disabled =
+        currentPage <= 1 ||
+        isSearching;
+
+
+    nextButton.disabled =
+        !hasNextPage ||
+        isSearching;
+}
+
+
+/* ========================================
+   Previous Page
+======================================== */
+
+previousButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            currentPage <= 1 ||
+            isSearching
+        ) {
+            return;
+        }
+
+
+        const previousPage =
+            currentPage - 1;
+
+
+        performSearch(
+            true,
+            previousPage
+        );
+    }
+);
+
+
+/* ========================================
+   Next Page
+======================================== */
+
+nextButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !hasNextPage ||
+            isSearching
+        ) {
+            return;
+        }
+
+
+        const nextPage =
+            currentPage + 1;
+
+
+        performSearch(
+            true,
+            nextPage
+        );
+    }
+);
 
 
 /* ========================================
@@ -327,29 +806,38 @@ async function performSearch() {
 
 function renderSearchResults() {
 
-    resultsElement.innerHTML = "";
+    resultsElement.innerHTML =
+        "";
 
 
     currentResults.forEach(
-        (item) => {
+        item => {
 
             const result =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
 
 
-            result.type = "button";
+            result.type =
+                "button";
 
             result.className =
                 "mal-search-result";
 
 
+            /* ----------------------------------------
+               Image
+            ---------------------------------------- */
+
             const image =
-                document.createElement("img");
+                document.createElement(
+                    "img"
+                );
 
 
             image.className =
                 "mal-result-image";
-
 
             image.alt =
                 getItemName(item);
@@ -361,7 +849,8 @@ function renderSearchResults() {
 
             if (imageURL) {
 
-                image.src = imageURL;
+                image.src =
+                    imageURL;
 
             } else {
 
@@ -371,70 +860,100 @@ function renderSearchResults() {
             }
 
 
+            /* ----------------------------------------
+               Character / Anime Name
+            ---------------------------------------- */
+
             const name =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             name.className =
                 "mal-result-name";
 
-
             name.textContent =
                 getItemName(item);
 
 
+            /* ----------------------------------------
+               Secondary Information
+            ---------------------------------------- */
+
             const type =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             type.className =
                 "mal-result-type";
 
 
-            if (currentMode === "character") {
+            result.appendChild(
+                image
+            );
+
+            result.appendChild(
+                name
+            );
+
+            result.appendChild(
+                type
+            );
+
+
+            /* ----------------------------------------
+               Character Anime
+            ---------------------------------------- */
+
+            if (
+                currentMode ===
+                "character"
+            ) {
 
                 type.textContent =
-                    "Character";
+                    "Loading anime...";
+
+                queueCharacterAnimeRequest(
+                    item,
+                    type
+                );
 
             } else {
 
                 type.textContent =
-                    item.type || "Anime";
+                    item.type ||
+                    "Anime";
             }
 
 
-            result.appendChild(image);
-
-            result.appendChild(name);
-
-            result.appendChild(type);
-
-
-            /* ========================================
-               IMPORTANT CLICK HANDLER
-            ======================================== */
+            /* ----------------------------------------
+               Result Click
+            ---------------------------------------- */
 
             result.addEventListener(
                 "click",
-                (event) => {
+                event => {
 
                     event.preventDefault();
 
-                    console.log(
-                        "MAL result clicked:",
+                    openPictureGallery(
                         item
                     );
-
-                    openPictureGallery(item);
                 }
             );
 
 
-            resultsElement.appendChild(result);
+            resultsElement.appendChild(
+                result
+            );
 
 
-            /* Load image if search result
-               didn't contain one */
+            /* ----------------------------------------
+               Missing Thumbnail
+            ---------------------------------------- */
 
             if (!imageURL) {
 
@@ -449,6 +968,241 @@ function renderSearchResults() {
 
 
 /* ========================================
+   Load Character Anime
+======================================== */
+
+async function loadCharacterAnime(
+    character,
+    typeElement
+) {
+
+    if (
+        !character ||
+        !character.malId
+    ) {
+
+        typeElement.textContent =
+            "Anime unavailable";
+
+        return;
+    }
+
+
+    const characterId =
+        character.malId;
+
+
+    /* ----------------------------------------
+       Cache
+    ---------------------------------------- */
+
+    if (
+        characterAnimeCache.has(
+            characterId
+        )
+    ) {
+
+        typeElement.textContent =
+            characterAnimeCache.get(
+                characterId
+            );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/characters/${characterId}/anime`
+            );
+
+
+        /* ----------------------------------------
+           Rate Limit
+        ---------------------------------------- */
+
+        if (
+            response.status ===
+            429
+        ) {
+
+            throw new Error(
+                "RATE_LIMITED"
+            );
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Anime request failed (${response.status})`
+            );
+        }
+
+
+        const json =
+            await response.json();
+
+
+        const appearances =
+            Array.isArray(
+                json.data
+            )
+                ? json.data
+                : [];
+
+
+        let animeTitle =
+            null;
+
+
+        /* ----------------------------------------
+           Find Anime Title
+        ---------------------------------------- */
+
+        if (
+            appearances.length
+        ) {
+
+            const firstAppearance =
+                appearances[0];
+
+
+            /*
+             * Direct format.
+             */
+
+            if (
+                firstAppearance
+            ) {
+
+                animeTitle =
+                    firstAppearance.title ||
+                    firstAppearance.name ||
+                    null;
+            }
+
+
+            /*
+             * Nested anime format.
+             */
+
+            if (
+                !animeTitle &&
+                firstAppearance &&
+                firstAppearance.anime
+            ) {
+
+                animeTitle =
+                    firstAppearance.anime.title ||
+                    firstAppearance.anime.name ||
+                    null;
+            }
+
+
+            /*
+             * Nested entry format.
+             */
+
+            if (
+                !animeTitle &&
+                firstAppearance &&
+                firstAppearance.entry
+            ) {
+
+                animeTitle =
+                    firstAppearance.entry.title ||
+                    firstAppearance.entry.name ||
+                    null;
+            }
+
+
+            /*
+             * Nested data format.
+             */
+
+            if (
+                !animeTitle &&
+                firstAppearance &&
+                firstAppearance.data
+            ) {
+
+                animeTitle =
+                    firstAppearance.data.title ||
+                    firstAppearance.data.name ||
+                    null;
+            }
+        }
+
+
+        /* ----------------------------------------
+           No Anime Found
+        ---------------------------------------- */
+
+        if (!animeTitle) {
+
+            typeElement.textContent =
+                "Anime unavailable";
+
+            /*
+             * Cache this only when the API
+             * actually returned successfully.
+             *
+             * We do NOT cache failures.
+             */
+
+            if (
+                appearances.length === 0
+            ) {
+
+                characterAnimeCache.set(
+                    characterId,
+                    "Anime unavailable"
+                );
+            }
+
+            return;
+        }
+
+
+        /* ----------------------------------------
+           Cache Successful Result
+        ---------------------------------------- */
+
+        characterAnimeCache.set(
+            characterId,
+            animeTitle
+        );
+
+
+        typeElement.textContent =
+            animeTitle;
+
+    } catch (error) {
+
+        console.warn(
+            "Unable to load character anime:",
+            error
+        );
+
+
+        /*
+         * Don't cache failures.
+         *
+         * If the API was temporarily
+         * rate limited, this character
+         * can be tried again later.
+         */
+
+        typeElement.textContent =
+            "Anime unavailable";
+    }
+}
+
+
+/* ========================================
    Load Missing Search Thumbnail
 ======================================== */
 
@@ -457,7 +1211,10 @@ async function loadResultImage(
     imageElement
 ) {
 
-    if (!item || !item.malId) {
+    if (
+        !item ||
+        !item.malId
+    ) {
         return;
     }
 
@@ -465,7 +1222,8 @@ async function loadResultImage(
     try {
 
         const endpoint =
-            currentMode === "character"
+            currentMode ===
+            "character"
                 ? "characters"
                 : "anime";
 
@@ -486,11 +1244,14 @@ async function loadResultImage(
 
 
         const detail =
-            json.data || json;
+            json.data ||
+            json;
 
 
         const imageURL =
-            getImageURL(detail);
+            getImageURL(
+                detail
+            );
 
 
         if (imageURL) {
@@ -517,14 +1278,14 @@ async function loadResultImage(
    Open Picture Gallery
 ======================================== */
 
-async function openPictureGallery(item) {
+async function openPictureGallery(
+    item
+) {
 
-    if (!item || !item.malId) {
-
-        console.error(
-            "MAL result has no malId:",
-            item
-        );
+    if (
+        !item ||
+        !item.malId
+    ) {
 
         statusElement.textContent =
             "This result does not have a valid MyAnimeList ID.";
@@ -533,24 +1294,46 @@ async function openPictureGallery(item) {
     }
 
 
-    /* Immediately show that the click worked */
-
     statusElement.textContent =
         `Loading ${
             getItemName(item)
         }...`;
 
 
-    resultsElement.innerHTML = "";
+    resultsElement.innerHTML =
+        "";
+
 
     backButton.style.display =
         "inline-flex";
 
 
+    if (previousButton) {
+
+        previousButton.style.display =
+            "none";
+    }
+
+
+    if (nextButton) {
+
+        nextButton.style.display =
+            "none";
+    }
+
+
+    if (pageIndicator) {
+
+        pageIndicator.style.display =
+            "none";
+    }
+
+
     try {
 
         const endpoint =
-            currentMode === "character"
+            currentMode ===
+            "character"
                 ? "characters"
                 : "anime";
 
@@ -559,18 +1342,10 @@ async function openPictureGallery(item) {
            Load Detail
         ======================================== */
 
-        const detailURL =
-            `${API_BASE}/${endpoint}/${item.malId}`;
-
-
-        console.log(
-            "Loading MAL detail:",
-            detailURL
-        );
-
-
         const detailResponse =
-            await fetch(detailURL);
+            await fetch(
+                `${API_BASE}/${endpoint}/${item.malId}`
+            );
 
 
         if (!detailResponse.ok) {
@@ -586,7 +1361,8 @@ async function openPictureGallery(item) {
 
 
         const detail =
-            detailJSON.data || detailJSON;
+            detailJSON.data ||
+            detailJSON;
 
 
         const name =
@@ -594,18 +1370,14 @@ async function openPictureGallery(item) {
             getItemName(item);
 
 
-        console.log(
-            "MAL detail:",
-            detail
-        );
-
-
         /* ========================================
            Get Main Image
         ======================================== */
 
         const primaryImage =
-            getImageURL(detail);
+            getImageURL(
+                detail
+            );
 
 
         /* ========================================
@@ -617,30 +1389,18 @@ async function openPictureGallery(item) {
 
         try {
 
-            const picturesURL =
-                `${API_BASE}/${endpoint}/${item.malId}/pictures`;
-
-
-            console.log(
-                "Loading MAL pictures:",
-                picturesURL
-            );
-
-
             const picturesResponse =
-                await fetch(picturesURL);
+                await fetch(
+                    `${API_BASE}/${endpoint}/${item.malId}/pictures`
+                );
 
 
-            if (picturesResponse.ok) {
+            if (
+                picturesResponse.ok
+            ) {
 
                 const picturesJSON =
                     await picturesResponse.json();
-
-
-                console.log(
-                    "MAL pictures response:",
-                    picturesJSON
-                );
 
 
                 if (
@@ -663,7 +1423,9 @@ async function openPictureGallery(item) {
                 }
             }
 
-        } catch (pictureError) {
+        } catch (
+            pictureError
+        ) {
 
             console.warn(
                 "Picture gallery request failed:",
@@ -680,13 +1442,17 @@ async function openPictureGallery(item) {
 
             const alreadyExists =
                 pictures.some(
-                    (picture) =>
-                        getPictureURL(picture) ===
+                    picture =>
+                        getPictureURL(
+                            picture
+                        ) ===
                         primaryImage
                 );
 
 
-            if (!alreadyExists) {
+            if (
+                !alreadyExists
+            ) {
 
                 pictures = [
                     {
@@ -706,7 +1472,7 @@ async function openPictureGallery(item) {
         pictures =
             pictures
                 .map(
-                    (picture) => {
+                    picture => {
 
                         return {
                             picture,
@@ -718,7 +1484,7 @@ async function openPictureGallery(item) {
                     }
                 )
                 .filter(
-                    (picture) =>
+                    picture =>
                         picture.url
                 );
 
@@ -727,7 +1493,9 @@ async function openPictureGallery(item) {
            No Gallery
         ======================================== */
 
-        if (!pictures.length) {
+        if (
+            !pictures.length
+        ) {
 
             statusElement.textContent =
                 "No additional pictures were found.";
@@ -753,7 +1521,6 @@ async function openPictureGallery(item) {
             name
         );
 
-
     } catch (error) {
 
         console.error(
@@ -768,7 +1535,8 @@ async function openPictureGallery(item) {
             }`;
 
 
-        resultsElement.innerHTML = "";
+        resultsElement.innerHTML =
+            "";
     }
 }
 
@@ -782,65 +1550,69 @@ function renderPictureGallery(
     name
 ) {
 
-    resultsElement.innerHTML = "";
+    resultsElement.innerHTML =
+        "";
 
 
     pictures.forEach(
         (item, index) => {
 
             const button =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
 
 
-            button.type = "button";
+            button.type =
+                "button";
 
             button.className =
                 "mal-picture-result";
 
 
             const image =
-                document.createElement("img");
+                document.createElement(
+                    "img"
+                );
 
 
             image.src =
                 item.url;
 
-
             image.alt =
                 `${name} picture ${index + 1}`;
-
 
             image.loading =
                 "lazy";
 
 
             const label =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
 
             label.className =
                 "mal-picture-number";
 
-
             label.textContent =
                 `Picture ${index + 1}`;
 
 
-            button.appendChild(image);
+            button.appendChild(
+                image
+            );
 
-            button.appendChild(label);
+            button.appendChild(
+                label
+            );
 
 
             button.addEventListener(
                 "click",
-                (event) => {
+                event => {
 
                     event.preventDefault();
-
-                    console.log(
-                        "MAL picture selected:",
-                        item.url
-                    );
 
                     selectPicture(
                         item.url
@@ -861,13 +1633,11 @@ function renderPictureGallery(
    Select Picture
 ======================================== */
 
-function selectPicture(imageURL) {
+function selectPicture(
+    imageURL
+) {
 
     if (!targetElement) {
-
-        console.error(
-            "No target board element exists."
-        );
 
         return;
     }
@@ -877,15 +1647,8 @@ function selectPicture(imageURL) {
         targetElement;
 
 
-    console.log(
-        "Opening cropper with:",
-        imageURL
-    );
-
-
     modal.style.display =
         "none";
-
 
     targetElement =
         null;
@@ -910,13 +1673,52 @@ backButton.addEventListener(
             "none";
 
 
-        statusElement.textContent =
-            currentResults.length
-                ? `Search results for "${currentQuery}".`
-                : "";
+        if (previousButton) {
+
+            previousButton.style.display =
+                "inline-flex";
+        }
+
+
+        if (nextButton) {
+
+            nextButton.style.display =
+                "inline-flex";
+        }
+
+
+        if (pageIndicator) {
+
+            pageIndicator.style.display =
+                "inline-flex";
+        }
+
+
+        if (
+            currentApiResultCount >=
+            API_RESULTS_PER_PAGE
+        ) {
+
+            statusElement.textContent =
+                `Found 50+ results — Page ${currentPage}.`;
+
+        } else if (
+            currentApiResultCount > 0
+        ) {
+
+            statusElement.textContent =
+                `Found ${currentApiResultCount} results — Page ${currentPage}.`;
+
+        } else {
+
+            statusElement.textContent =
+                "";
+        }
 
 
         renderSearchResults();
+
+        updatePagination();
     }
 );
 
@@ -931,9 +1733,32 @@ function showSearchView() {
         "none";
 
 
-    resultsElement.innerHTML = "";
+    if (previousButton) {
 
-    statusElement.textContent = "";
+        previousButton.style.display =
+            "inline-flex";
+    }
+
+
+    if (nextButton) {
+
+        nextButton.style.display =
+            "inline-flex";
+    }
+
+
+    if (pageIndicator) {
+
+        pageIndicator.style.display =
+            "inline-flex";
+    }
+
+
+    resultsElement.innerHTML =
+        "";
+
+    statusElement.textContent =
+        "";
 }
 
 
@@ -944,11 +1769,15 @@ function showSearchView() {
 function getItemName(item) {
 
     if (!item) {
+
         return "Unknown";
     }
 
 
-    if (currentMode === "character") {
+    if (
+        currentMode ===
+        "character"
+    ) {
 
         return (
             item.name ||
@@ -972,11 +1801,10 @@ function getItemName(item) {
 function getImageURL(item) {
 
     if (!item) {
+
         return null;
     }
 
-
-    /* jikan-edge */
 
     if (item.imageUrl) {
 
@@ -984,68 +1812,73 @@ function getImageURL(item) {
     }
 
 
-    /* Direct images */
-
     if (item.images) {
 
         if (item.images.large) {
+
             return item.images.large;
         }
 
         if (item.images.medium) {
+
             return item.images.medium;
         }
 
         if (item.images.small) {
+
             return item.images.small;
         }
 
 
-        /* JPG */
-
         if (item.images.jpg) {
 
             if (
-                item.images.jpg.large_image_url
+                item.images.jpg
+                    .large_image_url
             ) {
 
                 return (
-                    item.images.jpg.large_image_url
+                    item.images.jpg
+                        .large_image_url
                 );
             }
 
 
             if (
-                item.images.jpg.image_url
+                item.images.jpg
+                    .image_url
             ) {
 
                 return (
-                    item.images.jpg.image_url
+                    item.images.jpg
+                        .image_url
                 );
             }
         }
 
 
-        /* WebP */
-
         if (item.images.webp) {
 
             if (
-                item.images.webp.large_image_url
+                item.images.webp
+                    .large_image_url
             ) {
 
                 return (
-                    item.images.webp.large_image_url
+                    item.images.webp
+                        .large_image_url
                 );
             }
 
 
             if (
-                item.images.webp.image_url
+                item.images.webp
+                    .image_url
             ) {
 
                 return (
-                    item.images.webp.image_url
+                    item.images.webp
+                        .image_url
                 );
             }
         }
@@ -1060,14 +1893,15 @@ function getImageURL(item) {
    Get Picture URL
 ======================================== */
 
-function getPictureURL(picture) {
+function getPictureURL(
+    picture
+) {
 
     if (!picture) {
+
         return null;
     }
 
-
-    /* jikan-edge */
 
     if (picture.imageUrl) {
 
@@ -1075,83 +1909,89 @@ function getPictureURL(picture) {
     }
 
 
-    /* Direct URLs */
-
     if (picture.large) {
+
         return picture.large;
     }
 
     if (picture.medium) {
+
         return picture.medium;
     }
 
     if (picture.small) {
+
         return picture.small;
     }
 
 
-    /* Nested image object */
-
     if (picture.images) {
 
         if (picture.images.large) {
+
             return picture.images.large;
         }
 
         if (picture.images.medium) {
+
             return picture.images.medium;
         }
 
         if (picture.images.small) {
+
             return picture.images.small;
         }
 
 
-        /* JPG */
-
         if (picture.images.jpg) {
 
             if (
-                picture.images.jpg.large_image_url
+                picture.images.jpg
+                    .large_image_url
             ) {
 
                 return (
-                    picture.images.jpg.large_image_url
+                    picture.images.jpg
+                        .large_image_url
                 );
             }
 
 
             if (
-                picture.images.jpg.image_url
+                picture.images.jpg
+                    .image_url
             ) {
 
                 return (
-                    picture.images.jpg.image_url
+                    picture.images.jpg
+                        .image_url
                 );
             }
         }
 
 
-        /* WebP */
-
         if (picture.images.webp) {
 
             if (
-                picture.images.webp.large_image_url
+                picture.images.webp
+                    .large_image_url
             ) {
 
                 return (
-                    picture.images.webp.large_image_url
+                    picture.images.webp
+                        .large_image_url
                 );
             }
 
 
             if (
-                picture.images.webp.image_url
+                picture.images.webp
+                    .image_url
             ) {
 
                 return (
-                    picture.images.webp.image_url
+                    picture.images.webp
+                        .image_url
                 );
             }
         }
@@ -1168,9 +2008,11 @@ function getPictureURL(picture) {
 
 modal.addEventListener(
     "click",
-    (event) => {
+    event => {
 
-        if (event.target === modal) {
+        if (
+            event.target === modal
+        ) {
 
             closeMalSearch();
         }

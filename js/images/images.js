@@ -21,6 +21,9 @@ import {
     openImageSearch
 } from "./imageSearch.js";
 
+import {
+    openUrlImage
+} from "./urlImage.js";
 
 // ========================================
 // Elements
@@ -136,6 +139,11 @@ const replaceImageSearchButton =
         "replaceImageSearchButton"
     );
 
+    const urlImageButton =
+    document.getElementById("urlImageButton");
+
+const replaceUrlImageButton =
+    document.getElementById("replaceUrlImageButton");
 
 // ========================================
 // Close All Menus
@@ -1006,6 +1014,46 @@ document.addEventListener(
 
         appState.menuDiv =
             null;
+
+    }
+);
+
+urlImageButton.addEventListener(
+    "click",
+    () => {
+
+        if (!appState.menuDiv) {
+            return;
+        }
+
+        const div =
+            appState.menuDiv;
+
+        closeAllMenus();
+
+        appState.menuDiv = null;
+
+        openUrlImage(div);
+
+    }
+);
+
+replaceUrlImageButton.addEventListener(
+    "click",
+    () => {
+
+        if (!appState.menuDiv) {
+            return;
+        }
+
+        const div =
+            appState.menuDiv;
+
+        closeAllMenus();
+
+        appState.menuDiv = null;
+
+        openUrlImage(div);
 
     }
 );
