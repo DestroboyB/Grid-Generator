@@ -13,7 +13,8 @@ import {
 } from "./cropperTransforms.js";
 
 import {
-    createCropper
+    createCropper,
+    centerCropperCanvas
 } from "./cropperCore.js";
 
 import {
@@ -115,6 +116,79 @@ const restoreOriginalButton =
 
 
 // ========================================
+// Keep Cropper Centered During Resize
+// ========================================
+//
+// responsive: false prevents CropperJS from
+// changing the image/crop scale when the
+// browser window changes size.
+//
+// We still need to reposition the existing
+// canvas after the editor container changes
+// size.
+//
+
+let resizeFrame = null;
+
+function handleEditorResize() {
+
+    if (
+        resizeFrame
+    ) {
+
+        cancelAnimationFrame(
+            resizeFrame
+        );
+
+    }
+
+
+    resizeFrame =
+        requestAnimationFrame(
+            () => {
+
+                resizeFrame =
+                    null;
+
+
+                // ========================================
+                // Only Recenter When Editor Is Open
+                // ========================================
+
+                if (
+                    !cropModal ||
+                    cropModal.style.display === "none" ||
+                    cropModal.style.visibility === "hidden"
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    !appState.cropper
+                ) {
+
+                    return;
+
+                }
+
+
+                centerCropperCanvas();
+
+            }
+        );
+
+}
+
+window.addEventListener(
+    "resize",
+    handleEditorResize
+);
+
+
+// ========================================
 // Open Cropper For Local File
 // ========================================
 
@@ -150,10 +224,10 @@ export function openCropForFile(
 
 
             cropModal.style.display =
-    "flex";
+                "flex";
 
-cropModal.style.visibility =
-    "hidden";
+            cropModal.style.visibility =
+                "hidden";
 
 
             // ========================================
@@ -179,7 +253,7 @@ cropModal.style.visibility =
                     // ========================================
 
                     cropModal.style.visibility =
-    "visible";
+                        "visible";
 
                 }
             );
@@ -254,11 +328,11 @@ export function openCropForURL(
     // Keep Editor Hidden While Loading
     // ========================================
 
-     cropModal.style.display =
-    "flex";
+    cropModal.style.display =
+        "flex";
 
-cropModal.style.visibility =
-    "hidden";
+    cropModal.style.visibility =
+        "hidden";
 
 
     // ========================================
@@ -298,7 +372,7 @@ cropModal.style.visibility =
                     // ========================================
 
                     cropModal.style.visibility =
-    "visible";
+                        "visible";
 
                 }
             );
@@ -451,11 +525,11 @@ export function openCropForExistingImage(
     // Keep Editor Hidden Until Ready
     // ========================================
 
-     cropModal.style.display =
-    "flex";
+    cropModal.style.display =
+        "flex";
 
-cropModal.style.visibility =
-    "hidden";
+    cropModal.style.visibility =
+        "hidden";
 
 
     // ========================================
@@ -481,7 +555,7 @@ cropModal.style.visibility =
             // ========================================
 
             cropModal.style.visibility =
-    "visible";
+                "visible";
 
         }
     );

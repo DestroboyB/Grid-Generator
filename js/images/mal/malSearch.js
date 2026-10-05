@@ -106,15 +106,76 @@ let targetElement = null;
 let currentMode =
     "character";
 
+
+/*
+ * Results currently available to the UI.
+ *
+ * This can contain more than 12 results.
+ * Results are displayed in groups of 12.
+ */
+
+let allResults = [];
+
+
+/*
+ * Results currently being displayed.
+ */
+
 let currentResults = [];
+
+
+/*
+ * Search information.
+ */
 
 let currentQuery = "";
 
+
+/*
+ * UI page.
+ *
+ * This is NOT the MAL/Jikan API page.
+ */
+
 let currentPage = 1;
+
+
+/*
+ * MAL/Jikan API page currently loaded.
+ *
+ * Each API page can contain up to 50 results.
+ */
+
+let currentApiPage = 0;
+
+
+/*
+ * Whether MAL says another API page exists.
+ */
+
+let hasNextApiPage = false;
+
+
+/*
+ * Whether another UI page can currently
+ * be displayed from the results we have.
+ */
 
 let hasNextPage = false;
 
+
+/*
+ * Prevent multiple searches/navigation
+ * requests at the same time.
+ */
+
 let isSearching = false;
+
+
+/*
+ * Number of results currently loaded
+ * into allResults.
+ */
 
 let currentApiResultCount = 0;
 
@@ -127,6 +188,7 @@ export function openMalSearch(element) {
 
     targetElement = element;
 
+
     /*
      * Keep the selected grid box.
      *
@@ -138,11 +200,17 @@ export function openMalSearch(element) {
     currentMode =
         "character";
 
+    allResults = [];
+
     currentResults = [];
 
     currentQuery = "";
 
     currentPage = 1;
+
+    currentApiPage = 0;
+
+    hasNextApiPage = false;
 
     hasNextPage = false;
 
@@ -186,11 +254,17 @@ function closeMalSearch() {
 
     targetElement = null;
 
+    allResults = [];
+
     currentResults = [];
 
     currentQuery = "";
 
     currentPage = 1;
+
+    currentApiPage = 0;
+
+    hasNextApiPage = false;
 
     hasNextPage = false;
 
@@ -274,11 +348,17 @@ function switchMode(mode) {
      * search mode.
      */
 
+    allResults = [];
+
     currentResults = [];
 
     currentQuery = "";
 
     currentPage = 1;
+
+    currentApiPage = 0;
+
+    hasNextApiPage = false;
 
     hasNextPage = false;
 
@@ -383,13 +463,10 @@ searchInput.addEventListener(
 
 
 /* ========================================
-   Perform Search
+   Perform New Search
 ======================================== */
 
-async function performSearch(
-    keepResults = false,
-    requestedPage = currentPage
-) {
+async function performSearch() {
 
     const query =
         searchInput.value.trim();
@@ -408,50 +485,31 @@ async function performSearch(
     }
 
 
-    /* ------------------------------------
-       New Search
-    ------------------------------------ */
-
-    if (
-        query !== currentQuery
-    ) {
-
-        requestedPage = 1;
-
-        keepResults = false;
-    }
-
+    /*
+     * Always begin a brand-new search
+     * from API page 1.
+     */
 
     currentQuery =
         query;
 
+    allResults = [];
 
-    /* ------------------------------------
-       Preserve Pagination State
-    ------------------------------------ */
+    currentResults = [];
 
-    const previousHasNextPage =
-        hasNextPage;
+    currentPage = 1;
 
+    currentApiPage = 0;
 
-    /* ------------------------------------
-       Clear Results
-    ------------------------------------ */
-
-    if (!keepResults) {
-
-        currentResults = [];
-
-        resultsElement.innerHTML = "";
-    }
-
+    hasNextApiPage = false;
 
     hasNextPage = false;
 
     currentApiResultCount = 0;
 
-    isSearching = true;
+    resultsElement.innerHTML = "";
 
+    isSearching = true;
 
     statusElement.textContent =
         `Searching ${
@@ -461,7 +519,6 @@ async function performSearch(
                 : "anime"
         }...`;
 
-
     searchButton.disabled =
         true;
 
@@ -470,88 +527,15 @@ async function performSearch(
 
     try {
 
-        /* --------------------------------
-           Search API
-        -------------------------------- */
-
-        const json =
-            currentMode ===
-            "character"
-                ? await searchCharacters(
-                    query,
-                    requestedPage
-                )
-                : await searchAnime(
-                    query,
-                    requestedPage
-                );
-
-
-        /* --------------------------------
-           Search Results
-        -------------------------------- */
-
-        const apiResults =
-            Array.isArray(
-                json?.data
-            )
-                ? json.data
-                : [];
-
-
-        currentApiResultCount =
-            apiResults.length;
+        await loadApiPage(1);
 
 
         /*
-         * Only update currentPage after
-         * the API request succeeds.
+         * If no results were returned.
          */
 
-        currentPage =
-            requestedPage;
-
-
-        currentResults =
-            apiResults.slice(
-                0,
-                RESULTS_PER_PAGE
-            );
-
-
-        /* --------------------------------
-           Pagination
-        -------------------------------- */
-
-        const pagination =
-            json?.meta?.pagination ||
-            null;
-
-
         if (
-            pagination &&
-            typeof
-                pagination.hasNextPage ===
-                "boolean"
-        ) {
-
-            hasNextPage =
-                pagination.hasNextPage;
-
-        } else {
-
-            hasNextPage =
-                apiResults.length >=
-                API_RESULTS_PER_PAGE;
-        }
-
-
-        /* --------------------------------
-           No Results
-        -------------------------------- */
-
-        if (
-            currentResults.length === 0
+            allResults.length === 0
         ) {
 
             resultsElement.innerHTML =
@@ -563,40 +547,17 @@ async function performSearch(
             hasNextPage =
                 false;
 
-            isSearching =
-                false;
-
-            updatePagination();
-
             return;
         }
 
 
-        /* --------------------------------
-           Render Results
-        -------------------------------- */
+        /*
+         * Show the first UI page.
+         */
 
-        renderResults();
+        currentPage = 1;
 
-
-        /* --------------------------------
-           Status
-        -------------------------------- */
-
-        if (
-            currentApiResultCount >=
-            API_RESULTS_PER_PAGE
-        ) {
-
-            statusElement.textContent =
-                `Found 50+ results — Page ${currentPage}.`;
-
-        } else {
-
-            statusElement.textContent =
-                `Found ${currentApiResultCount} results — Page ${currentPage}.`;
-        }
-
+        renderCurrentPage();
 
     } catch (error) {
 
@@ -606,18 +567,13 @@ async function performSearch(
         );
 
 
-        /*
-         * Do not change currentPage.
-         *
-         * If page 8 fails while page 7
-         * is displayed, currentPage remains 7.
-         */
+        allResults = [];
 
-        if (!keepResults) {
+        currentResults = [];
 
-            resultsElement.innerHTML =
-                "";
-        }
+        hasNextPage = false;
+
+        hasNextApiPage = false;
 
 
         if (
@@ -633,15 +589,6 @@ async function performSearch(
                 "Unable to search MyAnimeList right now.";
         }
 
-
-        /*
-         * Restore the pagination state
-         * from before the failed request.
-         */
-
-        hasNextPage =
-            previousHasNextPage;
-
     } finally {
 
         isSearching =
@@ -652,6 +599,210 @@ async function performSearch(
 
         updatePagination();
     }
+}
+
+
+/* ========================================
+   Load MAL/Jikan API Page
+======================================== */
+
+async function loadApiPage(
+    apiPage
+) {
+
+    /*
+     * Don't request an API page that has
+     * already been loaded.
+     */
+
+    if (
+        apiPage <= currentApiPage
+    ) {
+        return;
+    }
+
+
+    const json =
+        currentMode ===
+        "character"
+            ? await searchCharacters(
+                currentQuery,
+                apiPage
+            )
+            : await searchAnime(
+                currentQuery,
+                apiPage
+            );
+
+
+    const apiResults =
+        Array.isArray(
+            json?.data
+        )
+            ? json.data
+            : [];
+
+
+    const pagination =
+        json?.meta?.pagination ||
+        null;
+
+
+    /*
+     * Store ALL results from this API page.
+     *
+     * Previously we immediately sliced this
+     * to 12 and lost results 13-50.
+     */
+
+    allResults.push(
+        ...apiResults
+    );
+
+
+    currentApiPage =
+        apiPage;
+
+
+    currentApiResultCount =
+        allResults.length;
+
+
+    /*
+     * Determine whether MAL has another
+     * API page available.
+     */
+
+    if (
+        pagination &&
+        typeof
+            pagination.hasNextPage ===
+            "boolean"
+    ) {
+
+        hasNextApiPage =
+            pagination.hasNextPage;
+
+    } else {
+
+        hasNextApiPage =
+            apiResults.length >=
+            API_RESULTS_PER_PAGE;
+    }
+}
+
+
+/* ========================================
+   Render Current UI Page
+======================================== */
+
+function renderCurrentPage() {
+
+    const startIndex =
+        (currentPage - 1) *
+        RESULTS_PER_PAGE;
+
+
+    const endIndex =
+        startIndex +
+        RESULTS_PER_PAGE;
+
+
+    currentResults =
+        allResults.slice(
+            startIndex,
+            endIndex
+        );
+
+
+    /*
+     * Determine whether another UI page
+     * can be displayed immediately.
+     */
+
+    const localNextPageExists =
+        endIndex <
+        allResults.length;
+
+
+    /*
+     * If there are enough currently loaded
+     * results, there is another page.
+     *
+     * Otherwise, if MAL has another API
+     * page, we can load more when Next
+     * is clicked.
+     */
+
+    hasNextPage =
+        localNextPageExists ||
+        hasNextApiPage;
+
+
+    /*
+     * Render the current 12 results.
+     */
+
+    renderResults();
+
+
+    /*
+     * Update the status.
+     */
+
+    updateStatus();
+
+
+    /*
+     * Update Previous / Next buttons.
+     */
+
+    updatePagination();
+}
+
+
+/* ========================================
+   Update Search Status
+======================================== */
+
+function updateStatus() {
+
+    if (
+        currentApiResultCount === 0
+    ) {
+
+        statusElement.textContent =
+            "";
+
+        return;
+    }
+
+
+    /*
+     * If MAL says another API page exists,
+     * we know there are more results than
+     * we've currently loaded.
+     */
+
+    if (
+        hasNextApiPage
+    ) {
+
+        statusElement.textContent =
+            `Found ${currentApiResultCount}+ results — Page ${currentPage}.`;
+
+        return;
+    }
+
+
+    /*
+     * Otherwise, this is the actual number
+     * of results returned across all loaded
+     * API pages.
+     */
+
+    statusElement.textContent =
+        `Found ${currentApiResultCount} results — Page ${currentPage}.`;
 }
 
 
@@ -1071,21 +1222,21 @@ function restoreSearchView() {
 
 
     /*
-     * Re-render the current search results.
+     * Re-render the current search page.
      */
 
-    renderResults();
-
-
-    /*
-     * Restore Previous / Page / Next state.
-     */
-
-    updatePagination();
+    renderCurrentPage();
 
 
     statusElement.textContent =
         "";
+
+    /*
+     * renderCurrentPage() already restores
+     * the correct pagination state.
+     */
+
+    updateStatus();
 }
 
 
@@ -1137,14 +1288,9 @@ previousButton.addEventListener(
         }
 
 
-        const previousPage =
-            currentPage - 1;
+        currentPage--;
 
-
-        performSearch(
-            true,
-            previousPage
-        );
+        renderCurrentPage();
     }
 );
 
@@ -1155,7 +1301,7 @@ previousButton.addEventListener(
 
 nextButton.addEventListener(
     "click",
-    () => {
+    async () => {
 
         if (
             !hasNextPage ||
@@ -1166,14 +1312,99 @@ nextButton.addEventListener(
         }
 
 
-        const nextPage =
-            currentPage + 1;
+        isSearching =
+            true;
+
+        updatePagination();
 
 
-        performSearch(
-            true,
-            nextPage
-        );
+        try {
+
+            const nextPage =
+                currentPage + 1;
+
+
+            const requiredEndIndex =
+                nextPage *
+                RESULTS_PER_PAGE;
+
+
+            /*
+             * If the next UI page is already
+             * contained in our loaded results,
+             * don't contact MAL again.
+             */
+
+            if (
+                requiredEndIndex >
+                allResults.length &&
+                hasNextApiPage
+            ) {
+
+                /*
+                 * Load the next MAL/Jikan API page.
+                 */
+
+                await loadApiPage(
+                    currentApiPage + 1
+                );
+            }
+
+
+            /*
+             * Move to the next UI page.
+             */
+
+            currentPage =
+                nextPage;
+
+
+            /*
+             * Make sure the requested page
+             * actually contains results.
+             */
+
+            const startIndex =
+                (currentPage - 1) *
+                RESULTS_PER_PAGE;
+
+
+            if (
+                startIndex >=
+                allResults.length
+            ) {
+
+                /*
+                 * No more results are actually
+                 * available.
+                 */
+
+                hasNextPage =
+                    false;
+
+                return;
+            }
+
+
+            renderCurrentPage();
+
+        } catch (error) {
+
+            console.error(
+                "MAL pagination error:",
+                error
+            );
+
+            statusElement.textContent =
+                "Unable to load more MyAnimeList results.";
+
+        } finally {
+
+            isSearching =
+                false;
+
+            updatePagination();
+        }
     }
 );
 

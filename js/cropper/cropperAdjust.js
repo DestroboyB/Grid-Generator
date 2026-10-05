@@ -27,6 +27,26 @@ const blurInput =
         "blurInput"
     );
 
+const brightnessValue =
+    document.getElementById(
+        "brightnessValue"
+    );
+
+const contrastValue =
+    document.getElementById(
+        "contrastValue"
+    );
+
+const saturationValue =
+    document.getElementById(
+        "saturationValue"
+    );
+
+const blurValue =
+    document.getElementById(
+        "blurValue"
+    );
+
 
 // ========================================
 // Filter Presets
@@ -177,6 +197,45 @@ export function applyAdjustments() {
 
 
 // ========================================
+// Update Adjustment Value Displays
+// ========================================
+
+function updateAdjustmentValues() {
+
+    if (brightnessValue) {
+
+        brightnessValue.textContent =
+            `${cropperState.brightness}%`;
+
+    }
+
+
+    if (contrastValue) {
+
+        contrastValue.textContent =
+            `${cropperState.contrast}%`;
+
+    }
+
+
+    if (saturationValue) {
+
+        saturationValue.textContent =
+            `${cropperState.saturation}%`;
+
+    }
+
+
+    if (blurValue) {
+
+        blurValue.textContent =
+            `${cropperState.blur}px`;
+
+    }
+}
+
+
+// ========================================
 // Restore Adjustment Controls
 // ========================================
 
@@ -216,6 +275,13 @@ export function restoreAdjustments() {
             cropperState.blur;
 
     }
+
+
+    // ========================================
+    // Restore Value Displays
+    // ========================================
+
+    updateAdjustmentValues();
 
 
     // ========================================
@@ -351,6 +417,8 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateAdjustmentValues();
+
                 applyAdjustments();
 
             }
@@ -378,6 +446,8 @@ export function setupAdjustments() {
                 cropperState.filterName =
                     "none";
 
+
+                updateAdjustmentValues();
 
                 applyAdjustments();
 
@@ -407,6 +477,8 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateAdjustmentValues();
+
                 applyAdjustments();
 
             }
@@ -435,12 +507,21 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateAdjustmentValues();
+
                 applyAdjustments();
 
             }
         );
 
     }
+
+
+    // ========================================
+    // Initialize Displays
+    // ========================================
+
+    updateAdjustmentValues();
 }
 
 

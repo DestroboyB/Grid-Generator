@@ -14,6 +14,75 @@ import {
 } from "./cropperAdjust.js";
 
 
+// ========================================
+// Center Existing Cropper Canvas
+// ========================================
+//
+// Repositions the current canvas inside the
+// Cropper container without changing its
+// width or height.
+//
+// This is used when the browser window is
+// resized while the editor is open.
+//
+
+export function centerCropperCanvas() {
+    if (!appState.cropper) {
+        return;
+    }
+
+    const preview = document.querySelector(".editor-preview");
+
+    if (!preview) {
+        return;
+    }
+
+    const canvasData = appState.cropper.getCanvasData();
+    const cropBoxData = appState.cropper.getCropBoxData();
+
+    if (!canvasData || !cropBoxData) {
+        return;
+    }
+
+    const containerWidth = preview.clientWidth;
+    const containerHeight = preview.clientHeight;
+
+    const centeredLeft =
+        (containerWidth - canvasData.width) / 2;
+
+    const centeredTop =
+        (containerHeight - canvasData.height) / 2;
+
+    // How far the canvas is moving.
+    const deltaX =
+        centeredLeft - canvasData.left;
+
+    const deltaY =
+        centeredTop - canvasData.top;
+
+    // Move the canvas without changing its size.
+    appState.cropper.setCanvasData({
+        left: centeredLeft,
+        top: centeredTop,
+        width: canvasData.width,
+        height: canvasData.height
+    });
+
+    // Move the crop box by the exact same amount.
+    // This keeps it attached to the same part of the image.
+    appState.cropper.setCropBoxData({
+        left: cropBoxData.left + deltaX,
+        top: cropBoxData.top + deltaY,
+        width: cropBoxData.width,
+        height: cropBoxData.height
+    });
+}
+
+
+// ========================================
+// Create Cropper
+// ========================================
+
 export function createCropper(
     cropImage,
     imageRatioInput,
@@ -24,12 +93,15 @@ export function createCropper(
     // Destroy Existing Cropper
     // ========================================
 
-    if (appState.cropper) {
+    if (
+        appState.cropper
+    ) {
 
         appState.cropper.destroy();
 
         appState.cropper =
             null;
+
     }
 
 
@@ -61,8 +133,15 @@ export function createCropper(
                 autoCropArea:
                     1,
 
+                /*
+                 * Keep this disabled.
+                 *
+                 * CropperJS will otherwise recalculate
+                 * the image/canvas when the editor
+                 * container changes size.
+                 */
                 responsive:
-                    true,
+                    false,
 
 
                 // ========================================
