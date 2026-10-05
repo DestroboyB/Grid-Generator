@@ -515,17 +515,30 @@ imageSearchCloseButton.addEventListener(
 // Click Outside Window
 // ========================================
 
+let imageSearchStartedOnBackdrop = false;
+
+imageSearchModal.addEventListener(
+    "mousedown",
+    event => {
+
+        imageSearchStartedOnBackdrop =
+            event.target === imageSearchModal;
+    }
+);
+
 imageSearchModal.addEventListener(
     "click",
     event => {
 
         if (
-            event.target ===
-            imageSearchModal
+            imageSearchStartedOnBackdrop &&
+            event.target === imageSearchModal
         ) {
 
             closeImageSearch();
 
         }
+
+        imageSearchStartedOnBackdrop = false;
     }
 );

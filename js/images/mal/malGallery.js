@@ -65,6 +65,19 @@ export async function openPictureGallery({
 
 
     /*
+     * Preserve the current results area's
+     * height so the MAL window does not
+     * shrink while the gallery loads.
+     */
+
+    const galleryHeight =
+        galleryGridElement.getBoundingClientRect().height;
+
+    galleryGridElement.style.minHeight =
+        `${galleryHeight}px`;
+
+
+    /*
      * Show the picture gallery.
      */
 
@@ -108,22 +121,62 @@ export async function openPictureGallery({
 
     try {
 
-        const [
-            detailResponse,
-            pictureResponse
-        ] = await Promise.all([
+        /*
+         * Load the pictures first.
+         *
+         * This is the important request for
+         * the gallery. If it fails, there is
+         * nothing useful we can display.
+         */
 
-            getItemDetail(
-                mode,
-                item.malId
-            ),
+        let pictureResponse = null;
 
-            getItemPictures(
-                mode,
-                item.malId
-            )
+        try {
 
-        ]);
+            pictureResponse =
+                await getItemPictures(
+                    mode,
+                    item.malId
+                );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load MAL pictures:",
+                error
+            );
+
+            throw error;
+        }
+
+
+        /*
+         * Try to refresh the item's detail
+         * information.
+         *
+         * If this fails, use the original
+         * search result instead. A detail
+         * failure should NOT prevent the
+         * picture gallery from loading.
+         */
+
+        let detailResponse = null;
+
+        try {
+
+            detailResponse =
+                await getItemDetail(
+                    mode,
+                    item.malId
+                );
+
+        } catch (error) {
+
+            console.warn(
+                "Unable to refresh MAL item details. Using search result instead.",
+                error
+            );
+        }
 
 
         const detail =
@@ -180,12 +233,17 @@ export async function openPictureGallery({
          */
 
         if (statusElement) {
-    const itemName =
-        getItemName(detail, mode);
 
-    statusElement.textContent =
-        `Showing ${pictures.length} pictures for ${itemName}`;
-}
+            const itemName =
+                getItemName(
+                    detail,
+                    mode
+                );
+
+            statusElement.textContent =
+                `Showing ${pictures.length} pictures for ${itemName}`;
+        }
+
 
         renderPictureGallery({
 
@@ -205,6 +263,18 @@ export async function openPictureGallery({
         });
 
 
+        /*
+         * Pictures have loaded and the
+         * gallery has been rendered.
+         *
+         * Remove the temporary height
+         * restriction.
+         */
+
+        galleryGridElement.style.minHeight =
+            "";
+
+
     } catch (error) {
 
         console.error(
@@ -214,6 +284,15 @@ export async function openPictureGallery({
 
 
         galleryGridElement.innerHTML = "";
+
+
+        /*
+         * Remove the temporary height
+         * restriction if loading fails.
+         */
+
+        galleryGridElement.style.minHeight =
+            "";
 
 
         const errorMessage =
@@ -448,7 +527,6 @@ function selectPicture(
 
         galleryContainer.appendChild(
             loadingOverlay
-
         );
 
     }

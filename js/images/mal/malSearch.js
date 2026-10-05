@@ -61,6 +61,8 @@ const searchInput =
         "malSearchInput"
     );
 
+    searchInput.spellcheck = false;
+
 const searchButton =
     document.getElementById(
         "malSearchButton"
@@ -1411,19 +1413,34 @@ nextButton.addEventListener(
 );
 
 
-/* ========================================
-   Close When Clicking Overlay
-======================================== */
+// ========================================
+// Close When Clicking Overlay
+// ========================================
+
+let malSearchStartedOnBackdrop = false;
+
+modal.addEventListener(
+    "mousedown",
+    event => {
+
+        malSearchStartedOnBackdrop =
+            event.target === modal;
+    }
+);
 
 modal.addEventListener(
     "click",
     event => {
 
         if (
+            malSearchStartedOnBackdrop &&
             event.target === modal
         ) {
 
             closeMalSearch();
+
         }
+
+        malSearchStartedOnBackdrop = false;
     }
 );
