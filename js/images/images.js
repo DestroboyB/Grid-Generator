@@ -13,9 +13,7 @@ import {
     clearImageBox
 } from "../board.js";
 
-import {
-    openMalSearch
-} from "./malSearch.js";
+import { openMalSearch } from "./mal/malSearch.js";
 
 import {
     openImageSearch
