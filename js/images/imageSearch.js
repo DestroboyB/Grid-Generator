@@ -283,18 +283,27 @@ function renderResults(results) {
             "Select image";
 
         const image =
-            document.createElement("img");
+    document.createElement("img");
 
-        image.src =
-            result.thumbnail;
+image.src =
+    result.thumbnail;
 
-        image.alt =
-            result.title ||
-            "Search result";
+image.alt =
+    result.title ||
+    "Search result";
 
-        image.loading =
-            "lazy";
+image.loading =
+    "lazy";
 
+image.onerror = () => {
+    if (
+        image.dataset.fallbackUsed !== "true" &&
+        result.url
+    ) {
+        image.dataset.fallbackUsed = "true";
+        image.src = result.url;
+    }
+};
         const info =
             document.createElement("div");
 

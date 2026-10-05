@@ -410,30 +410,18 @@
    Search Result Name
 ======================================== */
 
-#malSearchModal .mal-result-name {
+#malSearchModal .mal-search-status {
     width: 100%;
-
-    min-width: 0;
-
+    min-height: 20px;
+    padding: 0 20px 8px;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #6b7280;
     font-size: 13px;
-
-    font-weight: 600;
-
-    line-height: 1.3;
-
-    text-align: center;
-
-    margin-bottom: 4px;
-
-    overflow: hidden;
-
-    display: -webkit-box;
-
-    -webkit-box-orient: vertical;
-
-    -webkit-line-clamp: 2;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    flex-shrink: 0;
 }
-
 
 /* ========================================
    Search Result Type

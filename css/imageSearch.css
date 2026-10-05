@@ -81,11 +81,13 @@
 
 .image-search-status {
     min-height: 20px;
-    padding: 10px 20px 0;
+    padding: 10px 20px 10px;
     color: #6b7280;
     font-size: 13px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
-
 /* Search results */
 
 .image-search-results {

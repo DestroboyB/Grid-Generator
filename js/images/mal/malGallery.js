@@ -180,11 +180,12 @@ export async function openPictureGallery({
          */
 
         if (statusElement) {
+    const itemName =
+        getItemName(detail, mode);
 
-            statusElement.textContent =
-                `Found ${pictures.length} pictures`;
-        }
-
+    statusElement.textContent =
+        `Showing ${pictures.length} pictures for ${itemName}`;
+}
 
         renderPictureGallery({
 

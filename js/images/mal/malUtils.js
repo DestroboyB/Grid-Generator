@@ -2,13 +2,27 @@
    MAL Item Names
 ======================================== */
 
+
 export function getItemName(item, mode) {
     if (!item) {
         return "Unknown";
     }
 
     if (mode === "character") {
-        return item.name || "Unknown Character";
+        const name =
+            item.name ||
+            "Unknown Character";
+
+        const nicknames =
+            Array.isArray(item.nicknames)
+                ? item.nicknames
+                : [];
+
+        if (nicknames.length === 0) {
+            return name;
+        }
+
+        return `${name} (${nicknames.join(", ")})`;
     }
 
     return item.title || "Unknown Anime";
