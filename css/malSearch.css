@@ -452,7 +452,7 @@
    Picture Gallery
 ======================================== */
 
-#malSearchModal .mal-picture-result {
+#malSearchModal .mal-gallery-picture {
     display: flex;
 
     flex-direction: column;
@@ -486,7 +486,7 @@
         box-shadow 0.15s ease;
 }
 
-#malSearchModal .mal-picture-result:hover {
+#malSearchModal .mal-gallery-picture:hover {
     transform: translateY(-2px);
 
     border-color: #2563eb;
@@ -497,7 +497,7 @@
         0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-#malSearchModal .mal-picture-result:focus {
+#malSearchModal .mal-gallery-picture:focus {
     outline: none;
 
     border-color: #2563eb;
@@ -511,7 +511,7 @@
    Picture Gallery Image
 ======================================== */
 
-#malSearchModal .mal-picture-result img {
+#malSearchModal .mal-gallery-picture img {
     width: 100%;
 
     height: 180px;
@@ -524,7 +524,7 @@
 
     background: #e5e7eb;
 
-    margin-bottom: 7px;
+    margin-bottom: 0;
 
     display: block;
 }
@@ -713,7 +713,7 @@
     }
 
 
-    #malSearchModal .mal-picture-result img {
+    #malSearchModal .mal-gallery-picture img {
         height: 140px;
     }
 
@@ -729,18 +729,22 @@
         width: calc(100% - 32px);
 
         margin-left: 16px;
+
         margin-right: 16px;
     }
 
+
     #malSearchModal .mal-search-navigation {
-    padding: 10px 16px;
+        padding: 10px 16px;
+    }
+
+
+    #malSearchModal .mal-search-navigation button {
+        min-width: 75px;
+    }
+
 }
 
-#malSearchModal .mal-search-navigation button {
-    min-width: 75px;
-}
-
-}
 
 /* ========================================
    Search Pagination
@@ -748,8 +752,11 @@
 
 #malSearchModal .mal-search-navigation {
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     gap: 10px;
 
     width: 100%;
@@ -771,12 +778,15 @@
     padding: 8px 14px;
 
     border: 1px solid #d1d5db;
+
     border-radius: 7px;
 
     background: #ffffff;
+
     color: #374151;
 
     font-size: 13px;
+
     font-weight: 600;
 
     cursor: pointer;
@@ -784,11 +794,13 @@
 
 #malSearchModal .mal-search-navigation button:hover:not(:disabled) {
     background: #f3f4f6;
+
     border-color: #9ca3af;
 }
 
 #malSearchModal .mal-search-navigation button:disabled {
     opacity: 0.45;
+
     cursor: not-allowed;
 }
 
@@ -798,7 +810,35 @@
     color: #6b7280;
 
     font-size: 13px;
+
     font-weight: 600;
 
     text-align: center;
+}
+
+/* ========================================
+   Picture Loading Overlay
+======================================== */
+
+#malSearchModal .mal-picture-loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.75);
+    z-index: 100;
+    cursor: wait;
+}
+
+#malSearchModal .mal-picture-loading-message {
+    padding: 12px 18px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12);
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
 }

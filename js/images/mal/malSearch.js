@@ -1112,7 +1112,7 @@ function openGallery(item) {
         return;
     }
 
-
+    statusElement.textContent = "";
     /*
      * Hide search pagination while viewing
      * the picture gallery.
@@ -1156,6 +1156,8 @@ function openGallery(item) {
 
         galleryGridElement:
             resultsElement,
+
+            statusElement,
 
         backButton,
 

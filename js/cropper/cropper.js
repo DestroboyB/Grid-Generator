@@ -272,9 +272,14 @@ export function openCropForFile(
 // Open Cropper For URL
 // ========================================
 
+// ========================================
+// Open Cropper For URL
+// ========================================
+
 export function openCropForURL(
     imageURL,
-    element
+    element,
+    onReady
 ) {
 
     appState.selectedDiv =
@@ -365,6 +370,19 @@ export function openCropForURL(
                     restoreAdjustments();
 
                     applyAdjustments();
+
+
+                    // ========================================
+                    // Cropper Is Now Ready
+                    // ========================================
+
+                    if (
+                        onReady
+                    ) {
+
+                        onReady();
+
+                    }
 
 
                     // ========================================

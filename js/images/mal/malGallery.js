@@ -14,6 +14,29 @@ import {
 } from "../../cropper/cropper.js";
 
 
+/* ========================================
+   Loading Overlay Cleanup
+======================================== */
+
+function removePictureLoadingOverlay() {
+
+    const loadingOverlay =
+        document.querySelector(
+            "#malSearchModal .mal-picture-loading-overlay"
+        );
+
+    if (loadingOverlay) {
+
+        loadingOverlay.remove();
+
+    }
+}
+
+
+/* ========================================
+   Open Picture Gallery
+======================================== */
+
 export async function openPictureGallery({
     item,
     mode,
@@ -22,10 +45,19 @@ export async function openPictureGallery({
     galleryElement,
     galleryTitleElement,
     galleryGridElement,
+    statusElement,
     backButton,
     onCloseGallery,
     onBackToResults
 }) {
+
+    /*
+     * Remove any loading overlay left
+     * over from a previous image selection.
+     */
+
+    removePictureLoadingOverlay();
+
 
     if (!item || !item.malId) {
         return;
@@ -40,7 +72,14 @@ export async function openPictureGallery({
         "none";
 
     galleryElement.style.display =
-        "block";
+        "grid";
+
+
+    if (statusElement) {
+
+        statusElement.textContent =
+            "Loading pictures...";
+    }
 
 
     if (galleryTitleElement) {
@@ -132,6 +171,18 @@ export async function openPictureGallery({
 
                 ];
             }
+        }
+
+
+        /*
+         * Show the total number of
+         * available pictures.
+         */
+
+        if (statusElement) {
+
+            statusElement.textContent =
+                `Found ${pictures.length} pictures`;
         }
 
 
@@ -343,25 +394,97 @@ function selectPicture(
 
 
     /*
-     * Close the entire MAL modal.
+     * Create loading overlay.
      */
 
-    if (onCloseGallery) {
+    const loadingOverlay =
+        document.createElement("div");
 
-        onCloseGallery();
+    loadingOverlay.className =
+        "mal-picture-loading-overlay";
+
+
+    const loadingMessage =
+        document.createElement("div");
+
+    loadingMessage.className =
+        "mal-picture-loading-message";
+
+    loadingMessage.textContent =
+        "Preparing image...";
+
+
+    loadingOverlay.appendChild(
+        loadingMessage
+    );
+
+
+    /*
+     * Put the overlay over the MAL gallery.
+     */
+
+    const galleryContainer =
+        document.querySelector(
+            "#malSearchModal .mal-search-container"
+        );
+
+
+    if (galleryContainer) {
+
+        const currentPosition =
+            window.getComputedStyle(
+                galleryContainer
+            ).position;
+
+
+        if (currentPosition === "static") {
+
+            galleryContainer.style.position =
+                "relative";
+
+        }
+
+
+        galleryContainer.appendChild(
+            loadingOverlay
+
+        );
+
     }
 
 
     /*
-     * Open the selected image in the
-     * existing crop editor.
+     * Open the cropper while the MAL
+     * gallery is still visible.
+     *
+     * MAL closes only after the cropper
+     * is completely ready.
      */
 
     try {
 
         openCropForURL(
             imageURL,
-            targetElement
+            targetElement,
+            () => {
+
+                /*
+                 * The cropper is ready.
+                 *
+                 * Remove the loading overlay
+                 * before closing MAL.
+                 */
+
+                removePictureLoadingOverlay();
+
+
+                if (onCloseGallery) {
+
+                    onCloseGallery();
+
+                }
+
+            }
         );
 
     } catch (error) {
@@ -370,6 +493,15 @@ function selectPicture(
             "Unable to open MAL image in cropper:",
             error
         );
+
+
+        /*
+         * Remove the loading overlay if
+         * something goes wrong.
+         */
+
+        loadingOverlay.remove();
+
     }
 }
 
@@ -383,6 +515,14 @@ export function showSearchView({
     galleryElement,
     backButton
 }) {
+
+    /*
+     * Make sure no stale loading overlay
+     * remains when returning to search.
+     */
+
+    removePictureLoadingOverlay();
+
 
     galleryElement.style.display =
         "none";
