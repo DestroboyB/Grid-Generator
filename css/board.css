@@ -106,6 +106,16 @@
     box-sizing: border-box;
 }
 
+.image.drag-over {
+    outline: none;
+    background: #eff6ff;
+    z-index: 3;
+}
+
+.image.drag-over::after {
+    border: 3px dashed #2563eb;
+}
+
 
 /* ========================================
    Empty Box Hover

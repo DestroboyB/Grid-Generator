@@ -112,50 +112,13 @@ const borderSizeValue =
     );
 
 
-// ========================================
-// Board Settings
-// ========================================
 
-const boardSettingsButton =
-    document.getElementById(
-        "boardSettingsButton"
-    );
-
-const boardSettingsPanel =
-    document.getElementById(
-        "boardSettingsPanel"
-    );
-
-
-// ========================================
-// History / Actions
-// ========================================
-
-const undoButton =
-    document.getElementById(
-        "undoButton"
-    );
-
-const redoButton =
-    document.getElementById(
-        "redoButton"
-    );
-
-const clearBoardButton =
-    document.getElementById(
-        "clearBoardButton"
-    );
-
-
-// ========================================
-// Board Settings Menu
-// ========================================
+ // ========================================
+ // Board Settings Menu
+ // ========================================
 
 function closeBoardSettings() {
-
-    boardSettingsPanel.classList.remove(
-        "open"
-    );
+    boardSettingsPanel.classList.remove("open");
 
     boardSettingsButton.setAttribute(
         "aria-expanded",
@@ -163,24 +126,15 @@ function closeBoardSettings() {
     );
 }
 
+function isBoardSettingsOpen() {
+    return boardSettingsPanel.classList.contains("open");
+}
 
 function toggleBoardSettings() {
-
-    const isOpen =
-        boardSettingsPanel.classList.contains(
-            "open"
-        );
-
-
-    if (isOpen) {
-
+    if (isBoardSettingsOpen()) {
         closeBoardSettings();
-
     } else {
-
-        boardSettingsPanel.classList.add(
-            "open"
-        );
+        boardSettingsPanel.classList.add("open");
 
         boardSettingsButton.setAttribute(
             "aria-expanded",
@@ -189,39 +143,55 @@ function toggleBoardSettings() {
     }
 }
 
+boardSettingsButton.addEventListener("click", event => {
+    event.stopPropagation();
+    toggleBoardSettings();
+});
 
-boardSettingsButton.addEventListener(
-    "click",
-    event => {
-
-        event.stopPropagation();
-
-        toggleBoardSettings();
+// Close settings when clicking outside the panel.
+document.addEventListener("click", event => {
+    if (
+        !boardSettingsPanel.contains(event.target) &&
+        !boardSettingsButton.contains(event.target)
+    ) {
+        closeBoardSettings();
     }
+});
+
+// Close settings immediately when interacting with the board.
+// Prevent the same pointer interaction from starting a drag.
+const boardElement = document.getElementById("board");
+
+boardElement.addEventListener("pointerdown", event => {
+    if (!isBoardSettingsOpen()) {
+        return;
+    }
+
+    closeBoardSettings();
+
+    // Block this interaction from starting a drag.
+    event.preventDefault();
+    event.stopPropagation();
+}, true);
+
+// Close settings when using other controls.
+const settingsDismissControls = document.querySelectorAll(
+    "#rows, #columns, #imageRatio, " +
+    "#generateBoard, #bulkImportButton, #clearBoardButton, " +
+    "#undoButton, #redoButton, #libraryButton, #downloadButton"
 );
 
-
-// ========================================
-// Close Settings When Clicking Outside
-// ========================================
-
-document.addEventListener(
-    "click",
-    event => {
-
-        if (
-            !boardSettingsPanel.contains(
-                event.target
-            ) &&
-            !boardSettingsButton.contains(
-                event.target
-            )
-        ) {
-
-            closeBoardSettings();
-        }
+settingsDismissControls.forEach(control => {
+    control.addEventListener("pointerdown", closeBoardSettings, true);
+});
+document.addEventListener("click", event => {
+    if (
+        !boardSettingsPanel.contains(event.target) &&
+        !boardSettingsButton.contains(event.target)
+    ) {
+        closeBoardSettings();
     }
-);
+});
 
 
 // ========================================

@@ -970,6 +970,8 @@ document.addEventListener(
     "click",
     event => {
 
+        // Clicking inside an image menu
+        // should not close that menu.
         if (
             imageMenu.contains(
                 event.target
@@ -992,8 +994,10 @@ document.addEventListener(
 
         /*
          * Don't close menus when clicking
-         * somewhere on the board. The board
-         * click handler manages those menus.
+         * somewhere on the board.
+         *
+         * The board click handler manages
+         * image/empty-box menus.
          */
 
         if (
@@ -1009,12 +1013,27 @@ document.addEventListener(
 
         closeAllMenus();
 
-
         appState.menuDiv =
             null;
 
-    }
+    },
+    true
 );
+
+ // ========================================
+ // Close Image Menus When Using Top Dropdowns
+ // ========================================
+
+const topPanelDropdowns = document.querySelectorAll(
+    "#rows, #columns, #imageRatio"
+);
+
+topPanelDropdowns.forEach(dropdown => {
+    dropdown.addEventListener("pointerdown", () => {
+        closeAllMenus();
+        appState.menuDiv = null;
+    }, true);
+});
 
 urlImageButton.addEventListener(
     "click",

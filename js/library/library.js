@@ -455,105 +455,228 @@ function createCategoryElement(
 }
 
 
-// ========================================
-// Create Grid Element
-// ========================================
-
-function createGridElement(
-    grid
-) {
-
-    const element =
-        document.createElement(
-            "div"
-        );
-
-    element.className =
-        "library-grid";
 
 
-    if (
-        grid.id ===
-        appState.currentGridId
-    ) {
+function createGridElement(grid) {
+    const element = document.createElement("div");
+    element.className = "library-grid";
 
-        element.classList.add(
-            "active"
-        );
+    if (grid.id === appState.currentGridId) {
+        element.classList.add("active");
     }
 
+    const icon = document.createElement("span");
+    icon.className = "library-grid-icon";
+    icon.textContent = "▣";
 
-    const icon =
-        document.createElement(
-            "span"
-        );
+    const name = document.createElement("span");
+    name.className = "library-grid-name";
+    name.textContent = grid.name || "Untitled Grid";
 
-    icon.className =
-        "library-grid-icon";
+    const actions = document.createElement("div");
+    actions.className = "library-grid-actions";
 
-    icon.textContent =
-        "▣";
+    // Rename button
+    const renameButton = document.createElement("button");
+    renameButton.type = "button";
+    renameButton.className = "library-grid-action";
+    renameButton.textContent = "Rename";
+    renameButton.title = "Rename this grid";
 
-
-    const name =
-        document.createElement(
-            "span"
-        );
-
-    name.className =
-        "library-grid-name";
-
-    name.textContent =
-        grid.name ||
-        "Untitled Grid";
-
-
-    element.appendChild(
-        icon
-    );
-
-    element.appendChild(
-        name
-    );
-
+    // Delete button
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "library-grid-action delete";
+    deleteButton.textContent = "Delete";
+    deleteButton.title = "Delete this grid";
 
     // ========================================
-    // Load Grid
+    // Rename Grid — Inline Editing
     // ========================================
 
-    element.addEventListener(
-        "click",
-        async () => {
+    renameButton.addEventListener("click", event => {
+        event.stopPropagation();
+
+        // Don't start a second editing session.
+        if (element.querySelector(".library-grid-rename-input")) {
+            return;
+        }
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "library-grid-rename-input";
+        input.value = grid.name || "Untitled Grid";
+        input.setAttribute("aria-label", "New grid name");
+
+        const saveButton = document.createElement("button");
+        saveButton.type = "button";
+        saveButton.className = "library-grid-action";
+        saveButton.textContent = "Save";
+
+        const cancelButton = document.createElement("button");
+        cancelButton.type = "button";
+        cancelButton.className = "library-grid-action";
+        cancelButton.textContent = "Cancel";
+
+        name.replaceWith(input);
+
+        renameButton.hidden = true;
+        deleteButton.hidden = true;
+
+        actions.appendChild(saveButton);
+        actions.appendChild(cancelButton);
+
+        input.focus();
+        input.select();
+
+        let finished = false;
+
+        async function finishRename(shouldSave) {
+            if (finished) {
+                return;
+            }
+
+            if (!shouldSave) {
+                finished = true;
+                await renderLibrary();
+                return;
+            }
+
+            const newName = input.value.trim();
+
+            if (!newName) {
+                alert("Grid name cannot be empty.");
+                input.focus();
+                return;
+            }
+
+            finished = true;
+            saveButton.disabled = true;
+            cancelButton.disabled = true;
 
             try {
+                const renamedGrid = await renameGrid(grid.id, newName);
 
-                const loaded =
-                    await loadGrid(
-                        grid.id
-                    );
-
-                if (!loaded) {
+                if (!renamedGrid) {
+                    alert("This grid could not be found.");
+                    await renderLibrary();
                     return;
                 }
 
-                generateBoard();
-
                 updateCurrentGridName();
-
                 await renderLibrary();
-
             } catch (error) {
+                console.error("Failed to rename grid:", error);
+                alert("Failed to rename the grid. Please try again.");
 
-                console.error(
-                    "Failed to load grid:",
-                    error
-                );
+                finished = false;
+                saveButton.disabled = false;
+                cancelButton.disabled = false;
+                input.focus();
+                input.select();
             }
         }
-    );
+
+        saveButton.addEventListener("click", event => {
+            event.stopPropagation();
+            finishRename(true);
+        });
+
+        cancelButton.addEventListener("click", event => {
+            event.stopPropagation();
+            finishRename(false);
+        });
+
+        input.addEventListener("click", event => {
+            event.stopPropagation();
+        });
+
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                finishRename(true);
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                finishRename(false);
+            }
+        });
+    });
+
+    // ========================================
+    // Delete Grid
+    // ========================================
+
+    deleteButton.addEventListener("click", async event => {
+        event.stopPropagation();
+
+        const gridName = grid.name || "Untitled Grid";
+
+        if (!confirm(`Delete "${gridName}" permanently? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const deletingCurrentGrid =
+                grid.id === appState.currentGridId;
+
+            await deleteGrid(grid.id);
+
+            if (deletingCurrentGrid) {
+                // Look for another saved grid to open.
+                const remainingGrids = await getAllGrids();
+
+                if (remainingGrids.length > 0) {
+                    await loadGrid(remainingGrids[0].id);
+                } else {
+                    // Leave an empty board without saving a new grid.
+                    appState.currentGridId = null;
+                    appState.currentGridName = "Untitled Grid";
+                    appState.savedImages = [];
+                    appState.undoStack = [];
+                    appState.redoStack = [];
+                }
+
+                generateBoard();
+                updateCurrentGridName();
+            }
+
+            await renderLibrary();
+        } catch (error) {
+            console.error("Failed to delete grid:", error);
+            alert("Failed to delete the grid. Please try again.");
+        }
+    });
+
+    actions.appendChild(renameButton);
+    actions.appendChild(deleteButton);
+
+    element.appendChild(icon);
+    element.appendChild(name);
+    element.appendChild(actions);
+
+    // Clicking the entry loads the grid.
+    element.addEventListener("click", async () => {
+        try {
+            const loaded = await loadGrid(grid.id);
+
+            if (!loaded) {
+                return;
+            }
+
+            generateBoard();
+            updateCurrentGridName();
+            await renderLibrary();
+        } catch (error) {
+            console.error("Failed to load grid:", error);
+        }
+    });
 
     return element;
 }
+
+
 
 
 // ========================================

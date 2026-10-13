@@ -37,6 +37,14 @@ board.addEventListener(
     "dragstart",
     (event) => {
 
+
+const settingsPanel = document.getElementById("boardSettingsPanel");
+
+if (settingsPanel?.classList.contains("open")) {
+    event.preventDefault();
+    return;
+}
+
         const div =
             event.target.closest(
                 ".image"
@@ -58,10 +66,35 @@ board.addEventListener(
         }
 
         draggedDiv =
-            div;
+    div;
 
-        event.dataTransfer.effectAllowed =
-            "move";
+// Close any open image menus when
+// starting an image drag.
+const imageMenus = [
+    "imageMenu",
+    "addImageMenu",
+    "imageSourceMenu",
+    "replaceImageSourceMenu"
+];
+
+imageMenus.forEach(
+    id => {
+
+        const menu =
+            document.getElementById(id);
+
+        if (menu) {
+            menu.style.display =
+                "none";
+        }
+    }
+);
+
+appState.menuDiv =
+    null;
+
+event.dataTransfer.effectAllowed =
+    "move";
 
         event.dataTransfer.setData(
             "text/plain",
