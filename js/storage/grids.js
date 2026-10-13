@@ -1,3 +1,4 @@
+
 import {
     openDatabase,
     GRID_STORE
@@ -18,82 +19,30 @@ import {
 // ========================================
 
 export function createGridData() {
-
-    const rowsInput =
-        document.getElementById(
-            "rows"
-        );
-
-    const columnsInput =
-        document.getElementById(
-            "columns"
-        );
-
-    const ratioInput =
-        document.getElementById(
-            "imageRatio"
-        );
+    const rowsInput = document.getElementById("rows");
+    const columnsInput = document.getElementById("columns");
+    const ratioInput = document.getElementById("imageRatio");
 
     return {
+        id: generateId("grid"),
+        name: "Untitled Grid",
+        categoryId: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
 
-        id:
-            generateId("grid"),
+        rows: Number(rowsInput?.value ?? 3),
+        columns: Number(columnsInput?.value ?? 3),
+        ratio: ratioInput?.value ?? "1:1",
 
-        name:
-            "Untitled Grid",
+        spacing: appState.spacing,
+        backgroundColor: appState.backgroundColor,
+        borderEnabled: appState.borderEnabled,
+        borderSize: appState.borderSize,
+        borderColor: appState.borderColor,
 
-        categoryId:
-            null,
-
-        createdAt:
-            Date.now(),
-
-        updatedAt:
-            Date.now(),
-
-        rows:
-            Number(
-                rowsInput?.value ?? 3
-            ),
-
-        columns:
-            Number(
-                columnsInput?.value ?? 3
-            ),
-
-        ratio:
-            ratioInput?.value ??
-            "1:1",
-
-        spacing:
-            appState.spacing,
-
-        backgroundColor:
-            appState.backgroundColor,
-
-        borderEnabled:
-            appState.borderEnabled,
-
-        borderSize:
-            appState.borderSize,
-
-        borderColor:
-            appState.borderColor,
-
-        images:
-            cloneData(
-                appState.savedImages
-            ),
-
-        undoStack:
-            cloneData(
-                appState.undoStack
-            ),
-
-        redoStack:
-            cloneData(
-                appState.redoStack
-            )
+        images: cloneData(appState.savedImages),
+        undoStack: cloneData(appState.undoStack),
+        redoStack: cloneData(appState.redoStack)
     };
 }
 
@@ -102,132 +51,71 @@ export function createGridData() {
 // Create Empty Grid Data
 // ========================================
 
+
 export function createEmptyGridData() {
-
-    const rowsInput =
-        document.getElementById(
-            "rows"
-        );
-
-    const columnsInput =
-        document.getElementById(
-            "columns"
-        );
-
-    const ratioInput =
-        document.getElementById(
-            "imageRatio"
-        );
-
     return {
+        id: generateId("grid"),
+        name: "Untitled Grid",
+        categoryId: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
 
-        id:
-            generateId("grid"),
+        // Default grid layout
+        rows: 3,
+        columns: 3,
+        ratio: "1:1",
 
-        name:
-            "Untitled Grid",
+        // Default appearance
+        spacing: 0,
+        backgroundColor: "#ffffff",
+        borderEnabled: true,
+        borderSize: 2,
+        borderColor: "#9ca3af",
 
-        categoryId:
-            null,
-
-        createdAt:
-            Date.now(),
-
-        updatedAt:
-            Date.now(),
-
-        rows:
-            Number(
-                rowsInput?.value ?? 3
-            ),
-
-        columns:
-            Number(
-                columnsInput?.value ?? 3
-            ),
-
-        ratio:
-            ratioInput?.value ??
-            "1:1",
-
-        spacing:
-            appState.spacing,
-
-        backgroundColor:
-            appState.backgroundColor,
-
-        borderEnabled:
-            appState.borderEnabled,
-
-        borderSize:
-            appState.borderSize,
-
-        borderColor:
-            appState.borderColor,
-
-        images:
-            [],
-
-        undoStack:
-            [],
-
-        redoStack:
-            []
+        // Start with no images or history
+        images: [],
+        undoStack: [],
+        redoStack: []
     };
 }
+
 
 
 // ========================================
 // Save Grid
 // ========================================
 
-export async function saveGrid(
-    grid
-) {
+export async function saveGrid(grid) {
+    const db = await openDatabase();
 
-    const db =
-        await openDatabase();
+    grid.updatedAt = Date.now();
 
-    grid.updatedAt =
-        Date.now();
-
-    const transaction =
-        db.transaction(
-            GRID_STORE,
-            "readwrite"
-        );
-
-    const store =
-        transaction.objectStore(
-            GRID_STORE
-        );
-
-    store.put(
-        cloneData(grid)
+    const transaction = db.transaction(
+        GRID_STORE,
+        "readwrite"
     );
 
-    return new Promise(
-        (
-            resolve,
-            reject
-        ) => {
+    const store = transaction.objectStore(GRID_STORE);
 
-            transaction.oncomplete =
-                () => resolve(
-                    grid
-                );
+    store.put(cloneData(grid));
 
-            transaction.onerror =
-                () => reject(
-                    transaction.error
-                );
+    return new Promise((resolve, reject) => {
+        transaction.oncomplete = () => resolve(grid);
 
-            transaction.onabort =
-                () => reject(
-                    transaction.error
-                );
-        }
-    );
+        transaction.onerror = () => {
+            reject(
+                transaction.error ||
+                new Error("Failed to save grid.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Grid save transaction aborted.")
+            );
+        };
+    });
 }
 
 
@@ -235,57 +123,44 @@ export async function saveGrid(
 // Get One Grid
 // ========================================
 
-export async function getGrid(
-    gridId
-) {
-
+export async function getGrid(gridId) {
     if (!gridId) {
         return null;
     }
 
-    const db =
-        await openDatabase();
+    const db = await openDatabase();
 
-    const transaction =
-        db.transaction(
-            GRID_STORE,
-            "readonly"
-        );
-
-    const store =
-        transaction.objectStore(
-            GRID_STORE
-        );
-
-    const request =
-        store.get(
-            gridId
-        );
-
-    return new Promise(
-        (
-            resolve,
-            reject
-        ) => {
-
-            request.onsuccess =
-                () => {
-
-                    resolve(
-                        request.result
-                            ? cloneData(
-                                request.result
-                            )
-                            : null
-                    );
-                };
-
-            request.onerror =
-                () => reject(
-                    request.error
-                );
-        }
+    const transaction = db.transaction(
+        GRID_STORE,
+        "readonly"
     );
+
+    const store = transaction.objectStore(GRID_STORE);
+    const request = store.get(gridId);
+
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => {
+            resolve(
+                request.result
+                    ? cloneData(request.result)
+                    : null
+            );
+        };
+
+        request.onerror = () => {
+            reject(
+                request.error ||
+                new Error("Failed to retrieve grid.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Grid retrieval transaction aborted.")
+            );
+        };
+    });
 }
 
 
@@ -294,62 +169,116 @@ export async function getGrid(
 // ========================================
 
 export async function getAllGrids() {
+    const db = await openDatabase();
 
-    const db =
-        await openDatabase();
-
-    const transaction =
-        db.transaction(
-            GRID_STORE,
-            "readonly"
-        );
-
-    const store =
-        transaction.objectStore(
-            GRID_STORE
-        );
-
-    const request =
-        store.getAll();
-
-    return new Promise(
-        (
-            resolve,
-            reject
-        ) => {
-
-            request.onsuccess =
-                () => {
-
-                    const grids =
-                        request.result
-                            .map(
-                                grid =>
-                                    cloneData(
-                                        grid
-                                    )
-                            );
-
-                    grids.sort(
-                        (
-                            a,
-                            b
-                        ) =>
-                            (b.updatedAt ?? 0) -
-                            (a.updatedAt ?? 0)
-                    );
-
-                    resolve(
-                        grids
-                    );
-                };
-
-            request.onerror =
-                () => reject(
-                    request.error
-                );
-        }
+    const transaction = db.transaction(
+        GRID_STORE,
+        "readonly"
     );
+
+    const store = transaction.objectStore(GRID_STORE);
+    const request = store.getAll();
+
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => {
+            const grids = request.result.map(
+                grid => cloneData(grid)
+            );
+
+            grids.sort(
+                (a, b) =>
+                    (b.updatedAt ?? 0) -
+                    (a.updatedAt ?? 0)
+            );
+
+            resolve(grids);
+        };
+
+        request.onerror = () => {
+            reject(
+                request.error ||
+                new Error("Failed to retrieve grids.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Grid retrieval transaction aborted.")
+            );
+        };
+    });
+}
+
+
+// ========================================
+// Get Grid Summaries
+// ========================================
+
+/**
+ * Get the metadata needed by the library without
+ * deep-cloning every grid's images and history.
+ *
+ * Note: IndexedDB still retrieves the stored records.
+ * A separate metadata store would be needed to avoid
+ * reading the complete records altogether.
+ */
+export async function getGridSummaries() {
+    const db = await openDatabase();
+
+    const transaction = db.transaction(
+        GRID_STORE,
+        "readonly"
+    );
+
+    const store = transaction.objectStore(GRID_STORE);
+
+    return new Promise((resolve, reject) => {
+        const grids = [];
+
+        const request = store.openCursor();
+
+        request.onsuccess = () => {
+            const cursor = request.result;
+
+            if (!cursor) {
+                grids.sort(
+                    (a, b) =>
+                        (b.updatedAt ?? 0) -
+                        (a.updatedAt ?? 0)
+                );
+
+                resolve(grids);
+                return;
+            }
+
+            const grid = cursor.value;
+
+            grids.push({
+                id: grid.id,
+                name: grid.name,
+                categoryId: grid.categoryId ?? null,
+                createdAt: grid.createdAt ?? 0,
+                updatedAt: grid.updatedAt ?? 0
+            });
+
+            cursor.continue();
+        };
+
+        request.onerror = () => {
+            reject(
+                request.error ||
+                new Error("Failed to retrieve grid summaries.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Grid summary transaction aborted.")
+            );
+        };
+    });
 }
 
 
@@ -357,62 +286,46 @@ export async function getAllGrids() {
 // Delete Grid
 // ========================================
 
-export async function deleteGrid(
-    gridId
-) {
-
+export async function deleteGrid(gridId) {
     if (!gridId) {
         return;
     }
 
-    const db =
-        await openDatabase();
+    const db = await openDatabase();
 
-    const transaction =
-        db.transaction(
-            GRID_STORE,
-            "readwrite"
-        );
-
-    const store =
-        transaction.objectStore(
-            GRID_STORE
-        );
-
-    store.delete(
-        gridId
+    const transaction = db.transaction(
+        GRID_STORE,
+        "readwrite"
     );
 
-    return new Promise(
-        (
-            resolve,
-            reject
-        ) => {
+    const store = transaction.objectStore(GRID_STORE);
 
-            transaction.oncomplete =
-                () => {
+    store.delete(gridId);
 
-                    if (
-                        appState.currentGridId ===
-                        gridId
-                    ) {
+    return new Promise((resolve, reject) => {
+        transaction.oncomplete = () => {
+            if (appState.currentGridId === gridId) {
+                appState.currentGridId = null;
+                appState.currentGridName = "Untitled Grid";
+            }
 
-                        appState.currentGridId =
-                            null;
+            resolve();
+        };
 
-                        appState.currentGridName =
-                            "Untitled Grid";
-                    }
+        transaction.onerror = () => {
+            reject(
+                transaction.error ||
+                new Error("Failed to delete grid.")
+            );
+        };
 
-                    resolve();
-                };
-
-            transaction.onerror =
-                () => reject(
-                    transaction.error
-                );
-        }
-    );
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Grid deletion transaction aborted.")
+            );
+        };
+    });
 }
 
 
@@ -420,37 +333,21 @@ export async function deleteGrid(
 // Create New Grid
 // ========================================
 
-export async function createGrid(
-    options = {}
-) {
-
-    const grid =
-        createEmptyGridData();
+export async function createGrid(options = {}) {
+    const grid = createEmptyGridData();
 
     if (options.name) {
-
-        grid.name =
-            options.name;
+        grid.name = options.name;
     }
 
-    if (
-        options.categoryId !==
-        undefined
-    ) {
-
-        grid.categoryId =
-            options.categoryId;
+    if (options.categoryId !== undefined) {
+        grid.categoryId = options.categoryId;
     }
 
-    await saveGrid(
-        grid
-    );
+    await saveGrid(grid);
 
-    appState.currentGridId =
-        grid.id;
-
-    appState.currentGridName =
-        grid.name;
+    appState.currentGridId = grid.id;
+    appState.currentGridName = grid.name;
 
     return grid;
 }
@@ -460,148 +357,64 @@ export async function createGrid(
 // Apply Grid Data To App State
 // ========================================
 
-export function applyGridData(
-    grid
-) {
-
+export function applyGridData(grid) {
     if (!grid) {
         return;
     }
 
-    appState.currentGridId =
-        grid.id;
+    appState.currentGridId = grid.id;
+    appState.currentGridName = grid.name ?? "Untitled Grid";
 
-    appState.currentGridName =
-        grid.name ??
-        "Untitled Grid";
+    appState.savedImages = cloneData(grid.images ?? []);
 
-    appState.savedImages =
-        cloneData(
-            grid.images ?? []
-        );
+    appState.spacing = grid.spacing ?? 0;
+    appState.backgroundColor = grid.backgroundColor ?? "#ffffff";
+    appState.borderEnabled = grid.borderEnabled ?? true;
+    appState.borderSize = grid.borderSize ?? 2;
+    appState.borderColor = grid.borderColor ?? "#9ca3af";
 
-    appState.spacing =
-        grid.spacing ?? 0;
+    appState.undoStack = cloneData(grid.undoStack ?? []);
+    appState.redoStack = cloneData(grid.redoStack ?? []);
 
-    appState.backgroundColor =
-        grid.backgroundColor ??
-        "#ffffff";
-
-    appState.borderEnabled =
-        grid.borderEnabled ??
-        true;
-
-    appState.borderSize =
-        grid.borderSize ??
-        2;
-
-    appState.borderColor =
-        grid.borderColor ??
-        "#9ca3af";
-
-    appState.undoStack =
-        cloneData(
-            grid.undoStack ?? []
-        );
-
-    appState.redoStack =
-        cloneData(
-            grid.redoStack ?? []
-        );
-
-
-    // ========================================
-    // Update Controls
-    // ========================================
-
-    const rowsInput =
-        document.getElementById(
-            "rows"
-        );
-
-    const columnsInput =
-        document.getElementById(
-            "columns"
-        );
-
-    const ratioInput =
-        document.getElementById(
-            "imageRatio"
-        );
-
-    const spacingInput =
-        document.getElementById(
-            "spacing"
-        );
-
-    const backgroundInput =
-        document.getElementById(
-            "backgroundColor"
-        );
-
-    const borderEnabledInput =
-        document.getElementById(
-            "borderEnabled"
-        );
-
-    const borderColorInput =
-        document.getElementById(
-            "borderColor"
-        );
-
-    const borderSizeInput =
-        document.getElementById(
-            "borderSize"
-        );
-
+    const rowsInput = document.getElementById("rows");
+    const columnsInput = document.getElementById("columns");
+    const ratioInput = document.getElementById("imageRatio");
+    const spacingInput = document.getElementById("spacing");
+    const backgroundInput = document.getElementById("backgroundColor");
+    const borderEnabledInput = document.getElementById("borderEnabled");
+    const borderColorInput = document.getElementById("borderColor");
+    const borderSizeInput = document.getElementById("borderSize");
 
     if (rowsInput) {
-
-        rowsInput.value =
-            grid.rows;
+        rowsInput.value = grid.rows;
     }
 
     if (columnsInput) {
-
-        columnsInput.value =
-            grid.columns;
+        columnsInput.value = grid.columns;
     }
 
     if (ratioInput) {
-
-        ratioInput.value =
-            grid.ratio;
+        ratioInput.value = grid.ratio;
     }
 
     if (spacingInput) {
-
-        spacingInput.value =
-            grid.spacing;
-
+        spacingInput.value = appState.spacing;
     }
 
     if (backgroundInput) {
-
-        backgroundInput.value =
-            grid.backgroundColor;
+        backgroundInput.value = appState.backgroundColor;
     }
 
     if (borderEnabledInput) {
-
-        borderEnabledInput.checked =
-            appState.borderEnabled;
+        borderEnabledInput.checked = appState.borderEnabled;
     }
 
     if (borderColorInput) {
-
-        borderColorInput.value =
-            appState.borderColor;
+        borderColorInput.value = appState.borderColor;
     }
 
     if (borderSizeInput) {
-
-        borderSizeInput.value =
-            appState.borderSize;
+        borderSizeInput.value = appState.borderSize;
     }
 }
 
@@ -610,23 +423,14 @@ export function applyGridData(
 // Load Grid
 // ========================================
 
-export async function loadGrid(
-    gridId
-) {
-
-    const grid =
-        await getGrid(
-            gridId
-        );
+export async function loadGrid(gridId) {
+    const grid = await getGrid(gridId);
 
     if (!grid) {
-
         return null;
     }
 
-    applyGridData(
-        grid
-    );
+    applyGridData(grid);
 
     return grid;
 }
@@ -637,126 +441,54 @@ export async function loadGrid(
 // ========================================
 
 export async function saveCurrentGrid() {
-
     let grid;
 
-    if (
-        appState.currentGridId
-    ) {
-
-        grid =
-            await getGrid(
-                appState.currentGridId
-            );
+    if (appState.currentGridId) {
+        grid = await getGrid(appState.currentGridId);
     }
-
-
-    // ========================================
-    // No Existing Grid
-    // ========================================
 
     if (!grid) {
+        grid = createGridData();
 
-        grid =
-            createGridData();
-
-        appState.currentGridId =
-            grid.id;
-
-        appState.currentGridName =
-            grid.name;
+        appState.currentGridId = grid.id;
+        appState.currentGridName = grid.name;
     }
 
-
-    // ========================================
-    // Read Current Controls
-    // ========================================
-
-    const rowsInput =
-        document.getElementById(
-            "rows"
-        );
-
-    const columnsInput =
-        document.getElementById(
-            "columns"
-        );
-
-    const ratioInput =
-        document.getElementById(
-            "imageRatio"
-        );
-
+    const rowsInput = document.getElementById("rows");
+    const columnsInput = document.getElementById("columns");
+    const ratioInput = document.getElementById("imageRatio");
 
     if (rowsInput) {
-
-        grid.rows =
-            Number(
-                rowsInput.value
-            );
+        grid.rows = Number(rowsInput.value);
     }
 
     if (columnsInput) {
-
-        grid.columns =
-            Number(
-                columnsInput.value
-            );
+        grid.columns = Number(columnsInput.value);
     }
 
     if (ratioInput) {
-
-        grid.ratio =
-            ratioInput.value;
+        grid.ratio = ratioInput.value;
     }
-
-
-    // ========================================
-    // Save Current State
-    // ========================================
 
     grid.name =
         appState.currentGridName ||
         grid.name ||
         "Untitled Grid";
 
-    grid.images =
-        cloneData(
-            appState.savedImages
-        );
+    grid.images = cloneData(appState.savedImages);
 
-    grid.spacing =
-        appState.spacing;
+    grid.spacing = appState.spacing;
+    grid.backgroundColor = appState.backgroundColor;
+    grid.borderEnabled = appState.borderEnabled;
+    grid.borderSize = appState.borderSize;
+    grid.borderColor = appState.borderColor;
 
-    grid.backgroundColor =
-        appState.backgroundColor;
+    grid.undoStack = cloneData(appState.undoStack);
+    grid.redoStack = cloneData(appState.redoStack);
 
-    grid.borderEnabled =
-        appState.borderEnabled;
+    grid.updatedAt = Date.now();
 
-    grid.borderSize =
-        appState.borderSize;
-
-    grid.borderColor =
-        appState.borderColor;
-
-    grid.undoStack =
-        cloneData(
-            appState.undoStack
-        );
-
-    grid.redoStack =
-        cloneData(
-            appState.redoStack
-        );
-
-    grid.updatedAt =
-        Date.now();
-
-
-    await saveGrid(
-        grid
-    );
+    await saveGrid(grid);
 
     return grid;
 }
@@ -766,8 +498,7 @@ export async function saveCurrentGrid() {
 // Backwards-Compatible Name
 // ========================================
 
-export const saveBoard =
-    saveCurrentGrid;
+export const saveBoard = saveCurrentGrid;
 
 
 // ========================================
@@ -775,41 +506,25 @@ export const saveBoard =
 // ========================================
 
 export async function loadBoard() {
-
-    // Try current grid first
-    if (
-        appState.currentGridId
-    ) {
-
-        const currentGrid =
-            await loadGrid(
-                appState.currentGridId
-            );
+    if (appState.currentGridId) {
+        const currentGrid = await loadGrid(
+            appState.currentGridId
+        );
 
         if (currentGrid) {
-
             return currentGrid;
         }
     }
 
+    const grids = await getAllGrids();
 
-    // Otherwise load most recently updated grid
-    const grids =
-        await getAllGrids();
-
-    if (
-        grids.length === 0
-    ) {
-
+    if (grids.length === 0) {
         return null;
     }
 
-    const grid =
-        grids[0];
+    const grid = grids[0];
 
-    applyGridData(
-        grid
-    );
+    applyGridData(grid);
 
     return grid;
 }
@@ -820,7 +535,6 @@ export async function loadBoard() {
 // ========================================
 
 export function getCurrentGridId() {
-
     return appState.currentGridId;
 }
 
@@ -829,55 +543,80 @@ export function getCurrentGridId() {
 // Set Current Grid ID
 // ========================================
 
-export function setCurrentGridId(
-    gridId
-) {
-
-    appState.currentGridId =
-        gridId;
+export function setCurrentGridId(gridId) {
+    appState.currentGridId = gridId;
 }
 
 
 // ========================================
-// Rename Grid
+// Rename Grid — Optimized
 // ========================================
 
-export async function renameGrid(
-    gridId,
-    newName
-) {
-
-    const grid =
-        await getGrid(
-            gridId
-        );
-
-    if (!grid) {
-
+export async function renameGrid(gridId, newName) {
+    if (!gridId) {
         return null;
     }
 
-    const trimmedName =
-        String(
-            newName
-        ).trim();
+    const trimmedName = String(newName).trim();
 
-    grid.name =
-        trimmedName ||
-        "Untitled Grid";
-
-    await saveGrid(
-        grid
-    );
-
-    if (
-        appState.currentGridId ===
-        gridId
-    ) {
-
-        appState.currentGridName =
-            grid.name;
+    if (!trimmedName) {
+        throw new Error("Grid name cannot be empty.");
     }
 
-    return grid;
+    const db = await openDatabase();
+
+    const transaction = db.transaction(
+        GRID_STORE,
+        "readwrite"
+    );
+
+    const store = transaction.objectStore(GRID_STORE);
+    const request = store.get(gridId);
+
+    let renamedGrid = null;
+
+    request.onsuccess = () => {
+        const grid = request.result;
+
+        if (!grid) {
+            return;
+        }
+
+        grid.name = trimmedName;
+
+        // Do not change updatedAt: a rename doesn't change
+        // the grid's content or its recency.
+        store.put(grid);
+
+        renamedGrid = grid;
+    };
+
+    return new Promise((resolve, reject) => {
+        transaction.oncomplete = () => {
+            if (!renamedGrid) {
+                resolve(null);
+                return;
+            }
+
+            if (appState.currentGridId === gridId) {
+                appState.currentGridName = renamedGrid.name;
+            }
+
+            resolve(renamedGrid);
+        };
+
+        transaction.onerror = () => {
+            reject(
+                transaction.error ||
+                new Error("Failed to rename grid.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Rename transaction aborted.")
+            );
+        };
+    });
 }

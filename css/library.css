@@ -1,127 +1,69 @@
+
 /* ========================================
    Library Button
 ======================================== */
 
 .library-button {
-
     position: fixed;
-
     top: 20px;
     left: 20px;
-
     z-index: 900;
-
-    padding:
-        10px 16px;
-
-    border:
-        1px solid #ccc;
-
-    border-radius:
-        8px;
-
-    background:
-        white;
-
-    font-size:
-        14px;
-
-    font-weight:
-        600;
-
-    cursor:
-        pointer;
-
-    transition:
-        background 0.15s ease,
-        transform 0.15s ease;
+    padding: 10px 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .library-button:hover {
-
-    background:
-        #f3f3f3;
+    background: #f3f3f3;
 }
 
 .library-button:active {
-
-    transform:
-        scale(0.97);
+    transform: scale(0.97);
 }
 
 
 /* ========================================
-   Library Panel
+   Library Panel and Overlay
 ======================================== */
 
 .library-panel {
-
     position: fixed;
-
     top: 0;
     left: 0;
-
     width: 320px;
     max-width: 85vw;
-
     height: 100vh;
-
     z-index: 1100;
-
     display: flex;
     flex-direction: column;
-
-    background:
-        #ffffff;
-
-    box-shadow:
-        4px 0 20px
-        rgba(0, 0, 0, 0.15);
-
-    transform:
-        translateX(-100%);
-
-    transition:
-        transform 0.25s ease;
+    background: #fff;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
 }
 
 .library-panel.open {
-
-    transform:
-        translateX(0);
+    transform: translateX(0);
 }
 
-
-/* ========================================
-   Library Overlay
-======================================== */
-
 .library-overlay {
-
     position: fixed;
-
     inset: 0;
-
     z-index: 1050;
-
-    background:
-        rgba(0, 0, 0, 0.35);
-
+    background: rgba(0, 0, 0, 0.35);
     opacity: 0;
-
-    pointer-events:
-        none;
-
-    transition:
-        opacity 0.25s ease;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
 }
 
 .library-overlay.visible {
-
     opacity: 1;
-
-    pointer-events:
-        auto;
+    pointer-events: auto;
 }
 
 
@@ -130,74 +72,40 @@
 ======================================== */
 
 .library-header {
-
     display: flex;
-
-    align-items:
-        flex-start;
-
-    justify-content:
-        space-between;
-
-    padding:
-        20px;
-
-    border-bottom:
-        1px solid #e5e5e5;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .library-header h2 {
-
-    margin:
-        0;
-
-    font-size:
-        20px;
+    margin: 0;
+    font-size: 20px;
 }
 
 .current-grid-name {
-
-    margin-top:
-        4px;
-
-    color:
-        #777;
-
-    font-size:
-        13px;
+    margin-top: 4px;
+    color: #777;
+    font-size: 13px;
+    overflow-wrap: anywhere;
 }
 
 .library-close-button {
-
-    width:
-        32px;
-
-    height:
-        32px;
-
-    padding:
-        0;
-
-    border:
-        none;
-
-    border-radius:
-        6px;
-
-    background:
-        transparent;
-
-    font-size:
-        24px;
-
-    cursor:
-        pointer;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
 }
 
 .library-close-button:hover {
-
-    background:
-        #f0f0f0;
+    background: #f0f0f0;
 }
 
 
@@ -206,57 +114,30 @@
 ======================================== */
 
 .library-actions {
-
     display: flex;
-
-    gap:
-        8px;
-
-    padding:
-        14px 16px;
-
-    border-bottom:
-        1px solid #e5e5e5;
+    gap: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .library-actions button {
-
-    flex:
-        1;
-
-    min-width:
-        0;
-
-    padding:
-        9px 10px;
-
-    border:
-        1px solid #ccc;
-
-    border-radius:
-        6px;
-
-    background:
-        white;
-
-    cursor:
-        pointer;
-
-    font-size:
-        13px;
+    flex: 1;
+    min-width: 0;
+    padding: 9px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
 }
 
 .library-actions button:hover {
-
-    background:
-        #f3f3f3;
+    background: #f3f3f3;
 }
 
-.library-actions
-.primary-button {
-
-    border-color:
-        transparent;
+.library-actions .primary-button,
+.library-modal-actions .primary-button {
+    border-color: transparent;
 }
 
 
@@ -265,30 +146,17 @@
 ======================================== */
 
 .library-content {
-
-    flex:
-        1;
-
-    overflow-y:
-        auto;
-
-    padding:
-        12px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px;
 }
 
 .library-empty {
-
-    padding:
-        30px 15px;
-
-    text-align:
-        center;
-
-    color:
-        #777;
-
-    font-size:
-        14px;
+    padding: 30px 15px;
+    color: #777;
+    font-size: 14px;
+    text-align: center;
 }
 
 
@@ -297,163 +165,162 @@
 ======================================== */
 
 .library-category {
-
-    margin-bottom:
-        4px;
+    min-width: 0;
+    margin-bottom: 4px;
 }
 
+/* Name and action buttons can wrap instead of
+   squeezing the category name into a tiny space. */
 .library-category-header {
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        6px;
-
-    padding:
-        7px 8px;
-
-    border-radius:
-        6px;
-
-    cursor:
-        pointer;
-
-    user-select:
-        none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 7px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .library-category-header:hover {
+    background: #f3f3f3;
+}
 
-    background:
-        #f3f3f3;
+.library-category-header:focus-visible {
+    outline: 2px solid #4f83cc;
+    outline-offset: 2px;
 }
 
 .library-category-arrow {
-
-    width:
-        16px;
-
-    font-size:
-        11px;
-
-    color:
-        #777;
-
-    text-align:
-        center;
+    flex: 0 0 16px;
+    width: 16px;
+    color: #777;
+    font-size: 11px;
+    text-align: center;
 }
 
 .library-category-name {
-
-    flex:
-        1;
-
-    font-size:
-        14px;
-
-    font-weight:
-        600;
+    flex: 1 1 120px;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
-.library-category-children {
-
-    margin-left:
-        18px;
-}
-
-
-/* ========================================
-   Grids
-======================================== */
-
-.library-grid {
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        7px;
-
-    padding:
-        7px 8px;
-
-    border-radius:
-        6px;
-
-    cursor:
-        pointer;
-
-    font-size:
-        14px;
-}
-
-.library-grid:hover {
-
-    background:
-        #f3f3f3;
-}
-
-.library-grid.active {
-
-    background:
-        #e8f0fe;
-
-    font-weight:
-        600;
-}
-
-.library-grid-icon {
-
-    width:
-        16px;
-
-    text-align:
-        center;
-
-    color:
-        #777;
-}
-
-.library-grid-name {
-
-    flex:
-        1;
-
-    overflow:
-        hidden;
-
-    text-overflow:
-        ellipsis;
-
-    white-space:
-        nowrap;
-}
-
-/* ========================================
-   Grid Entry Actions
-======================================== */
-
-.library-grid-actions {
+/* Keep category controls on their own row. */
+.library-category-actions {
     display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4px;
-    margin-left: auto;
-    flex-shrink: 0;
+    min-width: 0;
+    margin-left: 21px;
 }
 
-.library-grid-action {
+.library-category-action {
+    flex: 0 1 auto;
+    max-width: 100%;
     padding: 4px 6px;
     border: 1px solid #d1d5db;
     border-radius: 5px;
-    background: #ffffff;
-    color: #333333;
+    background: #fff;
+    color: #333;
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.library-category-action:hover {
+    background: #f3f4f6;
+}
+
+.library-category-action.delete {
+    color: #b42318;
+    border-color: #f0c5c2;
+}
+
+.library-category-action.delete:hover {
+    background: #fef2f2;
+}
+
+/* Use smaller indentation so deeper levels retain space. */
+.library-category-children {
+    min-width: 0;
+    margin-left: 8px;
+    padding-left: 5px;
+    border-left: 1px solid #e5e7eb;
+}
+
+/* JavaScript should add/remove .collapsed on the category
+   element when its arrow is clicked. */
+.library-category.collapsed > .library-category-children {
+    display: none;
+}
+
+
+/* ========================================
+   Grid Entries
+======================================== */
+
+.library-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 7px 6px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.library-grid:hover {
+    background: #f3f3f3;
+}
+
+.library-grid.active {
+    background: #e8f0fe;
+    font-weight: 600;
+}
+
+.library-grid-icon {
+    flex: 0 0 16px;
+    width: 16px;
+    color: #777;
+    text-align: center;
+}
+
+.library-grid-name {
+    flex: 1 1 100px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.library-grid-actions {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    margin-left: 22px;
+}
+
+.library-grid-action {
+    flex: 0 1 auto;
+    padding: 4px 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+    color: #333;
     font-size: 11px;
     line-height: 1.3;
     cursor: pointer;
@@ -471,7 +338,6 @@
 .library-grid-action.delete:hover {
     background: #fef2f2;
 }
-
 
 .library-grid-rename-input {
     flex: 1;
@@ -491,170 +357,90 @@
 
 
 /* ========================================
-   New Grid Modal
+   Modals
 ======================================== */
 
 .library-modal {
-
     position: fixed;
-
     inset: 0;
-
     z-index: 1300;
-
     display: flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    background:
-        rgba(0, 0, 0, 0.4);
-
-    opacity:
-        0;
-
-    pointer-events:
-        none;
-
-    transition:
-        opacity 0.2s ease;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
 }
 
 .library-modal.open {
-
-    opacity:
-        1;
-
-    pointer-events:
-        auto;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .library-modal-content {
-
-    width:
-        360px;
-
-    max-width:
-        calc(100vw - 32px);
-
-    padding:
-        22px;
-
-    border-radius:
-        10px;
-
-    background:
-        #ffffff;
-
-    box-shadow:
-        0 10px 35px
-        rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    width: 360px;
+    max-width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 22px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
 }
 
 .library-modal-content h2 {
-
-    margin:
-        0 0 18px;
-
-    font-size:
-        20px;
+    margin: 0 0 18px;
+    font-size: 20px;
 }
 
 .library-modal-content label {
-
-    display:
-        block;
-
-    margin-bottom:
-        6px;
-
-    font-size:
-        14px;
-
-    font-weight:
-        600;
+    display: block;
+    margin: 12px 0 6px;
+    font-size: 14px;
+    font-weight: 600;
 }
 
-.library-modal-content input {
-
-    box-sizing:
-        border-box;
-
-    width:
-        100%;
-
-    padding:
-        10px 12px;
-
-    border:
-        1px solid #ccc;
-
-    border-radius:
-        6px;
-
-    font-size:
-        14px;
+.library-modal-content input,
+.library-modal-content select {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 6px;
+    padding: 9px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
 }
 
-.library-modal-content input:focus {
-
-    outline:
-        none;
-
-    border-color:
-        #777;
+.library-modal-content input:focus,
+.library-modal-content select:focus {
+    outline: 2px solid #93c5fd;
+    outline-offset: 1px;
 }
 
 .library-modal-actions {
-
-    display:
-        flex;
-
-    justify-content:
-        flex-end;
-
-    gap:
-        8px;
-
-    margin-top:
-        18px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
 }
 
 .library-modal-actions button {
-
-    padding:
-        9px 14px;
-
-    border:
-        1px solid #ccc;
-
-    border-radius:
-        6px;
-
-    background:
-        #ffffff;
-
-    cursor:
-        pointer;
-
-    font-size:
-        14px;
+    padding: 9px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+    cursor: pointer;
 }
 
 .library-modal-actions button:hover {
-
-    background:
-        #f3f3f3;
-}
-
-.library-modal-actions
-.primary-button {
-
-    border-color:
-        transparent;
+    background: #f3f3f3;
 }
 
 
@@ -663,34 +449,40 @@
 ======================================== */
 
 @media (max-width: 600px) {
-
     .library-button {
-
-        top:
-            10px;
-
-        left:
-            10px;
-
-        padding:
-            8px 12px;
-
-        font-size:
-            13px;
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 13px;
     }
 
     .library-panel {
+        width: 300px;
+    }
 
-        width:
-            300px;
+    .library-content {
+        padding: 8px;
+    }
+
+    .library-category-header {
+        gap: 4px;
+        padding: 7px 4px;
+    }
+
+    .library-category-children {
+        margin-left: 5px;
+        padding-left: 4px;
+    }
+
+    .library-category-actions,
+    .library-grid-actions {
+        margin-left: 20px;
     }
 
     .library-modal-content {
-
-        width:
-            320px;
-
-        max-width:
-            calc(100vw - 24px);
+        padding: 18px;
     }
+}
+.library-category.collapsed > .library-category-children {
+    display: none;
 }
