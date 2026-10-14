@@ -12,14 +12,13 @@ import { generateId, cloneData } from "./helpers.js";
 // Create Category
 // ========================================
 
+
 export async function createCategory(name, parentId = null) {
     const trimmedName = String(name ?? "").trim();
 
     if (!trimmedName) {
         throw new Error("Category name cannot be empty.");
     }
-
-    const db = await openDatabase();
 
     if (parentId != null) {
         const parent = await getCategory(parentId);
@@ -29,6 +28,11 @@ export async function createCategory(name, parentId = null) {
         }
     }
 
+    const db = await openDatabase();
+    const transaction = db.transaction(CATEGORY_STORE, "readwrite");
+    const store = transaction.objectStore(CATEGORY_STORE);
+    const request = store.getAll();
+
     const category = {
         id: generateId("category"),
         name: trimmedName,
@@ -37,17 +41,49 @@ export async function createCategory(name, parentId = null) {
         updatedAt: Date.now()
     };
 
-    const transaction = db.transaction(CATEGORY_STORE, "readwrite");
-    transaction.objectStore(CATEGORY_STORE).add(category);
+    let validationError = null;
+
+    request.onsuccess = () => {
+        const normalizedName = trimmedName.toLowerCase();
+
+        const duplicate = request.result.some(
+            existing =>
+                String(existing.name ?? "").trim().toLowerCase() ===
+                normalizedName
+        );
+
+        if (duplicate) {
+            validationError = new Error(
+                `A category or subcategory named "${trimmedName}" already exists. Choose a different name.`
+            );
+            transaction.abort();
+            return;
+        }
+
+        store.add(category);
+    };
 
     return new Promise((resolve, reject) => {
         transaction.oncomplete = () => resolve(cloneData(category));
-        transaction.onerror = () =>
-            reject(transaction.error || new Error("Failed to create category."));
-        transaction.onabort = () =>
-            reject(transaction.error || new Error("Category creation aborted."));
+
+        transaction.onerror = () => {
+            reject(
+                validationError ||
+                transaction.error ||
+                new Error("Failed to create category.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                validationError ||
+                transaction.error ||
+                new Error("Category creation was aborted.")
+            );
+        };
     });
 }
+
 
 
 // ========================================
@@ -109,6 +145,7 @@ export async function getAllCategories() {
 // Rename Category
 // ========================================
 
+
 export async function renameCategory(categoryId, newName) {
     const trimmedName = String(newName ?? "").trim();
 
@@ -116,20 +153,49 @@ export async function renameCategory(categoryId, newName) {
         throw new Error("Category name cannot be empty.");
     }
 
+    if (categoryId == null) {
+        return null;
+    }
+
     const db = await openDatabase();
     const transaction = db.transaction(CATEGORY_STORE, "readwrite");
     const store = transaction.objectStore(CATEGORY_STORE);
-    const request = store.get(categoryId);
+    const request = store.getAll();
 
     let updatedCategory = null;
+    let validationError = null;
 
     request.onsuccess = () => {
-        if (!request.result) {
+        const categories = request.result;
+
+        const currentCategory = categories.find(
+            category =>
+                String(category.id) === String(categoryId)
+        );
+
+        if (!currentCategory) {
+            return;
+        }
+
+        const normalizedName = trimmedName.toLowerCase();
+
+        const duplicate = categories.some(
+            category =>
+                String(category.id) !== String(categoryId) &&
+                String(category.name ?? "").trim().toLowerCase() ===
+                    normalizedName
+        );
+
+        if (duplicate) {
+            validationError = new Error(
+                `A category or subcategory named "${trimmedName}" already exists. Choose a different name.`
+            );
+            transaction.abort();
             return;
         }
 
         updatedCategory = {
-            ...request.result,
+            ...currentCategory,
             name: trimmedName,
             updatedAt: Date.now()
         };
@@ -138,16 +204,30 @@ export async function renameCategory(categoryId, newName) {
     };
 
     return new Promise((resolve, reject) => {
-        transaction.oncomplete = () =>
-            resolve(updatedCategory ? cloneData(updatedCategory) : null);
+        transaction.oncomplete = () => {
+            resolve(
+                updatedCategory ? cloneData(updatedCategory) : null
+            );
+        };
 
-        transaction.onerror = () =>
-            reject(transaction.error || new Error("Failed to rename category."));
+        transaction.onerror = () => {
+            reject(
+                validationError ||
+                transaction.error ||
+                new Error("Failed to rename category.")
+            );
+        };
 
-        transaction.onabort = () =>
-            reject(transaction.error || new Error("Category rename aborted."));
+        transaction.onabort = () => {
+            reject(
+                validationError ||
+                transaction.error ||
+                new Error("Category rename was aborted.")
+            );
+        };
     });
 }
+
 
 
 // ========================================

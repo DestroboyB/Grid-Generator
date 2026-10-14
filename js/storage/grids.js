@@ -333,24 +333,73 @@ export async function deleteGrid(gridId) {
 // Create New Grid
 // ========================================
 
-export async function createGrid(options = {}) {
-    const grid = createEmptyGridData();
 
-    if (options.name) {
-        grid.name = options.name;
+export async function createGrid(options = {}) {
+    const name = String(options.name ?? "Untitled Grid").trim();
+
+    if (!name) {
+        throw new Error("Grid name cannot be empty.");
     }
+
+    const grid = createEmptyGridData();
+    grid.name = name;
 
     if (options.categoryId !== undefined) {
         grid.categoryId = options.categoryId;
     }
 
-    await saveGrid(grid);
+    const db = await openDatabase();
+    const transaction = db.transaction(GRID_STORE, "readwrite");
+    const store = transaction.objectStore(GRID_STORE);
+    const request = store.getAll();
 
-    appState.currentGridId = grid.id;
-    appState.currentGridName = grid.name;
+    let validationError = null;
 
-    return grid;
+    request.onsuccess = () => {
+        const normalizedName = name.toLowerCase();
+
+        const duplicate = request.result.some(
+            existing =>
+                String(existing.name ?? "").trim().toLowerCase() ===
+                normalizedName
+        );
+
+        if (duplicate) {
+            validationError = new Error(
+                `A grid named "${name}" already exists. Choose a different name.`
+            );
+            transaction.abort();
+            return;
+        }
+
+        store.add(grid);
+    };
+
+    return new Promise((resolve, reject) => {
+        transaction.oncomplete = () => {
+            appState.currentGridId = grid.id;
+            appState.currentGridName = grid.name;
+            resolve(grid);
+        };
+
+        transaction.onerror = () => {
+            reject(
+                validationError ||
+                transaction.error ||
+                new Error("Failed to create grid.")
+            );
+        };
+
+        transaction.onabort = () => {
+            reject(
+                validationError ||
+                transaction.error ||
+                new Error("Grid creation was aborted.")
+            );
+        };
+    });
 }
+
 
 
 // ========================================
@@ -552,43 +601,60 @@ export function setCurrentGridId(gridId) {
 // Rename Grid — Optimized
 // ========================================
 
+
 export async function renameGrid(gridId, newName) {
     if (!gridId) {
         return null;
     }
 
-    const trimmedName = String(newName).trim();
+    const trimmedName = String(newName ?? "").trim();
 
     if (!trimmedName) {
         throw new Error("Grid name cannot be empty.");
     }
 
     const db = await openDatabase();
-
-    const transaction = db.transaction(
-        GRID_STORE,
-        "readwrite"
-    );
-
+    const transaction = db.transaction(GRID_STORE, "readwrite");
     const store = transaction.objectStore(GRID_STORE);
-    const request = store.get(gridId);
+    const request = store.getAll();
 
     let renamedGrid = null;
+    let validationError = null;
 
     request.onsuccess = () => {
-        const grid = request.result;
+        const grids = request.result;
+        const currentGrid = grids.find(
+            grid => String(grid.id) === String(gridId)
+        );
 
-        if (!grid) {
+        if (!currentGrid) {
             return;
         }
 
-        grid.name = trimmedName;
+        const normalizedName = trimmedName.toLowerCase();
 
-        // Do not change updatedAt: a rename doesn't change
-        // the grid's content or its recency.
-        store.put(grid);
+        const duplicate = grids.some(
+            grid =>
+                String(grid.id) !== String(gridId) &&
+                String(grid.name ?? "").trim().toLowerCase() ===
+                    normalizedName
+        );
 
-        renamedGrid = grid;
+        if (duplicate) {
+            validationError = new Error(
+                `A grid named "${trimmedName}" already exists. Choose a different name.`
+            );
+            transaction.abort();
+            return;
+        }
+
+        renamedGrid = {
+            ...currentGrid,
+            name: trimmedName
+        };
+
+        // Renaming does not change the grid's content or recency.
+        store.put(renamedGrid);
     };
 
     return new Promise((resolve, reject) => {
@@ -607,6 +673,7 @@ export async function renameGrid(gridId, newName) {
 
         transaction.onerror = () => {
             reject(
+                validationError ||
                 transaction.error ||
                 new Error("Failed to rename grid.")
             );
@@ -614,8 +681,9 @@ export async function renameGrid(gridId, newName) {
 
         transaction.onabort = () => {
             reject(
+                validationError ||
                 transaction.error ||
-                new Error("Rename transaction aborted.")
+                new Error("Grid rename was aborted.")
             );
         };
     });

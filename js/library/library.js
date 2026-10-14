@@ -66,10 +66,12 @@ function updateCurrentGridName() {
         appState.currentGridName || "Untitled Grid";
 }
 
+
 function showError(message, error) {
     console.error(message, error);
-    alert(message);
+    alert(error?.message || message);
 }
+
 
 function makeActionButton(label, title, className = "") {
     const button = document.createElement("button");
@@ -234,7 +236,7 @@ function openCategoryNameModal({
             dialog.close();
         } catch (error) {
             console.error("Category operation failed:", error);
-            alert("The category operation failed. Please try again.");
+            alert(error.message ||"The category operation failed. Please try again.");
 
             dialog.saveButton.disabled = false;
             dialog.cancelButton.disabled = false;
@@ -1047,7 +1049,7 @@ function createGridElement(grid, categories) {
                 updateCurrentGridName();
             } catch (error) {
                 console.error("Failed to rename grid:", error);
-                alert("Failed to rename the grid. Please try again.");
+                alert(error.message ||"Failed to rename the grid. Please try again.");
 
                 finished = false;
                 saveButton.disabled = false;
