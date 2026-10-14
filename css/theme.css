@@ -350,6 +350,7 @@
 /* Theme changes on these controls should be immediate, not animated.
    Keep only the tiny press feedback; do not transition background, border, or text color. */
 :root .library-button,
+:root .theme-toggle-button,
 :root .controls #boardSettingsButton,
 :root .controls #undoButton,
 :root .controls #redoButton,
