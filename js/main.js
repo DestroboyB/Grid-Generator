@@ -33,6 +33,8 @@ import {
 
 import { appState } from "./state.js";
 
+import "./theme.js";
+
 import "./library/library.js";
 
 
