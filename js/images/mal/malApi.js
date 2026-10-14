@@ -196,17 +196,36 @@ export async function getCharacterAnime(
    Generic Helpers
 ======================================== */
 
-export async function getItemDetail(
+const inFlightDetailRequests = new Map();
+
+export function getItemDetail(
     mode,
     malId
 ) {
+    const itemType = mode === "character" ? "character" : "anime";
+    const key = `${itemType}:${malId}`;
 
-    if (mode === "character") {
-
-        return getCharacter(malId);
+    // Reuse a request already in progress for this same item.
+    if (inFlightDetailRequests.has(key)) {
+        return inFlightDetailRequests.get(key);
     }
 
-    return getAnime(malId);
+    const request = itemType === "character"
+        ? getCharacter(malId)
+        : getAnime(malId);
+
+    inFlightDetailRequests.set(key, request);
+
+    // Only deduplicate concurrent requests; later calls can retry normally.
+    const clearRequest = () => {
+        if (inFlightDetailRequests.get(key) === request) {
+            inFlightDetailRequests.delete(key);
+        }
+    };
+
+    request.then(clearRequest, clearRequest);
+
+    return request;
 }
 
 
