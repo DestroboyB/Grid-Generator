@@ -14,19 +14,19 @@
 
     margin-top: 20px;
 
-    padding: 32px;
+    padding: 36px;
 
-    background: #e5e7eb;
+    background: #f9fafb;
 
     border: 1px solid #d1d5db;
 
-    border-radius: 12px;
+    border-radius: 14px;
 
     overflow: auto;
 
     box-shadow:
-        inset 0 1px 2px
-        rgba(0, 0, 0, 0.03);
+        inset 0 1px 3px
+        rgba(15, 23, 42, 0.04);
 }
 
 
@@ -53,8 +53,10 @@
     background: #ffffff;
 
     box-shadow:
-        0 6px 18px
-        rgba(0, 0, 0, 0.12);
+        0 8px 24px
+        rgba(15, 23, 42, 0.14),
+        0 2px 5px
+        rgba(15, 23, 42, 0.06);
 }
 
 
