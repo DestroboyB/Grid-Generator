@@ -830,3 +830,75 @@
     font-weight: 600;
     color: #374151;
 }
+/* ========================================
+   Character Search Sub-tabs
+======================================== */
+
+#malSearchModal .mal-character-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px 0;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+#malSearchModal .mal-character-subtabs button {
+    padding: 7px 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #f9fafb;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#malSearchModal .mal-character-subtabs button.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+/* ========================================
+   Character Sorting
+======================================== */
+
+#malSearchModal .mal-character-sort-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 20px 0;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+#malSearchModal .mal-character-sort-row label {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#malSearchModal #malCharacterSort {
+    max-width: 180px;
+    padding: 6px 9px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    font: inherit;
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+    #malSearchModal .mal-character-subtabs {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    #malSearchModal .mal-character-sort-row {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
