@@ -859,6 +859,8 @@
 }
 
 #malSearchModal .mal-character-subtabs button {
+    flex: 0 1 auto;
+    min-height: 0;
     padding: 5px 11px;
     border: 1px solid #d1d5db;
     border-radius: 999px;
