@@ -256,7 +256,17 @@ export async function renderLibrary() {
                 category => category.parentId == null
             );
 
-            for (const category of rootCategories) {
+            const orphanCategories = categories.filter(category =>
+                category.parentId != null &&
+                !categories.some(
+                    parent =>
+                        String(parent.id) === String(category.parentId)
+                )
+            );
+
+            const topLevelCategories = [...rootCategories, ...orphanCategories];
+
+            for (const category of topLevelCategories) {
                 fragment.appendChild(
                     createCategoryElement(
                         category,
@@ -274,30 +284,15 @@ export async function renderLibrary() {
                 grid => grid.categoryId == null
             );
 
-            for (const grid of uncategorized) {
-                fragment.appendChild(createGridElement(grid, categories));
+            if (topLevelCategories.length > 0 && uncategorized.length > 0) {
+                const divider = document.createElement("div");
+                divider.className = "library-section-divider";
+                divider.setAttribute("aria-hidden", "true");
+                fragment.appendChild(divider);
             }
 
-            const orphanCategories = categories.filter(category =>
-                category.parentId != null &&
-                !categories.some(
-                    parent =>
-                        String(parent.id) === String(category.parentId)
-                )
-            );
-
-            for (const category of orphanCategories) {
-                fragment.appendChild(
-                    createCategoryElement(
-                        category,
-                        categories,
-                        grids,
-                        new Set(),
-                        1,
-                        expandedCategories,
-                        categoryElementDependencies
-                    )
-                );
+            for (const grid of uncategorized) {
+                fragment.appendChild(createGridElement(grid, categories));
             }
         }
 
