@@ -90,6 +90,9 @@ const gridElementDependencies = {
     updateCurrentGridName,
     showError,
     isLibrarySearchMode: () => isLibrarySearchMode,
+    setIsLibrarySearchMode: value => {
+        isLibrarySearchMode = value;
+    },
     searchLibrary: () => searchLibrary(),
     librarySearchInput,
     setPendingExpandedCategoryIds: ids => {
