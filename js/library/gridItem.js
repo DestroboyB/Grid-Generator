@@ -23,6 +23,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
         showError,
         isLibrarySearchMode,
         setIsLibrarySearchMode,
+        setIsLibrarySearchMode,
         searchLibrary,
         librarySearchInput,
         setPendingExpandedCategoryIds,
