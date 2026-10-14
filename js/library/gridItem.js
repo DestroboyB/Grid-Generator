@@ -22,6 +22,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
         updateCurrentGridName,
         showError,
         isLibrarySearchMode,
+        setIsLibrarySearchMode,
         searchLibrary,
         librarySearchInput,
         setPendingExpandedCategoryIds,
@@ -164,7 +165,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
                     cleanupRename();
                     updateCurrentGridName();
 
-                    if (isLibrarySearchMode) {
+                    if (isLibrarySearchMode()) {
                         await searchLibrary();
                     }
                 } catch (error) {
@@ -272,7 +273,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
 
             if (searchResult) {
                 // Leave search mode and restore the normal library.
-                isLibrarySearchMode = false;
+                setIsLibrarySearchMode(false);
 
                 if (librarySearchInput) {
                     librarySearchInput.value = "";
@@ -300,13 +301,13 @@ export function createGridElement(grid, categories, searchResult = false, depend
                     parentId = category.parentId ?? null;
                 }
 
-                pendingExpandedCategoryIds = expandedIds;
+                setPendingExpandedCategoryIds(expandedIds);
 
                 await renderLibrary();
                 return;
             }
 
-            libraryContent?.querySelectorAll(".library-grid")
+            getLibraryContent()?.querySelectorAll(".library-grid")
                 .forEach(item => {
                     item.classList.toggle(
                         "active",
