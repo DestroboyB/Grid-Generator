@@ -4,14 +4,13 @@
 ======================================== */
 
 .library-button {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 900;
-    padding: 10px 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background: #fff;
+    position: static;
+    z-index: auto;
+    padding: 9px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #1f2937;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -471,13 +470,6 @@
 ======================================== */
 
 @media (max-width: 600px) {
-    .library-button {
-        top: 10px;
-        left: 10px;
-        padding: 8px 12px;
-        font-size: 13px;
-    }
-
     .library-panel {
         width: 300px;
     }
