@@ -212,6 +212,8 @@ let currentApiResultCount = 0;
 
 export function openMalSearch(element) {
 
+    animeFilterRunId++;
+    isCheckingAnime = false;
     targetElement = element;
 
 
@@ -285,6 +287,8 @@ export function openMalSearch(element) {
 
 function closeMalSearch() {
 
+    animeFilterRunId++;
+    isCheckingAnime = false;
     modal.style.display =
         "none";
 
@@ -381,6 +385,9 @@ characterSortSelect.addEventListener("change", () => {
 ======================================== */
 
 function switchMode(mode) {
+
+    animeFilterRunId++;
+    isCheckingAnime = false;
 
     if (
         currentMode === mode
@@ -524,6 +531,9 @@ searchInput.addEventListener(
 ======================================== */
 
 async function performSearch() {
+
+    animeFilterRunId++;
+    isCheckingAnime = false;
 
     const query =
         searchInput.value.trim();
