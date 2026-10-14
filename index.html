@@ -459,23 +459,37 @@
         aria-hidden="true"
     >
 
-        <div class="library-header">
+        
 
-            <h2>
-                My Grids
-            </h2>
 
-            <button
-                id="libraryCloseButton"
-                type="button"
-                class="library-close-button"
-                aria-label="Close library"
-            >
-                ×
-            </button>
+<div class="library-header">
+    <h2>My Grids</h2>
 
-        </div>
+    <button
+        id="libraryCloseButton"
+        type="button"
+        class="library-close-button"
+        aria-label="Close library"
+    >
+        ×
+    </button>
+</div>
 
+<div class="library-search-row">
+    <input
+        id="librarySearchInput"
+        class="library-search-input"
+        type="search"
+        placeholder="Search grids..."
+        aria-label="Search saved grids"
+        autocomplete="off"
+        spellcheck="false"
+    >
+</div>
+
+<div class="library-content-divider"></div>
+
+<div id="libraryContent"></div>
 
         <div
             id="libraryContent"

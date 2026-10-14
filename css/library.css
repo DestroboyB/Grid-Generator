@@ -486,3 +486,77 @@
 .library-category.collapsed > .library-category-children {
     display: none;
 }
+
+
+
+.library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 20px 12px;
+    border-bottom: none;
+}
+
+.library-header h2 {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.library-search-row {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 12px 12px;
+}
+
+.library-search-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    font: inherit;
+    font-size: 14px;
+}
+
+.library-content-divider {
+    height: 1px;
+    flex-shrink: 0;
+    margin: 0;
+    background: #e5e5e5;
+}
+
+
+.library-content-divider {
+    height: 1px;
+    margin: 0;
+    background: #d1d5db;
+}
+
+
+
+/* ========================================
+   Library Search Filtering
+======================================== */
+
+/* Hide grids and categories that don't match */
+.library-search-hidden {
+    display: none !important;
+}
+
+/* Expand category paths containing matching grids */
+.library-category.search-expanded > .library-category-children {
+    display: block !important;
+}
+
+/* Keep the no-results message readable */
+.library-search-empty {
+    padding: 20px 10px;
+    color: #777;
+    font-size: 14px;
+    text-align: center;
+}
