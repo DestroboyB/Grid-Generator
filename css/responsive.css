@@ -32,6 +32,22 @@
 
 @media (max-width: 550px) {
 
+    .app-header {
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 10px;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+
+    .app-title {
+        font-size: 23px;
+    }
+
+    .app-header-actions {
+        margin-left: auto;
+    }
+
     .controls {
         flex-direction: column;
         align-items: stretch;
