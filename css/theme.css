@@ -4,7 +4,9 @@
    excluded from broad image/color transformations.
 ======================================== */
 
-:root[data-theme="dark"] color-scheme: dark;
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
 
 :root[data-theme="dark"] body {
     background: #111827;
