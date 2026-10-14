@@ -41,6 +41,10 @@
     color: #e5e7eb;
 }
 
+:root[data-theme="dark"] .control-actions {
+    border-left-color: #374151;
+}
+
 :root[data-theme="dark"] .controls,
 :root[data-theme="dark"] .board-container,
 :root[data-theme="dark"] .image-editor,
