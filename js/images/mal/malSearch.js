@@ -973,12 +973,16 @@ async function loadAnimeInfo(
 
 
     /*
-     * If the search result already had
-     * everything we need, don't make
-     * another API request.
+     * Use the search result whenever it has
+     * at least one useful metadata field.
+     *
+     * These details are supplementary to
+     * choosing an image, so don't request
+     * the full anime record just to fill
+     * every missing field on every card.
      */
 
-    if (parts.length >= 3) {
+    if (parts.length > 0) {
 
         typeElement.textContent =
             parts.join(" • ");
