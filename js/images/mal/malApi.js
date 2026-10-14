@@ -34,13 +34,17 @@ export async function fetchMAL(url) {
 
 
         /*
-         * MyAnimeList/Jikan rate limit.
-         *
-         * Wait before retrying instead of immediately
-         * giving up.
+         * Retry rate limits and temporary gateway/server errors.
+         * These can happen intermittently on the third-party API.
          */
 
-        if (response.status === 429) {
+        const isRetryableStatus =
+            response.status === 429 ||
+            response.status === 502 ||
+            response.status === 503 ||
+            response.status === 504;
+
+        if (isRetryableStatus) {
 
             if (attempt < MAX_RETRIES) {
 
@@ -58,9 +62,13 @@ export async function fetchMAL(url) {
                 continue;
             }
 
+            const message = response.status === 429
+                ? "MyAnimeList is temporarily rate limiting requests."
+                : "MyAnimeList is temporarily unavailable. Please try again.";
+
             throw new MalApiError(
-                "MyAnimeList is temporarily rate limiting requests.",
-                429
+                message,
+                response.status
             );
         }
 
