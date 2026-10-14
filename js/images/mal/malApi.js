@@ -163,6 +163,20 @@ export async function getAnime(
 
 
 /* ========================================
+   Anime Characters
+======================================== */
+
+export async function getAnimeCharacters(
+    animeId
+) {
+
+    return fetchMAL(
+        `${MAL_API_BASE}/anime/${animeId}/characters`
+    );
+}
+
+
+/* ========================================
    Pictures
 ======================================== */
 
