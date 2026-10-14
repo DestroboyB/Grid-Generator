@@ -48,11 +48,18 @@ export function createCategoryElement(
     const nextAncestors = new Set(ancestors);
     nextAncestors.add(categoryId);
 
-    const shouldExpand = expandedCategories === null
-        ? depth === 1
-        : expandedCategories.has(categoryId);
+    const childCategories = categories.filter(
+        child => String(child.parentId) === categoryId
+    );
+    const canExpand = depth < 3 && childCategories.length > 0;
 
-    if (!shouldExpand) {
+    const shouldExpand = canExpand && (
+        expandedCategories === null
+            ? depth === 1
+            : expandedCategories.has(categoryId)
+    );
+
+    if (canExpand && !shouldExpand) {
         wrapper.classList.add("collapsed");
     }
 
@@ -62,15 +69,20 @@ export function createCategoryElement(
     const main = document.createElement("div");
     main.className = "library-category-main";
 
-    const arrow = document.createElement("span");
-    arrow.className = "library-category-arrow";
-    arrow.textContent = shouldExpand ? "▼" : "▶";
+    if (canExpand) {
+        main.classList.add("expandable");
+
+        const arrow = document.createElement("span");
+        arrow.className = "library-category-arrow";
+        arrow.textContent = shouldExpand ? "▼" : "▶";
+        main.appendChild(arrow);
+    }
 
     const name = document.createElement("span");
     name.className = "library-category-name";
     name.textContent = category.name;
 
-    main.append(arrow, name);
+    main.appendChild(name);
 
     const actions = document.createElement("div");
     actions.className = "library-category-actions";
@@ -111,10 +123,6 @@ export function createCategoryElement(
     const children = document.createElement("div");
     children.className = "library-category-children";
 
-    const childCategories = categories.filter(
-        child => String(child.parentId) === categoryId
-    );
-
     const categoryGrids = grids.filter(
         grid => String(grid.categoryId) === categoryId
     );
@@ -139,12 +147,15 @@ export function createCategoryElement(
 
     wrapper.append(header, children);
 
-    main.addEventListener("click", () => {
-        const isOpen = !wrapper.classList.contains("collapsed");
+    if (canExpand) {
+        main.addEventListener("click", () => {
+            const isOpen = !wrapper.classList.contains("collapsed");
 
-        wrapper.classList.toggle("collapsed", isOpen);
-        arrow.textContent = isOpen ? "▶" : "▼";
-    });
+            wrapper.classList.toggle("collapsed", isOpen);
+            const arrow = main.querySelector(".library-category-arrow");
+            if (arrow) arrow.textContent = isOpen ? "▶" : "▼";
+        });
+    }
 
     addSubcategoryButton?.addEventListener("click", event => {
         stopClick(event);
