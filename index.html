@@ -1080,13 +1080,24 @@
 
             <div class="mal-search-tabs">
 
-                <button
-                    id="malCharacterTab"
-                    type="button"
-                    class="active"
-                >
-                    Characters
-                </button>
+                <div class="mal-character-tab-group">
+                    <button
+                        id="malCharacterTab"
+                        type="button"
+                        class="active"
+                    >
+                        Characters
+                    </button>
+
+                    <div id="malCharacterSubTabs" class="mal-character-subtabs">
+                        <button id="malCharacterNameTab" type="button" class="active">
+                            By Name
+                        </button>
+                        <button id="malByAnimeTab" type="button">
+                            By Anime
+                        </button>
+                    </div>
+                </div>
 
                 <button
                     id="malAnimeTab"
@@ -1095,26 +1106,6 @@
                     Anime
                 </button>
 
-            </div>
-
-            <div id="malCharacterSubTabs" class="mal-character-subtabs">
-                <button id="malCharacterNameTab" type="button" class="active">
-                    By Name
-                </button>
-                <button id="malByAnimeTab" type="button">
-                    By Anime
-                </button>
-            </div>
-
-
-            <div id="malCharacterSortRow" class="mal-character-sort-row">
-                <label for="malCharacterSort">Sort characters</label>
-                <select id="malCharacterSort">
-                    <option value="default">Default order</option>
-                    <option value="popular">Popularity</option>
-                    <option value="alphabetical">Alphabetical</option>
-                    <option value="role">Main characters first</option>
-                </select>
             </div>
 
             <div class="mal-search-controls">
@@ -1137,10 +1128,21 @@
             </div>
 
 
-            <div
-                id="malSearchStatus"
-                class="mal-search-status"
-            ></div>
+            <div class="mal-search-status-row">
+                <div
+                    id="malSearchStatus"
+                    class="mal-search-status"
+                ></div>
+
+                <div id="malCharacterSortRow" class="mal-character-sort-row" style="display: none;">
+                    <label for="malCharacterSort">Sort by</label>
+                    <select id="malCharacterSort">
+                        <option value="default">Default order</option>
+                        <option value="popular">Popularity</option>
+                        <option value="alphabetical">Alphabetical</option>
+                    </select>
+                </div>
+            </div>
 
 
             <div
