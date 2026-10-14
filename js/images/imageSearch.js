@@ -152,19 +152,20 @@ async function searchImages() {
 // Perform Search
 // ========================================
 
-async function performSearch() {
+async function performSearch({ keepResults = false } = {}) {
 
     if (!currentQuery) {
         return;
     }
 
-
-    imageSearchResults.innerHTML =
-        "";
+    // Keep the current page visible while another page loads so the
+    // search window doesn't collapse and expand during pagination.
+    if (!keepResults) {
+        imageSearchResults.innerHTML = "";
+    }
 
     imageSearchStatus.textContent =
-        "Searching...";
-
+        keepResults ? "Loading page..." : "Searching...";
 
     updatePagination();
 
@@ -467,7 +468,7 @@ imageSearchPreviousButton.addEventListener(
 
         currentPage--;
 
-        await performSearch();
+        await performSearch({ keepResults: true });
 
     }
 );
@@ -491,7 +492,7 @@ imageSearchNextButton.addEventListener(
 
         currentPage++;
 
-        await performSearch();
+        await performSearch({ keepResults: true });
 
     }
 );
