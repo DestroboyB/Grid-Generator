@@ -844,6 +844,7 @@
 }
 
 #malSearchModal .mal-character-tab-inner {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
@@ -863,7 +864,19 @@
 }
 
 #malSearchModal .mal-search-tabs .mal-character-tab-group > .mal-character-tab-inner > #malCharacterTab.active {
-    border-bottom-color: #2563eb;
+    /* The group draws the active underline across the full tab width. */
+    border-bottom-color: transparent;
+}
+
+#malSearchModal .mal-character-tab-group:has(#malCharacterTab.active) .mal-character-tab-inner::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: #2563eb;
+    pointer-events: none;
 }
 
 #malSearchModal .mal-character-subtabs {
