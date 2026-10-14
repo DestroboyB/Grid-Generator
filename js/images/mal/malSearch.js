@@ -226,6 +226,12 @@ export function openMalSearch(element) {
 
     statusElement.textContent = "";
 
+    // Gallery navigation hides these controls; restore them when
+    // opening a fresh search after choosing or cancelling a crop.
+    previousButton.style.display = "";
+    nextButton.style.display = "";
+    pageIndicator.style.display = "";
+
     modal.style.display =
         "flex";
 
