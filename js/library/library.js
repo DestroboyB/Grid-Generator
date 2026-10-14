@@ -321,35 +321,37 @@ export async function renderLibrary() {
 
             for (const grid of uncategorized) {
                 fragment.appendChild(createGridElement(grid, categories));
- function createGridElement(grid, categories, searchResult = false) {
+            }
+        }
+
+        libraryContent.replaceChildren(fragment);
+        hasRenderedLibrary = true;
+    } catch (error) {
+        console.error("Failed to render library:", error);
+
+        libraryContent.innerHTML = `
+            <div class="library-empty">
+                Failed to load library. Please try again.
+            </div>
+        `;
+    }
+}
+
+// ========================================
+// Create Category Element
+// ========================================
+
+// ========================================
+// Create Grid Element
+// ========================================
+
+function createGridElement(grid, categories, searchResult = false) {
     return buildGridElement(
         grid,
         categories,
         searchResult,
         gridElementDependencies
     );
-}
-
-CategoryIds = expandedIds;
-
-                await renderLibrary();
-                return;
-            }
-
-            libraryContent?.querySelectorAll(".library-grid")
-                .forEach(item => {
-                    item.classList.toggle(
-                        "active",
-                        item.dataset.gridId === String(appState.currentGridId)
-                    );
-                });
-        } catch (error) {
-            console.error("Failed to load grid:", error);
-            alert("Failed to load the grid. Please try again.");
-        }
-    });
-
-    return element;
 }
 
 // ========================================
