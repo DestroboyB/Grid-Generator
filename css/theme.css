@@ -327,3 +327,152 @@
         display: none;
     }
 }
+
+
+/* ========================================
+   Dark-mode interaction and control polish
+======================================== */
+
+/* Keep the main control buttons on the same transition timing. */
+:root[data-theme="dark"] .controls button {
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.05s ease;
+}
+
+:root[data-theme="dark"] .controls .library-button,
+:root[data-theme="dark"] .control-actions .library-button {
+    background-color: #1f2937;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .controls .library-button:hover,
+:root[data-theme="dark"] .control-actions .library-button:hover {
+    background-color: #374151;
+    border-color: #6b7280;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] #boardSettingsButton,
+:root[data-theme="dark"] #undoButton,
+:root[data-theme="dark"] #redoButton,
+:root[data-theme="dark"] #bulkImportButton,
+:root[data-theme="dark"] #clearBoardButton {
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.05s ease;
+}
+
+/* Library hover backgrounds are light, so their text must switch too. */
+:root[data-theme="dark"] .library-category-header:hover,
+:root[data-theme="dark"] .library-category-header:hover .library-category-name,
+:root[data-theme="dark"] .library-category-header:hover .library-category-arrow,
+:root[data-theme="dark"] .library-grid:hover:not(.active),
+:root[data-theme="dark"] .library-grid:hover:not(.active) .library-grid-name,
+:root[data-theme="dark"] .library-grid:hover:not(.active) .library-grid-icon {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+:root[data-theme="dark"] .library-grid.active,
+:root[data-theme="dark"] .library-grid.active:hover {
+    background-color: #1d4ed8;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .library-grid.active .library-grid-name,
+:root[data-theme="dark"] .library-grid.active .library-grid-icon {
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .library-category-action,
+:root[data-theme="dark"] .library-grid-action {
+    background-color: #1f2937;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .library-category-action:hover,
+:root[data-theme="dark"] .library-grid-action:hover {
+    background-color: #374151;
+    border-color: #6b7280;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .library-category-action.delete,
+:root[data-theme="dark"] .library-grid-action.delete {
+    color: #fca5a5;
+    border-color: #7f1d1d;
+}
+
+:root[data-theme="dark"] .library-category-action.delete:hover,
+:root[data-theme="dark"] .library-grid-action.delete:hover {
+    background-color: #7f1d1d;
+    color: #fff1f2;
+}
+
+/* MyAnimeList inputs and sorting controls have ID-level light-theme rules. */
+:root[data-theme="dark"] #malSearchModal #malSearchInput,
+:root[data-theme="dark"] #malSearchModal #malCharacterSort {
+    background-color: #111827;
+    border-color: #4b5563;
+    color: #f3f4f6;
+    color-scheme: dark;
+}
+
+:root[data-theme="dark"] #malSearchModal #malSearchInput::placeholder {
+    color: #9ca3af;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-character-sort-row label,
+:root[data-theme="dark"] #malSearchModal #malSearchPageIndicator {
+    color: #cbd5e1;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-navigation {
+    background-color: #1f2937;
+    border-color: #374151;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-navigation button,
+:root[data-theme="dark"] #malSearchModal .mal-search-back-button {
+    background-color: #111827;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-navigation button:hover:not(:disabled),
+:root[data-theme="dark"] #malSearchModal .mal-search-back-button:hover {
+    background-color: #374151;
+    border-color: #6b7280;
+    color: #ffffff;
+}
+
+/* The Replace Image source picker uses its own menu class. */
+:root[data-theme="dark"] .image-source-menu {
+    background-color: #1f2937;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .image-source-menu button {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .image-source-menu button:hover:not(:disabled),
+:root[data-theme="dark"] .image-source-menu .menu-back-button:hover {
+    background-color: #374151;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .image-source-menu .menu-divider {
+    background-color: #4b5563;
+}
