@@ -62,6 +62,11 @@ const byAnimeTab =
         "malByAnimeTab"
     );
 
+const characterSubTabs = document.getElementById("malCharacterSubTabs");
+const characterNameTab = document.getElementById("malCharacterNameTab");
+const characterSortRow = document.getElementById("malCharacterSortRow");
+const characterSortSelect = document.getElementById("malCharacterSort");
+
 const searchInput =
     document.getElementById(
         "malSearchInput"
@@ -119,6 +124,7 @@ let displayMode = "character";
 let viewingAnimeCharacters = false;
 let selectedAnime = null;
 let animeSearchSnapshot = null;
+let characterSortMode = "default";
 
 
 /*
@@ -351,6 +357,18 @@ byAnimeTab.addEventListener(
     }
 );
 
+characterNameTab.addEventListener("click", () => {
+    if (currentMode === "character") return;
+    switchMode("character");
+});
+
+characterSortSelect.addEventListener("change", () => {
+    characterSortMode = characterSortSelect.value;
+    sortCharacterResults();
+    currentPage = 1;
+    renderCurrentPage();
+});
+
 
 /* ========================================
    Switch Search Mode
@@ -433,19 +451,21 @@ function switchMode(mode) {
 
 function updateTabs() {
 
-    characterTab.classList.toggle(
-        "active",
-        currentMode ===
-            "character"
-    );
+    const characterModeActive = currentMode !== "anime";
 
+    characterTab.classList.toggle("active", characterModeActive);
     animeTab.classList.toggle("active", currentMode === "anime");
     byAnimeTab.classList.toggle("active", currentMode === "byAnime");
+    characterNameTab.classList.toggle("active", currentMode === "character");
+    characterSubTabs.style.display = characterModeActive ? "" : "none";
+    characterSortRow.style.display = displayMode === "character" ? "" : "none";
 
     if (currentMode === "character") {
         searchInput.placeholder = "Search for a character...";
     } else if (currentMode === "byAnime") {
-        searchInput.placeholder = "Search for an anime to browse its characters...";
+        searchInput.placeholder = viewingAnimeCharacters
+            ? `Characters from ${selectedAnime?.title || "selected anime"}...`
+            : "Search for an anime to browse its characters...";
     } else {
         searchInput.placeholder = "Search for an anime...";
     }
@@ -513,6 +533,7 @@ async function performSearch() {
         query;
 
     displayMode = currentMode === "character" ? "character" : "anime";
+    updateTabs();
     viewingAnimeCharacters = false;
     selectedAnime = null;
     animeSearchSnapshot = null;
@@ -676,9 +697,17 @@ async function loadApiPage(
      * to 12 and lost results 13-50.
      */
 
+    const startIndex = allResults.length;
     allResults.push(
-        ...apiResults
+        ...apiResults.map((item, index) => ({
+            ...item,
+            _sortIndex: startIndex + index
+        }))
     );
+
+    if (displayMode === "character") {
+        sortCharacterResults();
+    }
 
 
     currentApiPage =
@@ -712,6 +741,30 @@ async function loadApiPage(
     }
 }
 
+
+/* ========================================
+   Character Sorting
+======================================== */
+
+function sortCharacterResults() {
+    if (displayMode !== "character") return;
+
+    if (characterSortMode === "alphabetical") {
+        allResults.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" }));
+        return;
+    }
+
+    if (characterSortMode === "popular") {
+        allResults.sort((a, b) => {
+            const favoritesA = Number(a.favorites || a.favorites_count || 0);
+            const favoritesB = Number(b.favorites || b.favorites_count || 0);
+            return favoritesB - favoritesA || (a._sortIndex || 0) - (b._sortIndex || 0);
+        });
+        return;
+    }
+
+    allResults.sort((a, b) => (a._sortIndex || 0) - (b._sortIndex || 0));
+}
 
 /* ========================================
    Render Current UI Page
@@ -1157,6 +1210,7 @@ async function loadAnimeCharacters(anime) {
     selectedAnime = anime;
     viewingAnimeCharacters = true;
     displayMode = "character";
+    updateTabs();
     isSearching = true;
     statusElement.textContent = `Loading characters from ${anime.title || "this anime"}...`;
     searchButton.disabled = true;
@@ -1167,14 +1221,15 @@ async function loadAnimeCharacters(anime) {
         const response = await getAnimeCharacters(anime.malId);
         const entries = Array.isArray(response && response.data) ? response.data : [];
 
-        allResults = entries.map(entry => {
+        allResults = entries.map((entry, index) => {
             const character = (entry && entry.character) || (entry && entry.data && entry.data.character) || entry;
             const malId = character && (character.mal_id ?? character.malId) || (entry && entry.mal_id);
             if (!malId) return null;
-            return { ...character, malId, animeTitle: anime.title || "", role: (entry && entry.role) || "" };
+            return { ...character, malId, animeTitle: anime.title || "", role: (entry && entry.role) || "", _sortIndex: index };
         }).filter(Boolean);
 
         currentResults = [];
+        sortCharacterResults();
         currentPage = 1;
         currentApiPage = 1;
         hasNextApiPage = false;
@@ -1225,6 +1280,7 @@ function restoreAnimeSearch() {
     hasNextPage = saved.hasNextPage;
     currentApiResultCount = saved.currentApiResultCount;
     displayMode = saved.displayMode;
+    updateTabs();
 
     animeSearchSnapshot = null;
     selectedAnime = null;
