@@ -32,6 +32,16 @@
 
 @media (max-width: 550px) {
 
+    .download-menu,
+    .image-menu,
+    .add-image-menu,
+    .image-source-menu {
+        box-sizing: border-box;
+        max-width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+    }
+
     .app-header {
         flex-wrap: wrap;
         align-items: center;
