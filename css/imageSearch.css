@@ -193,6 +193,17 @@
     flex-shrink: 0;
 }
 
+.image-search-page-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .image-search-pagination button {
     padding: 8px 14px;
 
