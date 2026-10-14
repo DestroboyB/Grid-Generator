@@ -471,7 +471,8 @@
 
 @media (max-width: 600px) {
     .library-panel {
-        width: 300px;
+        width: 320px;
+        max-width: 90vw;
     }
 
     .library-content {
