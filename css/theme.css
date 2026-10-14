@@ -112,6 +112,7 @@
 :root[data-theme="dark"] .download-menu,
 :root[data-theme="dark"] .board-settings-panel,
 :root[data-theme="dark"] .image-menu,
+:root[data-theme="dark"] .add-image-menu,
 :root[data-theme="dark"] .mal-character-subtabs {
     background-color: #1f2937;
     border-color: #374151;
@@ -482,4 +483,17 @@
 
 :root[data-theme="dark"] .image-source-menu .menu-divider {
     background-color: #4b5563;
+}
+
+/* Match the empty-cell Add Image menu to the dark theme. */
+:root[data-theme="dark"] .add-image-menu button {
+    background-color: #1f2937;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+:root[data-theme="dark"] .add-image-menu button:hover:not(:disabled) {
+    background-color: #374151;
+    border-color: #6b7280;
+    color: #ffffff;
 }
