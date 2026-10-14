@@ -187,6 +187,28 @@
     background: #f3f3f3;
 }
 
+.library-category-main {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0;
+    min-width: 0;
+}
+
+.library-category-main.expandable {
+    cursor: pointer;
+}
+
+.library-category-main:not(.expandable) {
+    cursor: default;
+}
+
+.library-section-divider {
+    height: 1px;
+    margin: 10px 2px;
+    background: #d1d5db;
+}
+
 .library-category-header:focus-visible {
     outline: 2px solid #4f83cc;
     outline-offset: 2px;
