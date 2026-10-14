@@ -496,7 +496,12 @@
     }
 
     .library-modal-content {
+        max-height: calc(100vh - 32px);
         padding: 18px;
+    }
+
+    .library-modal-actions button {
+        min-height: 44px;
     }
 }
 .library-category.collapsed > .library-category-children {
