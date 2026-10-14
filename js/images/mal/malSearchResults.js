@@ -196,13 +196,19 @@ function createResultCard({
         mode === "character"
     ) {
 
-        type.textContent =
-            "Loading anime...";
+        if (item.animeTitle) {
+            type.textContent = item.role
+                ? `${item.animeTitle} • ${item.role}`
+                : item.animeTitle;
+        } else {
+            type.textContent =
+                "Loading anime...";
 
-        queueCharacterAnimeRequest(
-            item,
-            type
-        );
+            queueCharacterAnimeRequest(
+                item,
+                type
+            );
+        }
 
     }
 
