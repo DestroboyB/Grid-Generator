@@ -632,13 +632,17 @@
 
     #malSearchModal {
         padding: 10px !important;
+        /* Account for mobile browser chrome and keep the dialog on-screen. */
+        height: 100vh !important;
+        height: 100dvh !important;
     }
 
 
     #malSearchModal .mal-search-container {
         width: 96vw;
 
-        max-height: 95vh;
+        max-height: calc(100vh - 20px);
+        max-height: calc(100dvh - 20px);
 
         border-radius: 10px;
     }
@@ -653,6 +657,12 @@
         font-size: 17px;
     }
 
+    #malSearchModal .mal-search-header button {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+    }
+
 
     #malSearchModal .mal-search-controls {
         flex-direction: column;
@@ -663,8 +673,11 @@
     }
 
 
+    #malSearchModal #malSearchInput,
     #malSearchModal #malSearchButton {
         width: 100%;
+        min-height: 44px;
+        box-sizing: border-box;
     }
 
 
@@ -707,13 +720,18 @@
 
 
     #malSearchModal .mal-search-tabs button {
-        padding: 10px 12px;
-
+        min-height: 44px;
+        padding: 10px 8px;
         font-size: 13px;
+    }
+
+    #malSearchModal .mal-character-subtabs button {
+        min-height: 32px;
     }
 
 
     #malSearchModal .mal-search-back-button {
+        min-height: 44px;
         width: calc(100% - 32px);
 
         margin-left: 16px;
@@ -729,6 +747,12 @@
 
     #malSearchModal .mal-search-navigation button {
         min-width: 75px;
+        min-height: 44px;
+    }
+
+    #malSearchModal #malSearchPageIndicator {
+        min-width: 62px;
+        font-size: 12px;
     }
 
 }
