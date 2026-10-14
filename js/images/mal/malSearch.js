@@ -458,7 +458,7 @@ function updateTabs() {
     byAnimeTab.classList.toggle("active", currentMode === "byAnime");
     characterNameTab.classList.toggle("active", currentMode === "character");
     characterSubTabs.style.display = characterModeActive ? "" : "none";
-    characterSortRow.style.display = displayMode === "character" ? "" : "none";
+    updateSortVisibility();
 
     if (currentMode === "character") {
         searchInput.placeholder = "Search for a character...";
@@ -469,6 +469,18 @@ function updateTabs() {
     } else {
         searchInput.placeholder = "Search for an anime...";
     }
+}
+
+
+function updateSortVisibility() {
+    const resultsAreShowing =
+        currentApiResultCount > 0 &&
+        Boolean(resultsElement.querySelector(".mal-search-result"));
+
+    characterSortRow.style.display =
+        displayMode === "character" && resultsAreShowing
+            ? "flex"
+            : "none";
 }
 
 
@@ -855,6 +867,8 @@ function renderCurrentPage() {
 ======================================== */
 
 function updateStatus() {
+
+    updateSortVisibility();
 
     if (viewingAnimeCharacters && selectedAnime) {
         statusElement.textContent =
@@ -1324,6 +1338,7 @@ function openGallery(item) {
     }
 
     statusElement.textContent = "";
+    characterSortRow.style.display = "none";
     /*
      * Hide search pagination while viewing
      * the picture gallery.
