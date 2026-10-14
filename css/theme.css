@@ -1,0 +1,223 @@
+/* ========================================
+   Dark Theme
+   The board and its image pixels are intentionally
+   excluded from broad image/color transformations.
+======================================== */
+
+:root[data-theme="dark"] color-scheme: dark;
+
+:root[data-theme="dark"] body {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .app-title,
+:root[data-theme="dark"] h1,
+:root[data-theme="dark"] h2,
+:root[data-theme="dark"] h3 {
+    color: #f9fafb;
+}
+
+:root[data-theme="dark"] .controls,
+:root[data-theme="dark"] .image-editor,
+:root[data-theme="dark"] .editor-header,
+:root[data-theme="dark"] .editor-tools,
+:root[data-theme="dark"] .editor-panel,
+:root[data-theme="dark"] .library-panel,
+:root[data-theme="dark"] .library-modal-content,
+:root[data-theme="dark"] .image-search-container,
+:root[data-theme="dark"] .url-image-container,
+:root[data-theme="dark"] #malSearchModal .mal-search-container,
+:root[data-theme="dark"] #malSearchModal .mal-search-header,
+:root[data-theme="dark"] #malSearchModal .mal-search-tabs,
+:root[data-theme="dark"] #malSearchModal .mal-search-controls,
+:root[data-theme="dark"] #malSearchModal .mal-search-status,
+:root[data-theme="dark"] #malSearchModal .mal-search-status-row,
+:root[data-theme="dark"] #malSearchModal .mal-search-navigation,
+:root[data-theme="dark"] #malSearchModal .mal-search-results {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .controls,
+:root[data-theme="dark"] .board-container,
+:root[data-theme="dark"] .image-editor,
+:root[data-theme="dark"] .editor-header,
+:root[data-theme="dark"] .editor-tools,
+:root[data-theme="dark"] .editor-panel,
+:root[data-theme="dark"] .library-header,
+:root[data-theme="dark"] .library-actions,
+:root[data-theme="dark"] .library-content-divider,
+:root[data-theme="dark"] .library-search-row,
+:root[data-theme="dark"] .library-modal-content,
+:root[data-theme="dark"] #malSearchModal .mal-search-header,
+:root[data-theme="dark"] #malSearchModal .mal-search-tabs {
+    border-color: #374151;
+}
+
+:root[data-theme="dark"] .board-container {
+    background: #0b1220;
+    border-color: #374151;
+}
+
+:root[data-theme="dark"] .board {
+    border-color: #6b7280;
+}
+
+/* Do not apply dark-theme colors to .board or images within it. */
+
+:root[data-theme="dark"] .control-group label,
+:root[data-theme="dark"] .board-setting label,
+:root[data-theme="dark"] .editor-control label,
+:root[data-theme="dark"] .library-header,
+:root[data-theme="dark"] .library-search-row,
+:root[data-theme="dark"] .current-grid-name,
+:root[data-theme="dark"] .mal-search-status,
+:root[data-theme="dark"] #malSearchModal .mal-search-status,
+:root[data-theme="dark"] #malSearchModal .mal-result-type,
+:root[data-theme="dark"] #malSearchModal .mal-picture-number {
+    color: #cbd5e1;
+}
+
+:root[data-theme="dark"] button,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] input:not([type="range"]):not([type="color"]):not([type="checkbox"]),
+:root[data-theme="dark"] textarea {
+    background-color: #111827;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+:root[data-theme="dark"] button:hover:not(:disabled),
+:root[data-theme="dark"] .library-close-button:hover,
+:root[data-theme="dark"] .library-actions button:hover {
+    background-color: #374151;
+    border-color: #6b7280;
+    color: #f9fafb;
+}
+
+:root[data-theme="dark"] button:focus-visible,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] input:focus-visible,
+:root[data-theme="dark"] textarea:focus-visible {
+    outline-color: #60a5fa;
+}
+
+:root[data-theme="dark"] .download-menu,
+:root[data-theme="dark"] .board-settings-panel,
+:root[data-theme="dark"] .image-menu,
+:root[data-theme="dark"] .mal-character-subtabs {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .editor-preview {
+    background: #111827;
+}
+
+:root[data-theme="dark"] .editor-tool.active,
+:root[data-theme="dark"] .mal-character-subtabs button.active {
+    background: #1e3a5f;
+    border-color: #60a5fa;
+    color: #bfdbfe;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-tabs button,
+:root[data-theme="dark"] #malSearchModal .mal-character-tab-group,
+:root[data-theme="dark"] #malSearchModal .mal-character-tab-inner,
+:root[data-theme="dark"] #malSearchModal .mal-search-tabs .mal-character-tab-group > .mal-character-tab-inner > #malCharacterTab,
+:root[data-theme="dark"] #malSearchModal .mal-character-subtabs {
+    background-color: #1f2937;
+    color: #cbd5e1;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-tabs button.active {
+    color: #93c5fd;
+    border-bottom-color: #60a5fa;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-character-subtabs button {
+    background: #111827;
+    color: #d1d5db;
+    border-color: #4b5563;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-result,
+:root[data-theme="dark"] #malSearchModal .mal-gallery-picture {
+    background: #111827;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] #malSearchModal .mal-search-result:hover,
+:root[data-theme="dark"] #malSearchModal .mal-gallery-picture:hover {
+    background: #1e3a5f;
+    border-color: #60a5fa;
+}
+
+:root[data-theme="dark"] .library-item,
+:root[data-theme="dark"] .library-grid-item,
+:root[data-theme="dark"] .library-category,
+:root[data-theme="dark"] .library-empty-state,
+:root[data-theme="dark"] .image-search-result,
+:root[data-theme="dark"] .url-image-preview {
+    background-color: #111827;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .library-content,
+:root[data-theme="dark"] .library-search-input,
+:root[data-theme="dark"] .image-search-results,
+:root[data-theme="dark"] .url-image-status {
+    color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .image-editor-modal,
+:root[data-theme="dark"] .library-modal,
+:root[data-theme="dark"] .image-search-modal,
+:root[data-theme="dark"] .url-image-modal {
+    background-color: rgba(0, 0, 0, 0.78);
+}
+
+:root[data-theme="dark"] .theme-toggle-button {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+.theme-toggle-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1f2937;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.theme-toggle-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+@media (max-width: 600px) {
+    .theme-toggle-button {
+        top: 14px;
+        right: 14px;
+        padding: 8px 10px;
+    }
+
+    .theme-toggle-label {
+        display: none;
+    }
+}
