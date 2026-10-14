@@ -293,20 +293,25 @@
     border-color: #4b5563;
 }
 
+.app-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
 .theme-toggle-button {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 900;
+    position: static;
+    z-index: auto;
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 10px 14px;
+    padding: 9px 12px;
     border: 1px solid #d1d5db;
-    border-radius: 999px;
+    border-radius: 7px;
     background: #ffffff;
     color: #1f2937;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
     font-size: 13px;
     font-weight: 600;
 }
@@ -317,10 +322,19 @@
 }
 
 @media (max-width: 600px) {
-    .theme-toggle-button {
-        top: 14px;
-        right: 14px;
+    .app-header {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .app-header-actions {
+        gap: 6px;
+    }
+
+    .app-header .library-button,
+    .app-header .theme-toggle-button {
         padding: 8px 10px;
+        font-size: 12px;
     }
 
     .theme-toggle-label {
