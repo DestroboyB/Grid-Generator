@@ -1000,16 +1000,51 @@
         padding-right: 16px;
     }
 
+    /* Give the character search controls enough room for both labels. */
+    #malSearchModal .mal-search-tabs > .mal-character-tab-group {
+        flex: 2 1 0;
+        min-width: 0;
+    }
+
+    #malSearchModal .mal-search-tabs > #malAnimeTab {
+        flex: 1 1 0;
+        min-width: 0;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    #malSearchModal .mal-character-tab-inner {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
     #malSearchModal .mal-character-subtabs {
-        gap: 3px;
-        padding-left: 5px;
-        padding-right: 5px;
+        grid-column: 1;
+        gap: 2px;
+        padding-left: 4px;
+        padding-right: 4px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     #malSearchModal .mal-character-subtabs button {
-        padding-left: 6px;
-        padding-right: 6px;
+        flex: 1 1 0;
+        width: 50%;
+        padding-left: 2px;
+        padding-right: 2px;
         font-size: 11px;
+        white-space: nowrap;
+    }
+
+    #malSearchModal .mal-search-tabs .mal-character-tab-group > .mal-character-tab-inner > #malCharacterTab {
+        grid-column: 2;
+        min-width: 0;
+        padding-left: 2px;
+        padding-right: 2px;
+        font-size: 12px;
+    }
+
+    #malSearchModal .mal-character-tab-spacer {
+        display: none;
     }
 
     #malSearchModal .mal-character-sort-row {
