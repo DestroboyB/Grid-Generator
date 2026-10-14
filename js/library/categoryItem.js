@@ -51,7 +51,10 @@ export function createCategoryElement(
     const childCategories = categories.filter(
         child => String(child.parentId) === categoryId
     );
-    const canExpand = depth < 3 && childCategories.length > 0;
+    const categoryHasGrids = grids.some(
+        grid => String(grid.categoryId) === categoryId
+    );
+    const canExpand = (depth < 3 && childCategories.length > 0) || categoryHasGrids;
 
     const shouldExpand = canExpand && (
         expandedCategories === null
