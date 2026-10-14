@@ -533,10 +533,10 @@ async function performSearch() {
         query;
 
     displayMode = currentMode === "character" ? "character" : "anime";
-    updateTabs();
     viewingAnimeCharacters = false;
     selectedAnime = null;
     animeSearchSnapshot = null;
+    updateTabs();
     backButton.style.display = "none";
     backButton.textContent = "Back";
 
@@ -760,6 +760,21 @@ function sortCharacterResults() {
             const favoritesB = Number(b.favorites || b.favorites_count || 0);
             return favoritesB - favoritesA || (a._sortIndex || 0) - (b._sortIndex || 0);
         });
+        return;
+    }
+
+    if (characterSortMode === "role") {
+        const roleRank = role => {
+            const normalized = String(role || "").toLowerCase();
+            if (normalized === "main") return 0;
+            if (normalized === "supporting") return 1;
+            return 2;
+        };
+
+        allResults.sort((a, b) =>
+            roleRank(a.role) - roleRank(b.role) ||
+            String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" })
+        );
         return;
     }
 
@@ -1280,11 +1295,11 @@ function restoreAnimeSearch() {
     hasNextPage = saved.hasNextPage;
     currentApiResultCount = saved.currentApiResultCount;
     displayMode = saved.displayMode;
-    updateTabs();
 
     animeSearchSnapshot = null;
     selectedAnime = null;
     viewingAnimeCharacters = false;
+    updateTabs();
     showSearchView({ resultsElement, galleryElement: resultsElement, backButton });
     backButton.textContent = "Back";
     backButton.style.display = "none";
