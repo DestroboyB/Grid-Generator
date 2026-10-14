@@ -137,3 +137,23 @@
     }
 
 }
+
+/* Keep the image editor usable on short phone screens, including landscape. */
+@media (max-width: 700px) and (max-height: 600px) {
+
+    .image-editor {
+        max-height: calc(100vh - 16px);
+    }
+
+    .editor-preview {
+        height: 30vh;
+        min-height: 160px;
+    }
+
+    .editor-panel {
+        height: 72px;
+        min-height: 72px;
+        max-height: 72px;
+    }
+
+}
