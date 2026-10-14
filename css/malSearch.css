@@ -834,17 +834,32 @@
    Character Search Sub-tabs
 ======================================== */
 
+#malSearchModal .mal-character-tab-group {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    border-right: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+#malSearchModal .mal-search-tabs .mal-character-tab-group > #malCharacterTab {
+    width: 100%;
+    flex: 1;
+}
+
 #malSearchModal .mal-character-subtabs {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 8px 20px 0;
+    padding: 0 12px 9px;
     background: #ffffff;
     flex-shrink: 0;
 }
 
 #malSearchModal .mal-character-subtabs button {
-    padding: 7px 13px;
+    padding: 5px 11px;
     border: 1px solid #d1d5db;
     border-radius: 999px;
     background: #f9fafb;
@@ -864,13 +879,32 @@
    Character Sorting
 ======================================== */
 
+#malSearchModal .mal-search-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 0 20px 8px;
+    box-sizing: border-box;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+#malSearchModal .mal-search-status-row .mal-search-status {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    min-height: 20px;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 #malSearchModal .mal-character-sort-row {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    padding: 8px 20px 0;
-    background: #ffffff;
     flex-shrink: 0;
 }
 
@@ -878,6 +912,7 @@
     color: #6b7280;
     font-size: 12px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 #malSearchModal #malCharacterSort {
@@ -892,13 +927,25 @@
 }
 
 @media (max-width: 600px) {
-    #malSearchModal .mal-character-subtabs {
+    #malSearchModal .mal-search-status-row {
         padding-left: 16px;
         padding-right: 16px;
     }
 
+    #malSearchModal .mal-character-subtabs {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
     #malSearchModal .mal-character-sort-row {
-        padding-left: 16px;
-        padding-right: 16px;
+        gap: 5px;
+    }
+
+    #malSearchModal .mal-character-sort-row label {
+        font-size: 11px;
+    }
+
+    #malSearchModal #malCharacterSort {
+        max-width: 130px;
     }
 }
