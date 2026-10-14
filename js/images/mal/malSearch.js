@@ -1,7 +1,8 @@
 import {
     searchCharacters,
     searchAnime,
-    getItemDetail
+    getItemDetail,
+    getAnimeCharacters
 } from "./malApi.js";
 
 import {
@@ -56,6 +57,11 @@ const animeTab =
         "malAnimeTab"
     );
 
+const byAnimeTab =
+    document.getElementById(
+        "malByAnimeTab"
+    );
+
 const searchInput =
     document.getElementById(
         "malSearchInput"
@@ -107,6 +113,12 @@ let targetElement = null;
 
 let currentMode =
     "character";
+
+// Search mode and displayed result type can differ when browsing anime characters.
+let displayMode = "character";
+let viewingAnimeCharacters = false;
+let selectedAnime = null;
+let animeSearchSnapshot = null;
 
 
 /*
@@ -201,6 +213,10 @@ export function openMalSearch(element) {
 
     currentMode =
         "character";
+    displayMode = "character";
+    viewingAnimeCharacters = false;
+    selectedAnime = null;
+    animeSearchSnapshot = null;
 
     allResults = [];
 
@@ -322,15 +338,16 @@ characterTab.addEventListener(
 animeTab.addEventListener(
     "click",
     () => {
-
-        if (
-            currentMode ===
-            "anime"
-        ) {
-            return;
-        }
-
+        if (currentMode === "anime") return;
         switchMode("anime");
+    }
+);
+
+byAnimeTab.addEventListener(
+    "click",
+    () => {
+        if (currentMode === "byAnime") return;
+        switchMode("byAnime");
     }
 );
 
@@ -349,6 +366,10 @@ function switchMode(mode) {
 
 
     currentMode = mode;
+    displayMode = mode === "character" ? "character" : "anime";
+    viewingAnimeCharacters = false;
+    selectedAnime = null;
+    animeSearchSnapshot = null;
 
 
     /*
@@ -418,25 +439,15 @@ function updateTabs() {
             "character"
     );
 
-    animeTab.classList.toggle(
-        "active",
-        currentMode ===
-            "anime"
-    );
+    animeTab.classList.toggle("active", currentMode === "anime");
+    byAnimeTab.classList.toggle("active", currentMode === "byAnime");
 
-
-    if (
-        currentMode ===
-        "character"
-    ) {
-
-        searchInput.placeholder =
-            "Search for a character...";
-
+    if (currentMode === "character") {
+        searchInput.placeholder = "Search for a character...";
+    } else if (currentMode === "byAnime") {
+        searchInput.placeholder = "Search for an anime to browse its characters...";
     } else {
-
-        searchInput.placeholder =
-            "Search for an anime...";
+        searchInput.placeholder = "Search for an anime...";
     }
 }
 
@@ -501,6 +512,13 @@ async function performSearch() {
     currentQuery =
         query;
 
+    displayMode = currentMode === "character" ? "character" : "anime";
+    viewingAnimeCharacters = false;
+    selectedAnime = null;
+    animeSearchSnapshot = null;
+    backButton.style.display = "none";
+    backButton.textContent = "Back";
+
     allResults = [];
 
     currentResults = [];
@@ -520,12 +538,7 @@ async function performSearch() {
     isSearching = true;
 
     statusElement.textContent =
-        `Searching ${
-            currentMode ===
-            "character"
-                ? "characters"
-                : "anime"
-        }...`;
+        `Searching ${currentMode === "character" ? "characters" : "anime"}...`;
 
     searchButton.disabled =
         true;
@@ -775,6 +788,12 @@ function renderCurrentPage() {
 
 function updateStatus() {
 
+    if (viewingAnimeCharacters && selectedAnime) {
+        statusElement.textContent =
+            `${currentApiResultCount} characters from ${selectedAnime.title || "this anime"} — Page ${currentPage}.`;
+        return;
+    }
+
     if (
         currentApiResultCount === 0
     ) {
@@ -826,7 +845,7 @@ function renderResults() {
             currentResults,
 
         mode:
-            currentMode,
+            displayMode,
 
         resultsElement,
 
@@ -834,7 +853,7 @@ function renderResults() {
 
         onResultClick:
             item => {
-                openGallery(item);
+                handleResultClick(item);
             },
 
         loadResultImage,
@@ -1108,6 +1127,115 @@ async function loadAnimeInfo(
 
 
 /* ========================================
+   Handle Search Result Click
+======================================== */
+
+function handleResultClick(item) {
+    if (currentMode === "byAnime" && displayMode === "anime") {
+        loadAnimeCharacters(item);
+        return;
+    }
+    openGallery(item);
+}
+
+
+/* ========================================
+   Load Characters for Selected Anime
+======================================== */
+
+async function loadAnimeCharacters(anime) {
+    if (!anime || !anime.malId) {
+        statusElement.textContent = "This anime does not have a valid MyAnimeList ID.";
+        return;
+    }
+
+    animeSearchSnapshot = {
+        allResults, currentResults, currentQuery, currentPage, currentApiPage,
+        hasNextApiPage, hasNextPage, currentApiResultCount, displayMode
+    };
+
+    selectedAnime = anime;
+    viewingAnimeCharacters = true;
+    displayMode = "character";
+    isSearching = true;
+    statusElement.textContent = `Loading characters from ${anime.title || "this anime"}...`;
+    searchButton.disabled = true;
+    resultsElement.innerHTML = "";
+    updatePagination();
+
+    try {
+        const response = await getAnimeCharacters(anime.malId);
+        const entries = Array.isArray(response && response.data) ? response.data : [];
+
+        allResults = entries.map(entry => {
+            const character = (entry && entry.character) || (entry && entry.data && entry.data.character) || entry;
+            const malId = character && (character.mal_id ?? character.malId) || (entry && entry.mal_id);
+            if (!malId) return null;
+            return { ...character, malId, animeTitle: anime.title || "", role: (entry && entry.role) || "" };
+        }).filter(Boolean);
+
+        currentResults = [];
+        currentPage = 1;
+        currentApiPage = 1;
+        hasNextApiPage = false;
+        hasNextPage = allResults.length > RESULTS_PER_PAGE;
+        currentApiResultCount = allResults.length;
+
+        if (allResults.length === 0) {
+            resultsElement.innerHTML = "";
+            statusElement.textContent = `No characters were found for ${anime.title || "this anime"}.`;
+        } else {
+            renderCurrentPage();
+        }
+
+        backButton.textContent = "Back to anime results";
+        backButton.style.display = "block";
+        backButton.onclick = restoreAnimeSearch;
+    } catch (error) {
+        console.error("Unable to load anime characters:", error);
+        statusElement.textContent = "Unable to load characters for this anime right now.";
+        backButton.textContent = "Back to anime results";
+        backButton.style.display = "block";
+        backButton.onclick = restoreAnimeSearch;
+    } finally {
+        isSearching = false;
+        searchButton.disabled = false;
+        updatePagination();
+    }
+}
+
+
+/* ========================================
+   Return to Anime Search Results
+======================================== */
+
+function restoreAnimeSearch() {
+    if (!animeSearchSnapshot) {
+        backButton.style.display = "none";
+        return;
+    }
+
+    const saved = animeSearchSnapshot;
+    allResults = saved.allResults;
+    currentResults = saved.currentResults;
+    currentQuery = saved.currentQuery;
+    currentPage = saved.currentPage;
+    currentApiPage = saved.currentApiPage;
+    hasNextApiPage = saved.hasNextApiPage;
+    hasNextPage = saved.hasNextPage;
+    currentApiResultCount = saved.currentApiResultCount;
+    displayMode = saved.displayMode;
+
+    animeSearchSnapshot = null;
+    selectedAnime = null;
+    viewingAnimeCharacters = false;
+    showSearchView({ resultsElement, galleryElement: resultsElement, backButton });
+    backButton.textContent = "Back";
+    backButton.style.display = "none";
+    renderCurrentPage();
+}
+
+/* ========================================
    Open Picture Gallery
 ======================================== */
 
@@ -1154,7 +1282,7 @@ function openGallery(item) {
         item,
 
         mode:
-            currentMode,
+            displayMode,
 
         targetElement,
 
@@ -1213,12 +1341,14 @@ function restoreSearchView() {
     });
 
 
-    /*
-     * Hide the Back button.
-     */
-
-    backButton.style.display =
-        "none";
+    if (viewingAnimeCharacters) {
+        backButton.textContent = "Back to anime results";
+        backButton.style.display = "block";
+        backButton.onclick = restoreAnimeSearch;
+    } else {
+        backButton.textContent = "Back";
+        backButton.style.display = "none";
+    }
 
 
     /*
