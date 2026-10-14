@@ -126,6 +126,12 @@ let selectedAnime = null;
 let animeSearchSnapshot = null;
 let characterSortMode = "default";
 
+// Cache confirmed anime character availability for this search session.
+// Failed checks are not cached, so temporary API errors never hide an anime.
+const animeCharacterAvailabilityCache = new Map();
+let animeFilterRunId = 0;
+let isCheckingAnime = false;
+
 
 /*
  * Results currently available to the UI.
@@ -794,6 +800,74 @@ function sortCharacterResults() {
 }
 
 /* ========================================
+   Check Visible Anime Character Availability
+======================================== */
+
+async function filterAnimePage(animeResults, runId) {
+    const results = [...animeResults];
+    const concurrency = 3;
+    let nextIndex = 0;
+
+    async function worker() {
+        while (nextIndex < results.length) {
+            if (runId !== animeFilterRunId) return;
+
+            const index = nextIndex++;
+            const anime = results[index];
+
+            if (!anime?.malId) continue;
+
+            const cached = animeCharacterAvailabilityCache.get(anime.malId);
+            if (cached === true || cached === false) {
+                if (cached === false) results[index] = null;
+                continue;
+            }
+
+            try {
+                const response = await getAnimeCharacters(anime.malId);
+                if (runId !== animeFilterRunId) return;
+
+                const entries = Array.isArray(response?.data)
+                    ? response.data
+                    : [];
+
+                const hasCharacters = entries.some(entry => {
+                    const character =
+                        entry?.character ||
+                        entry?.data?.character ||
+                        entry;
+                    const characterId =
+                        character?.mal_id ??
+                        character?.malId ??
+                        entry?.mal_id;
+                    return Boolean(characterId);
+                });
+
+                animeCharacterAvailabilityCache.set(anime.malId, hasCharacters);
+                if (!hasCharacters) results[index] = null;
+            } catch (error) {
+                // Unknown means "keep it visible" rather than risk hiding a valid show.
+                console.warn(
+                    `Unable to check character availability for ${anime.title || anime.malId}:`,
+                    error
+                );
+            }
+        }
+    }
+
+    await Promise.all(
+        Array.from(
+            { length: Math.min(concurrency, results.length) },
+            () => worker()
+        )
+    );
+
+    if (runId !== animeFilterRunId) return [];
+    return results.filter(Boolean);
+}
+
+
+/* ========================================
    Render Current UI Page
 ======================================== */
 
@@ -803,11 +877,9 @@ function renderCurrentPage() {
         (currentPage - 1) *
         RESULTS_PER_PAGE;
 
-
     const endIndex =
         startIndex +
         RESULTS_PER_PAGE;
-
 
     currentResults =
         allResults.slice(
@@ -815,50 +887,66 @@ function renderCurrentPage() {
             endIndex
         );
 
-
-    /*
-     * Determine whether another UI page
-     * can be displayed immediately.
-     */
-
     const localNextPageExists =
         endIndex <
         allResults.length;
-
-
-    /*
-     * If there are enough currently loaded
-     * results, there is another page.
-     *
-     * Otherwise, if MAL has another API
-     * page, we can load more when Next
-     * is clicked.
-     */
 
     hasNextPage =
         localNextPageExists ||
         hasNextApiPage;
 
+    // In the "Characters > Anime" flow, check only the anime cards on
+    // this UI page. Keep uncertain results visible if a check fails.
+    if (
+        currentMode === "byAnime" &&
+        displayMode === "anime" &&
+        !viewingAnimeCharacters
+    ) {
+        const runId = ++animeFilterRunId;
+        isCheckingAnime = true;
+        resultsElement.innerHTML = "";
+        statusElement.textContent =
+            `Checking ${currentResults.length} anime for available characters...`;
+        updatePagination();
 
-    /*
-     * Render the current 12 results.
-     */
+        filterAnimePage(currentResults, runId)
+            .then(filteredResults => {
+                if (runId !== animeFilterRunId) return;
+
+                isCheckingAnime = false;
+                renderResults(filteredResults);
+                updateStatus();
+
+                const hiddenCount =
+                    currentResults.length - filteredResults.length;
+
+                statusElement.textContent = hiddenCount > 0
+                    ? `Showing ${filteredResults.length} anime with characters; skipped ${hiddenCount} without listed characters.`
+                    : `All ${filteredResults.length} anime on this page have characters available.`;
+
+                updatePagination();
+            })
+            .catch(error => {
+                console.warn("Unable to filter anime results:", error);
+                if (runId !== animeFilterRunId) return;
+
+                isCheckingAnime = false;
+                renderResults(currentResults);
+                updateStatus();
+                statusElement.textContent =
+                    "Couldn't check character availability; showing all anime on this page.";
+                updatePagination();
+            });
+
+        return;
+    }
+
+    // Invalidate any filtering request left over from a previous view.
+    animeFilterRunId++;
+    isCheckingAnime = false;
 
     renderResults();
-
-
-    /*
-     * Update the status.
-     */
-
     updateStatus();
-
-
-    /*
-     * Update Previous / Next buttons.
-     */
-
-    updatePagination();
 }
 
 
@@ -919,12 +1007,11 @@ function updateStatus() {
    Render Results
 ======================================== */
 
-function renderResults() {
+function renderResults(results = currentResults) {
 
     renderSearchResults({
 
-        results:
-            currentResults,
+        results,
 
         mode:
             displayMode,
@@ -1492,12 +1579,14 @@ function updatePagination() {
 
     previousButton.disabled =
         currentPage <= 1 ||
-        isSearching;
+        isSearching ||
+        isCheckingAnime;
 
 
     nextButton.disabled =
         !hasNextPage ||
-        isSearching;
+        isSearching ||
+        isCheckingAnime;
 }
 
 
