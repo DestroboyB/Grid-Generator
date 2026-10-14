@@ -498,3 +498,30 @@
     border-color: #6b7280;
     color: #ffffff;
 }
+
+
+/* ========================================
+   Dark-mode primary action buttons
+======================================== */
+/*
+ * The general dark-theme button rule intentionally styles secondary controls.
+ * Reapply the primary blue treatment to buttons whose blue styling is defined
+ * by classes or element context rather than an ID selector.
+ */
+:root[data-theme="dark"] .primary-button,
+:root[data-theme="dark"] .download-button,
+:root[data-theme="dark"] .image-search-controls button,
+:root[data-theme="dark"] .url-image-controls button {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .primary-button:hover:not(:disabled),
+:root[data-theme="dark"] .download-button:hover:not(:disabled),
+:root[data-theme="dark"] .image-search-controls button:hover:not(:disabled),
+:root[data-theme="dark"] .url-image-controls button:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
