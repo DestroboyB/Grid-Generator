@@ -57,6 +57,11 @@ const imageSearchNextButton =
         "imageSearchNextButton"
     );
 
+const imageSearchPageIndicator =
+    document.getElementById(
+        "imageSearchPageIndicator"
+    );
+
 
 // ========================================
 // Search State
@@ -412,6 +417,9 @@ function updatePagination() {
     imageSearchNextButton.disabled =
         currentPage >= totalPages ||
         totalPages <= 1;
+
+    imageSearchPageIndicator.textContent =
+        `Page ${currentPage} of ${totalPages}`;
 }
 
 
