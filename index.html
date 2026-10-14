@@ -1095,15 +1095,26 @@
                     Anime
                 </button>
 
-                <button
-                    id="malByAnimeTab"
-                    type="button"
-                >
-                    By Anime
-                </button>
-
             </div>
 
+            <div id="malCharacterSubTabs" class="mal-character-subtabs">
+                <button id="malCharacterNameTab" type="button" class="active">
+                    By Name
+                </button>
+                <button id="malByAnimeTab" type="button">
+                    By Anime
+                </button>
+            </div>
+
+
+            <div id="malCharacterSortRow" class="mal-character-sort-row">
+                <label for="malCharacterSort">Sort characters</label>
+                <select id="malCharacterSort">
+                    <option value="default">Default order</option>
+                    <option value="popular">Popularity</option>
+                    <option value="alphabetical">Alphabetical</option>
+                </select>
+            </div>
 
             <div class="mal-search-controls">
 
