@@ -480,6 +480,10 @@
         padding: 8px;
     }
 
+    .library-search-input {
+        min-height: 44px;
+    }
+
     .library-category-header {
         gap: 4px;
         padding: 7px 4px;
