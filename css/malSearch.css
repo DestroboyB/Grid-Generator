@@ -943,6 +943,44 @@
     color: #1d4ed8;
 }
 
+/* Compact and consistently order the character sub-tabs on narrower screens. */
+@media (max-width: 850px) {
+    #malSearchModal .mal-search-tabs > .mal-character-tab-group,
+    #malSearchModal .mal-search-tabs > #malAnimeTab {
+        flex: 1 1 0;
+        min-width: 0;
+        width: 50%;
+    }
+
+    #malSearchModal .mal-character-tab-inner {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    #malSearchModal .mal-character-subtabs {
+        display: contents;
+    }
+
+    #malSearchModal #malCharacterNameTab {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: center;
+        width: 90%;
+        box-sizing: border-box;
+    }
+
+    #malSearchModal #malByAnimeTab {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: center;
+        width: 90%;
+        box-sizing: border-box;
+    }
+
+    #malSearchModal .mal-character-tab-spacer {
+        display: none;
+    }
+}
+
 /* ========================================
    Character Sorting
 ======================================== */
