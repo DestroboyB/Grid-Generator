@@ -686,3 +686,54 @@ test("storage reliability: failed category deletion rolls back category and grid
     expect(result.gridExists).toBe(true);
     expect(result.gridCategoryId).toBe(result.categoryId);
 });
+
+
+test("storage reliability: failed category rename preserves the original name", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { createCategory, getCategory, renameCategory } = await import(
+            `/js/storage/categories.js?category-rename-failure=${Date.now()}`
+        );
+
+        const category = await createCategory("Rename rollback original");
+        const originalPut = IDBObjectStore.prototype.put;
+
+        Object.defineProperty(IDBObjectStore.prototype, "put", {
+            configurable: true,
+            writable: true,
+            value: function (...args) {
+                throw new DOMException(
+                    "Simulated storage write failure",
+                    "UnknownError"
+                );
+            }
+        });
+
+        let renameError = null;
+
+        try {
+            await renameCategory(category.id, "Rename rollback replacement");
+        } catch (error) {
+            renameError = error.name;
+        } finally {
+            Object.defineProperty(IDBObjectStore.prototype, "put", {
+                configurable: true,
+                writable: true,
+                value: originalPut
+            });
+        }
+
+        const storedCategory = await getCategory(category.id);
+
+        return {
+            renameError,
+            categoryExists: Boolean(storedCategory),
+            storedName: storedCategory?.name ?? null
+        };
+    });
+
+    expect(result.renameError).toBeTruthy();
+    expect(result.categoryExists).toBe(true);
+    expect(result.storedName).toBe("Rename rollback original");
+});
