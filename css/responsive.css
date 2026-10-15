@@ -43,32 +43,40 @@
     }
 
     .app-header {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
-        row-gap: 10px;
+        gap: 8px;
         padding-bottom: 12px;
         margin-bottom: 16px;
     }
 
     .app-title {
-        font-size: 23px;
+        flex: 0 1 auto;
+        min-width: 0;
+        font-size: 20px;
+        white-space: nowrap;
     }
 
     .app-header-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        width: 100%;
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 6px;
+        width: auto;
         min-width: 0;
-        margin-left: 0;
+        margin-left: auto;
     }
 
     .app-header-actions .library-button,
     .app-header-actions .theme-toggle-button {
         min-width: 0;
         max-width: 100%;
-        white-space: normal;
-        overflow-wrap: anywhere;
+        padding: 7px 8px;
+        white-space: nowrap;
+    }
+
+    .app-header-actions .theme-toggle-label {
+        display: none;
     }
 
     .controls {
