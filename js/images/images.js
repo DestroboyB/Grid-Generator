@@ -648,7 +648,7 @@ updateImageButton.addEventListener(
             showAnimatedGifOption(
                 originalSource,
                 div,
-                imageData.animatedGif === true
+                true
             );
         } else {
             hideAnimatedGifOption();
