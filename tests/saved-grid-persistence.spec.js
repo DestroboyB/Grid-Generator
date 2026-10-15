@@ -130,7 +130,7 @@ test("saved grid settings and image data survive switching away and reopening", 
     await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
     await expect(page.locator("#board .image")).toHaveCount(9);
 
-    await page.locator("#libraryButton").click();
+    // Creating a grid leaves the library open; select the original grid directly.
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     await page.locator(`.library-grid[data-grid-id="${gridId}"]`).click();
 
