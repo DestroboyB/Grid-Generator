@@ -2,6 +2,7 @@
    Grid Generator Styles
 ======================================== */
 
+@import url("./css/variables.css");
 @import url("./css/base.css");
 @import url("./css/controls.css");
 @import url("./css/board.css");
