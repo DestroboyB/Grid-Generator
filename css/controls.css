@@ -376,3 +376,28 @@ input[type="range"] {
 .board-setting input[type="range"] {
     width: 100%;
 }
+
+/* ========================================
+   Desktop Control Sizing Polish
+======================================== */
+
+@media (min-width: 801px) {
+    .controls {
+        column-gap: 18px;
+        row-gap: 16px;
+        padding: 22px 24px;
+    }
+
+    .controls button,
+    .controls select {
+        min-height: 38px;
+    }
+
+    .controls input[type="color"] {
+        height: 38px;
+    }
+
+    .control-group {
+        gap: 7px;
+    }
+}
