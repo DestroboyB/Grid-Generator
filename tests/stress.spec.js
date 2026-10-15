@@ -234,7 +234,7 @@ test("history trimming: enforces count and size limits while retaining two state
             { marker: "middle", payload: "y".repeat(40) },
             { marker: "recent", payload: "z".repeat(40) }
         ];
-        trimHistoryStack(sizeLimited, 10, 100);
+        trimHistoryStack(sizeLimited, 10, 160);
 
         const oversizedTwoState = [
             { marker: "previous", payload: "a".repeat(120) },
@@ -255,7 +255,7 @@ test("history trimming: enforces count and size limits while retaining two state
     expect(result.count).toBe(10);
     expect(result.firstCountMarker).toBe(2);
     expect(result.lastCountMarker).toBe(11);
-    expect(result.sizeMarkers).toEqual(["recent"]);
+    expect(result.sizeMarkers).toEqual(["middle", "recent"]);
     expect(result.retainedTwoStateCount).toBe(2);
     expect(result.retainedTwoStateMarkers).toEqual(["previous", "current"]);
 });
