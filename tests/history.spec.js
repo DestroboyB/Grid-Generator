@@ -1018,3 +1018,118 @@ test("rotating an asymmetric image changes its saved pixel orientation", async (
     expect(pixels.bottom[2]).toBeGreaterThan(200);
     expect(pixels.bottom[0]).toBeLessThan(40);
 });
+
+
+test("grayscale filter is applied to the exported PNG", async ({ page }) => {
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const pngBase64 = await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 100;
+        canvas.height = 100;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#ff0000";
+        context.fillRect(0, 0, 50, 100);
+        context.fillStyle = "#0000ff";
+        context.fillRect(50, 0, 50, 100);
+        return canvas.toDataURL("image/png").split(",")[1];
+    });
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({
+        name: "two-color-grayscale-test.png",
+        mimeType: "image/png",
+        buffer: Buffer.from(pngBase64, "base64")
+    });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(100);
+    await page.locator('[data-tool="filters"]').click();
+    await page.locator('.filter-button[data-filter="grayscale"]').click();
+    await expect(page.locator('.filter-button[data-filter="grayscale"]')).toHaveClass(/active/);
+    await page.locator("#cropButton").click();
+
+    const sourcePixels = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        const source = grids.find(item => item.name === "Untitled Grid")?.images?.[0]?.source;
+        const image = new Image();
+        image.src = source;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        const y = Math.floor(canvas.height / 2);
+        return {
+            left: Array.from(context.getImageData(5, y, 1, 1).data),
+            right: Array.from(context.getImageData(canvas.width - 6, y, 1, 1).data)
+        };
+    });
+
+    // The original saved source remains colored; the display/export layer
+    // is responsible for applying the grayscale filter.
+    expect(sourcePixels.left[0]).toBeGreaterThan(200);
+    expect(sourcePixels.left[1]).toBeLessThan(40);
+    expect(sourcePixels.right[2]).toBeGreaterThan(200);
+    expect(sourcePixels.right[0]).toBeLessThan(40);
+
+    const tileLayout = await page.locator('#board .image[data-index="0"]').evaluate(tile => {
+        const boardRect = document.getElementById("board").getBoundingClientRect();
+        const tileRect = tile.getBoundingClientRect();
+        return {
+            x: tileRect.left - boardRect.left,
+            y: tileRect.top - boardRect.top,
+            width: tileRect.width,
+            height: tileRect.height
+        };
+    });
+
+    await page.locator("#downloadButton").click();
+    const downloadPromise = page.waitForEvent("download");
+    await page.locator("#downloadPngButton").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    const exportedBase64 = Buffer.concat(chunks).toString("base64");
+
+    const exportedPixels = await page.evaluate(async ({ exportedBase64, tileLayout }) => {
+        const image = new Image();
+        image.src = "data:image/png;base64," + exportedBase64;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(image, 0, 0);
+        const leftX = Math.round((tileLayout.x + tileLayout.width * 0.25) * 2);
+        const rightX = Math.round((tileLayout.x + tileLayout.width * 0.75) * 2);
+        const y = Math.round((tileLayout.y + tileLayout.height * 0.5) * 2);
+        return {
+            left: Array.from(context.getImageData(leftX, y, 1, 1).data),
+            right: Array.from(context.getImageData(rightX, y, 1, 1).data)
+        };
+    }, { exportedBase64, tileLayout });
+
+    for (const pixel of [exportedPixels.left, exportedPixels.right]) {
+        const channels = pixel.slice(0, 3);
+        expect(Math.max(...channels) - Math.min(...channels)).toBeLessThanOrEqual(8);
+    }
+    expect(exportedPixels.left[0]).toBeGreaterThan(exportedPixels.right[0]);
+});
