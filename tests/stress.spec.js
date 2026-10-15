@@ -163,3 +163,54 @@ test("stress: repeated high-resolution editor open and cancel cleans up Cropper 
         console.log("Editor lifecycle heap samples (bytes):", memorySamples.map(sample => sample.heapUsed));
     }
 });
+
+test("stress: repeated high-resolution edits remain usable with bounded Undo/Redo history", async ({ page }) => {
+    test.setTimeout(180000);
+
+    const pageErrors = [];
+    page.on("pageerror", error => pageErrors.push(error.message));
+
+    await waitForApp(page);
+    const largePng = await makeLargePng(page);
+    await importImageIntoFirstTile(page, largePng);
+
+    // Each applied edit creates a history snapshot containing image data.
+    // Ten edits exercise the history cap without making CI needlessly slow.
+    for (let i = 0; i < 10; i++) {
+        await page.locator('#board .image[data-index="0"]').click();
+        await expect(page.locator("#imageMenu")).toBeVisible();
+        await page.locator("#updateImageButton").click();
+        await expect(page.locator("#cropModal")).toBeVisible();
+        await expect.poll(
+            () => page.locator("#cropImage").evaluate(image => image.naturalWidth)
+        ).toBe(2048);
+
+        await page.locator("#rotateRightButton").click();
+        await page.locator("#cropButton").click();
+        await expect(page.locator("#cropModal")).toBeHidden();
+        await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    }
+
+    await expect(page.locator("#undoButton")).toBeEnabled();
+    for (let i = 0; i < 9; i++) {
+        await page.locator("#undoButton").click();
+        await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    }
+    await expect(page.locator("#undoButton")).toBeDisabled();
+    await expect(page.locator("#redoButton")).toBeEnabled();
+
+    for (let i = 0; i < 9; i++) {
+        await page.locator("#redoButton").click();
+        await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    }
+    await expect(page.locator("#redoButton")).toBeDisabled();
+
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    await expect.poll(
+        () => page.locator('#board .image[data-index="0"] img').evaluate(image => image.complete && image.naturalWidth > 0)
+    ).toBe(true);
+
+    expect(pageErrors, "Unexpected uncaught browser errors during repeated image edit/history stress test").toEqual([]);
+});
+
