@@ -111,3 +111,60 @@
 }
 
 
+
+
+/* ========================================
+   Portrait-only mobile experience
+======================================== */
+
+.portrait-orientation-notice {
+    display: none;
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (pointer: coarse) {
+    .portrait-orientation-notice {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #f3f4f6;
+        color: #1f2937;
+        text-align: center;
+    }
+
+    .portrait-orientation-card {
+        width: min(100%, 360px);
+        padding: 28px 24px;
+        border: 1px solid #d1d5db;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+    }
+
+    .portrait-orientation-icon {
+        margin-bottom: 12px;
+        font-size: 44px;
+        line-height: 1;
+    }
+
+    .portrait-orientation-card h1 {
+        margin: 0 0 10px;
+        font-size: 22px;
+    }
+
+    .portrait-orientation-card p {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+        color: #4b5563;
+    }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (pointer: coarse) {
+    body {
+        overflow: hidden;
+    }
+}
