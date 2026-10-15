@@ -137,3 +137,37 @@ test("dropping an image URL opens the editor and imports it into the target tile
     await page.reload();
     await expect(page.locator('#board .image[data-index="3"] img')).toHaveAttribute("src", importedSource);
 });
+
+
+test("dropping an invalid image URL shows an error and closes the editor cleanly", async ({ page }) => {
+    const pageErrors = [];
+    page.on("pageerror", error => pageErrors.push(error.message));
+    await page.goto("/");
+    await expect(page.locator("#board .image")).toHaveCount(9);
+
+    const dialogPromise = page.waitForEvent("dialog");
+    await page.evaluate(() => {
+        const target = document.querySelector('#board .image[data-index="4"]');
+        const transfer = new DataTransfer();
+        transfer.setData("text/uri-list", "data:image/png;base64,not-a-valid-image");
+
+        target.dispatchEvent(new DragEvent("dragover", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: transfer
+        }));
+        target.dispatchEvent(new DragEvent("drop", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: transfer
+        }));
+    });
+
+    const dialog = await dialogPromise;
+    expect(dialog.message()).toMatch(/unable to load this image/i);
+    await dialog.accept();
+
+    await expect(page.locator("#cropModal")).toBeHidden();
+    await expect(page.locator(".cropper-container")).toHaveCount(0);
+    expect(pageErrors).toEqual([]);
+});
