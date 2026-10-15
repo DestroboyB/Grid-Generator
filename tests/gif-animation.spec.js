@@ -40,6 +40,41 @@ async function samplePixel(page, selector = "#animatedGifPreview") {
     });
 }
 
+
+test("Chromium advances an attached image using the animated GIF fixture", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async base64 => {
+        const image = document.createElement("img");
+        image.id = "gifTimelineBaseline";
+        document.body.appendChild(image);
+        image.src = `data:image/gif;base64,${base64}`;
+        await image.decode();
+
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        const sample = () => {
+            context.drawImage(image, 0, 0);
+            return Array.from(context.getImageData(0, 0, 1, 1).data);
+        };
+
+        const first = sample();
+        let second = first;
+        for (let attempt = 0; attempt < 20 && second.every((value, index) => value === first[index]); attempt++) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            second = sample();
+        }
+        image.remove();
+        return { first, second, width: image.naturalWidth, height: image.naturalHeight };
+    }, animatedGif.toString("base64"));
+
+    expect(result.width).toBe(16);
+    expect(result.height).toBe(16);
+    expect(result.second).not.toEqual(result.first);
+});
+
 test("GIF animation defaults on, while the normal crop editor remains usable", async ({ page }) => {
     await waitForApp(page);
     await uploadGifToFirstTile(page);
@@ -94,7 +129,14 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
     // Decode the exported GIF in Chromium and compare rendered pixels over
     // time. Distinct compressed LZW payloads alone do not prove that the
     // exported frames visibly differ.
-    const renderedFrames = await page.evaluate(async base64 => {
+    const firstCell = await page.locator('#board .image[data-index="0"]').boundingBox();
+    const boardBox = await page.locator("#board").boundingBox();
+    expect(firstCell).not.toBeNull();
+    expect(boardBox).not.toBeNull();
+    const sampleX = Math.round(firstCell.x - boardBox.x + firstCell.width / 2);
+    const sampleY = Math.round(firstCell.y - boardBox.y + firstCell.height / 2);
+
+    const renderedFrames = await page.evaluate(async ({ base64, sampleX, sampleY }) => {
         const image = new Image();
         Object.assign(image.style, {
             position: "fixed",
@@ -117,7 +159,7 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
         const context = canvas.getContext("2d");
         const sample = () => {
             context.drawImage(image, 0, 0);
-            return Array.from(context.getImageData(8, 8, 1, 1).data);
+            return Array.from(context.getImageData(sampleX, sampleY, 1, 1).data);
         };
 
         const first = sample();
@@ -128,7 +170,7 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
         }
         image.remove();
         return { first, second, width: image.naturalWidth, height: image.naturalHeight };
-    }, exported.toString("base64"));
+    }, { base64: exported.toString("base64"), sampleX, sampleY });
 
     expect(renderedFrames.width).toBeGreaterThan(25);
     expect(renderedFrames.height).toBeGreaterThan(25);
