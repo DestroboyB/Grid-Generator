@@ -244,7 +244,8 @@ test("history is capped at 30 states and remains usable after reload", async ({ 
     await expect(page.locator("#redoButton")).toBeEnabled();
 
     const oldestRetainedRatio = await page.locator("#imageRatio").inputValue();
-    await page.locator("#undoButton").click();
+    // The disabled Undo button and unchanged ratio confirm the retained boundary.
+    await expect(page.locator("#undoButton")).toBeDisabled();
     await expect(page.locator("#imageRatio")).toHaveValue(oldestRetainedRatio);
 
     // Redo several states and verify that a new edit clears the redo stack.
