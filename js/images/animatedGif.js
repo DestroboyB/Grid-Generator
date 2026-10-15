@@ -3,6 +3,8 @@ import { saveHistoryState } from "../history.js";
 import { saveBoard } from "../storage/grids.js";
 import { renderImage } from "../board.js";
 
+const board = document.getElementById("board");
+
 function readBlobAsDataURL(blob) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -15,7 +17,7 @@ function readBlobAsDataURL(blob) {
 function findBoxIndex(element) {
     if (element?.dataset?.index !== undefined) {
         const index = Number(element.dataset.index);
-        if (Number.isInteger(index) && index >= 0 && index < appState.savedImages.length) {
+        if (Number.isInteger(index) && index >= 0 && index < board.children.length) {
             return index;
         }
     }
