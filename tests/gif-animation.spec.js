@@ -26,7 +26,7 @@ test("GIF upload opens the editor and offers a way to preserve animation", async
     });
 
     await expect(page.locator("#cropModal")).toBeVisible();
-    await expect(page.locator("#useAnimatedGifButton")).toBeVisible();
+    await expect(page.locator("#animatedGifToggle")).toBeVisible();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(0);
 });
 
@@ -62,8 +62,9 @@ test("GIF download option is hidden until an animated GIF is on the board", asyn
         buffer: tinyGif
     });
 
-    await expect(page.locator("#useAnimatedGifButton")).toBeVisible();
-    await page.locator("#useAnimatedGifButton").click();
+    await expect(page.locator("#animatedGifToggle")).toBeVisible();
+    await page.locator("#animatedGifToggle").check();
+    await page.locator("#cropButton").click();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
 
     // The menu is closed while editing/importing, so reopen it before
