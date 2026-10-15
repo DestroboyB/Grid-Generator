@@ -1448,3 +1448,39 @@ test("touch-sized landscape view shows the portrait orientation notice", async (
     await expect(page.locator("body")).not.toHaveClass(/portrait-lock-active/);
     await expect(page.locator(".portrait-orientation-notice")).toBeHidden();
 });
+
+
+test("MyAnimeList search modes switch tabs and placeholders without a request", async ({ page }) => {
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+    await expect(page.locator("#malSearchModal")).toBeVisible();
+
+    const requests = [];
+    page.on("request", request => {
+        if (/api\.jikan\.moe|myanimelist\.net\/v4/i.test(request.url())) {
+            requests.push(request.url());
+        }
+    });
+
+    await expect(page.locator("#malCharacterNameTab")).toHaveClass(/active/);
+    await expect(page.locator("#malAnimeTab")).not.toHaveClass(/active/);
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for a character...");
+
+    await page.locator("#malAnimeTab").click();
+    await expect(page.locator("#malAnimeTab")).toHaveClass(/active/);
+    await expect(page.locator("#malCharacterNameTab")).not.toHaveClass(/active/);
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for an anime...");
+
+    await page.locator("#malCharacterTab").click();
+    await expect(page.locator("#malCharacterTab")).toHaveClass(/active/);
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for a character...");
+
+    await page.locator("#malByAnimeTab").click();
+    await expect(page.locator("#malByAnimeTab")).toHaveClass(/active/);
+    await expect(page.locator("#malCharacterTab")).toHaveClass(/active/);
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for an anime to browse its characters...");
+
+    expect(requests).toEqual([]);
+});
