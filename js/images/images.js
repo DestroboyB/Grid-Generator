@@ -23,7 +23,7 @@ import {
     openUrlImage
 } from "./urlImage.js";
 
-import { importAnimatedGif } from "./animatedGif.js";
+import { showAnimatedGifOption, hideAnimatedGifOption } from "./animatedGifEditor.js";
 
 // ========================================
 // Elements
@@ -177,6 +177,7 @@ export function openFileSelector(
     appState.selectedDiv =
         element;
 
+    hideAnimatedGifOption();
 
     const fileInput =
         document.createElement(
@@ -208,13 +209,12 @@ export function openFileSelector(
 
 
             if (file.type === "image/gif" || /\.gif$/i.test(file.name)) {
-                importAnimatedGif(file, element).catch(error => {
-                    console.error("Unable to import animated GIF:", error);
-                    alert(error.message || "Unable to import this GIF.");
-                });
+                openCropForFile(file, element);
+                showAnimatedGifOption(file, element);
                 return;
             }
 
+            hideAnimatedGifOption();
             openCropForFile(
                 file,
                 element
@@ -638,6 +638,15 @@ updateImageButton.addEventListener(
             imageData,
             div
         );
+
+        if (imageData.animatedGif) {
+            showAnimatedGifOption(
+                imageData.originalSource || imageData.source,
+                div
+            );
+        } else {
+            hideAnimatedGifOption();
+        }
 
     }
 );
