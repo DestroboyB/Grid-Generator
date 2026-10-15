@@ -1265,7 +1265,8 @@ test("edited images stay with their own grids when switching back and forth", as
     await expect(page.locator("#imageRatio")).toHaveValue("1:1");
 
     if (await page.locator("#libraryPanel").evaluate(panel => panel.classList.contains("open"))) {
-        await page.locator("#libraryButton").click();
+        await page.locator("#libraryCloseButton").click();
+        await expect(page.locator("#libraryPanel")).not.toHaveClass(/open/);
     }
     await addImageToFirstTile(page);
     await page.locator('#board .image[data-index="0"]').click();
