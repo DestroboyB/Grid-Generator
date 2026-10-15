@@ -495,6 +495,9 @@ export async function loadGrid(gridId) {
 // Capture each save request before queueing it. The active grid and app state
 // can change while an earlier IndexedDB operation is still in progress.
 let currentGridSaveQueue = Promise.resolve();
+// A new grid can receive several queued saves before its first write succeeds.
+// Keep its ID pending so a later save can create it after a transient failure.
+const pendingInitialGridIds = new Set();
 
 function captureCurrentGridSnapshot() {
     let gridId = appState.currentGridId;
@@ -508,6 +511,7 @@ function captureCurrentGridSnapshot() {
         appState.currentGridId = gridId;
         appState.currentGridName =
             appState.currentGridName || initialGrid.name;
+        pendingInitialGridIds.add(gridId);
     }
 
     const rowsInput = document.getElementById("rows");
@@ -530,6 +534,22 @@ function captureCurrentGridSnapshot() {
         undoStack: cloneData(appState.undoStack),
         redoStack: cloneData(appState.redoStack)
     };
+}
+
+export function getSaveErrorMessage(error) {
+    if (error?.name === "QuotaExceededError") {
+        return "Your browser storage is full, so the latest changes couldn't be saved. Export important grids and free up browser storage before continuing.";
+    }
+
+    if (
+        error?.name === "SecurityError" ||
+        error?.name === "InvalidStateError" ||
+        error?.name === "NotSupportedError"
+    ) {
+        return "Browser storage is unavailable, so the latest changes couldn't be saved. Check your browser's site-storage settings and keep this tab open.";
+    }
+
+    return "Couldn't save your latest changes. Keep this tab open and try again. If it keeps happening, export important grids before refreshing.";
 }
 
 function updateSaveStatus(message, isError = false) {
@@ -579,10 +599,7 @@ export function saveCurrentGrid() {
                 return true;
             } catch (error) {
                 console.error("Failed to save the current grid:", error);
-                updateSaveStatus(
-                    "Couldn't save your latest changes. Keep this tab open and try making another change.",
-                    true
-                );
+                updateSaveStatus(getSaveErrorMessage(error), true);
                 return false;
             }
         });
@@ -591,14 +608,29 @@ export function saveCurrentGrid() {
 }
 
 async function saveCurrentGridSnapshot(snapshot) {
+    const isPendingNewGrid =
+        Boolean(snapshot.initialGrid) ||
+        pendingInitialGridIds.has(snapshot.gridId);
     let grid = snapshot.initialGrid;
 
     if (!grid) {
         grid = await getGrid(snapshot.gridId);
     }
 
+    if (!grid && isPendingNewGrid) {
+        // The first write may have failed before this grid reached IndexedDB.
+        // Rebuild it from the queued snapshot so the next save can recover.
+        grid = {
+            id: snapshot.gridId,
+            name: snapshot.name || "Untitled Grid",
+            categoryId: null,
+            createdAt: Date.now()
+        };
+    }
+
     if (!grid) {
-        // If a grid was deleted while this save was queued, do not resurrect it.
+        // If a previously saved grid was deleted while this save was queued,
+        // do not resurrect it.
         return null;
     }
 
@@ -619,8 +651,9 @@ async function saveCurrentGridSnapshot(snapshot) {
     // For existing grids, check and write in the same read/write
     // transaction. A separate getGrid() followed by saveGrid() leaves a
     // race where a queued save can recreate a grid deleted in between.
-    if (snapshot.initialGrid) {
+    if (isPendingNewGrid) {
         await saveGrid(grid);
+        pendingInitialGridIds.delete(snapshot.gridId);
         return grid;
     }
 
