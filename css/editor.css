@@ -9,8 +9,8 @@
     max-height: calc(100dvh - 32px);
     display: flex;
     flex-direction: column;
-    background: #ffffff;
-    border-radius: 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius-panel);
     overflow: hidden;
     box-sizing: border-box;
 }
@@ -22,8 +22,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
-    border-bottom: 1px solid #e5e7eb;
-    background: #ffffff;
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-surface);
     flex-shrink: 0;
 }
 
@@ -31,7 +31,7 @@
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--color-text);
 }
 
 .editor-close {
@@ -40,7 +40,7 @@
     padding: 0;
     border: none;
     background: transparent;
-    color: #6b7280;
+    color: var(--color-text-muted);
     font-size: 24px;
     line-height: 1;
     cursor: pointer;
@@ -48,8 +48,8 @@
 }
 
 .editor-close:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--color-page-background);
+    color: var(--color-text);
 }
 
 /* Preview layout. CropperJS-specific internals are in cropper.css. */
@@ -77,8 +77,8 @@
 .editor-tools {
     display: flex;
     align-items: stretch;
-    border-bottom: 1px solid #e5e7eb;
-    background: #ffffff;
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-surface);
     flex-shrink: 0;
     padding-top: 6px;
 }
@@ -88,23 +88,23 @@
     min-height: 44px;
     padding: 10px 16px;
     border: none;
-    border-right: 1px solid #e5e7eb;
-    background: #ffffff;
-    color: #6b7280;
+    border-right: 1px solid var(--color-border-subtle);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }
 
 .editor-tool:hover {
-    background: #f9fafb;
+    background: var(--color-surface-subtle);
     color: #374151;
 }
 
 .editor-tool.active {
-    background: #eff6ff;
-    color: #2563eb;
-    box-shadow: inset 0 -2px 0 #2563eb;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    box-shadow: inset 0 -2px 0 var(--color-primary);
 }
 
 /* Restore Original */
@@ -114,19 +114,19 @@
     min-height: 44px;
     margin-left: 6px;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-bottom: none;
     border-radius: 7px 7px 0 0;
-    background: #ffffff;
-    color: #6b7280;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
 }
 
 .restore-original-tab:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--color-page-background);
+    color: var(--color-text);
 }
 
 /* Editor panels */
@@ -138,7 +138,7 @@
     max-height: 90px;
     padding: 12px 20px;
     box-sizing: border-box;
-    background: #ffffff;
+    background: var(--color-surface);
     overflow-y: auto;
     flex-shrink: 0;
 }
@@ -170,9 +170,9 @@
 .editor-button-row button {
     width: clamp(110px, 12vw, 180px);
     padding: clamp(7px, 0.7vw, 12px) clamp(8px, 1vw, 16px);
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
-    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
     color: #374151;
     font-size: clamp(12px, 1.1vw, 18px);
     font-weight: 500;
@@ -180,8 +180,8 @@
 }
 
 .editor-button-row button:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: var(--color-page-background);
+    border-color: var(--color-text-subtle);
 }
 
 /* Adjustments */
@@ -204,7 +204,7 @@
 .editor-control label {
     font-size: 13px;
     font-weight: 600;
-    color: #4b5563;
+    color: var(--color-text-secondary);
 }
 
 .editor-control input[type="range"] {
@@ -214,7 +214,7 @@
 
 .editor-control span {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--color-text-muted);
     text-align: right;
 }
 
@@ -233,9 +233,9 @@
     width: 100%;
     min-width: 0;
     padding: clamp(6px, 0.6vw, 10px) clamp(4px, 0.6vw, 10px);
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
-    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
     color: #374151;
     font-size: clamp(11px, 0.9vw, 14px);
     font-weight: 500;
@@ -243,8 +243,8 @@
 }
 
 .filter-buttons button:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: var(--color-page-background);
+    border-color: var(--color-text-subtle);
 }
 
 /* Footer */
@@ -254,17 +254,17 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 14px 20px;
-    border-top: 1px solid #e5e7eb;
-    background: #ffffff;
+    border-top: 1px solid var(--color-border-subtle);
+    background: var(--color-surface);
     flex-shrink: 0;
 }
 
 .editor-footer button {
     min-width: 80px;
     padding: 9px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
-    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
     color: #374151;
     font-size: 14px;
     font-weight: 600;
@@ -272,18 +272,18 @@
 }
 
 .editor-footer button:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 .editor-footer #cropButton {
-    border-color: #2563eb;
-    background: #2563eb;
-    color: #ffffff;
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-surface);
 }
 
 .editor-footer #cropButton:hover {
-    border-color: #1d4ed8;
-    background: #1d4ed8;
+    border-color: var(--color-primary-hover);
+    background: var(--color-primary-hover);
 }
 
 /* Tablet and mobile */
