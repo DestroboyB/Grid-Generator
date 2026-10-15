@@ -173,9 +173,12 @@ export async function downloadAnimatedGifBoard(board, state = appState) {
 
     try {
         for (let frame = 0; frame < FRAME_COUNT; frame++) {
+            // Let the browser advance animated <img> elements before each
+            // capture. Capturing first and waiting afterward can repeatedly
+            // sample the same decoded GIF frame under load.
+            await wait(FRAME_DELAY_MS);
             drawBoardFrame(ctx, board, boxes, state, boardRect);
             encoder.addFrame(ctx, { copy: true, delay: FRAME_DELAY_MS });
-            await wait(FRAME_DELAY_MS);
         }
 
         const blob = await new Promise((resolve, reject) => {
