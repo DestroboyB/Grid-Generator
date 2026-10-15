@@ -263,12 +263,12 @@ test("history is capped at 30 states and remains usable after reload", async ({ 
 test("a failed IndexedDB save is reported and a later save succeeds", async ({ page }) => {
     await page.addInitScript(() => {
         const originalPut = IDBObjectStore.prototype.put;
-        let shouldFail = true;
+        window.__failNextGridSave = false;
 
         IDBObjectStore.prototype.put = function (...args) {
             const request = originalPut.apply(this, args);
-            if (shouldFail && this.transaction.mode === "readwrite") {
-                shouldFail = false;
+            if (window.__failNextGridSave && this.transaction.mode === "readwrite") {
+                window.__failNextGridSave = false;
                 queueMicrotask(() => {
                     try {
                         this.transaction.abort();
@@ -282,6 +282,9 @@ test("a failed IndexedDB save is reported and a later save succeeds", async ({ p
     });
 
     await waitForApp(page);
+    await page.evaluate(() => {
+        window.__failNextGridSave = true;
+    });
 
     await page.locator("#imageRatio").selectOption("4:3");
     await expect(page.locator("#gridSaveStatus")).toBeVisible();
