@@ -44,7 +44,9 @@ self.addEventListener("fetch", event => {
                 .then(response => {
                     if (response.ok) {
                         const copy = response.clone();
-                        caches.open(APP_CACHE).then(cache => cache.put("./index.html", copy));
+                        event.waitUntil(
+                            caches.open(APP_CACHE).then(cache => cache.put("./index.html", copy))
+                        );
                     }
                     return response;
                 })
@@ -57,16 +59,18 @@ self.addEventListener("fetch", event => {
         return;
     }
 
+    // Prefer fresh same-origin assets when online, but retain a cached copy for offline use.
     event.respondWith(
-        caches.match(request).then(cached => {
-            const network = fetch(request).then(response => {
+        fetch(request)
+            .then(response => {
                 if (response.ok && response.type === "basic") {
                     const copy = response.clone();
-                    caches.open(RUNTIME_CACHE).then(cache => cache.put(request, copy));
+                    event.waitUntil(
+                        caches.open(RUNTIME_CACHE).then(cache => cache.put(request, copy))
+                    );
                 }
                 return response;
-            });
-            return cached || network;
-        })
+            })
+            .catch(async () => (await caches.match(request)) || Response.error())
     );
 });
