@@ -443,6 +443,32 @@ test("storage reliability: failed first save can recover and retry creating the 
     expect(result.savedGridId).toBe(result.failedGridId);
 });
 
+test("storage reliability: latest rapid changes survive an immediate reload", async ({ page }) => {
+    await waitForApp(page);
+
+    // Change several saved settings in quick succession. Unlike the grid-switch
+    // test, deliberately reload without polling IndexedDB for completion first.
+    await page.locator("#rows").selectOption("2");
+    await page.locator("#generateBoard").click();
+    await page.locator("#columns").selectOption("4");
+    await page.locator("#generateBoard").click();
+    await page.locator("#imageRatio").selectOption("4:3");
+    await page.locator("#imageRatio").selectOption("16:9");
+    await page.locator("#spacing").evaluate(element => {
+        element.value = "17";
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await page.reload();
+
+    await expect(page.locator("#rows")).toHaveValue("2");
+    await expect(page.locator("#columns")).toHaveValue("4");
+    await expect(page.locator("#imageRatio")).toHaveValue("16:9");
+    await expect(page.locator("#spacing")).toHaveValue("17");
+    await expect(page.locator("#board .image")).toHaveCount(8);
+});
+
 test("storage reliability: save warnings explain quota and unavailable-storage errors", async ({ page }) => {
     await waitForApp(page);
 
