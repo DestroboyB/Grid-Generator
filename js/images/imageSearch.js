@@ -396,7 +396,7 @@ function selectImage(result) {
 
         closeImageSearch();
 
-        if (result.mime === "image/gif" || /\\.gif(?:[?#]|$)/i.test(result.url)) {
+        if (result.mime === "image/gif" || /\.gif(?:[?#]|$)/i.test(result.url)) {
             imageSearchStatus.textContent = "Importing animated GIF...";
             importAnimatedGif(result.url, selectedDiv).catch(error => {
                 console.error("Unable to import animated GIF:", error);
