@@ -1133,3 +1133,75 @@ test("grayscale filter is applied to the exported PNG", async ({ page }) => {
     }
     expect(exportedPixels.left[0]).toBeGreaterThan(exportedPixels.right[0]);
 });
+
+
+test("Restore Original clears rotation and filter adjustments before saving", async ({ page }) => {
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const pngBase64 = await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 100;
+        canvas.height = 100;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#ff0000";
+        context.fillRect(0, 0, 50, 100);
+        context.fillStyle = "#0000ff";
+        context.fillRect(50, 0, 50, 100);
+        return canvas.toDataURL("image/png").split(",")[1];
+    });
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({
+        name: "restore-original-test.png",
+        mimeType: "image/png",
+        buffer: Buffer.from(pngBase64, "base64")
+    });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(100);
+    await page.locator("#rotateRightButton").click();
+    await page.locator('[data-tool="filters"]').click();
+    await page.locator('.filter-button[data-filter="grayscale"]').click();
+    await page.locator("#cropButton").click();
+
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(100);
+    await page.locator("#restoreOriginalButton").click();
+    await page.locator("#cropButton").click();
+
+    const savedImage = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return grids.find(item => item.name === "Untitled Grid")?.images?.[0] ?? null;
+    });
+
+    expect(savedImage).toMatchObject({
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        filterName: "none",
+        brightness: 100,
+        contrast: 100,
+        saturation: 100,
+        blur: 0,
+        grayscale: 0,
+        sepia: 0,
+        hueRotate: 0
+    });
+});
