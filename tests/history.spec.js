@@ -1314,7 +1314,25 @@ test("edited images stay with their own grids when switching back and forth", as
     expect(stateA).toMatchObject({ rotation: 90, flipX: false, flipY: false });
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", stateA.source);
 
+    // Undo/Redo the first grid's image edit while the library is closed.
+    await page.locator("#libraryCloseButton").click();
+    await expect(page.locator("#libraryPanel")).not.toHaveClass(/open/);
+    await page.locator("#undoButton").click();
+    await expect.poll(() => readImageState("Untitled Grid")).toMatchObject({
+        rotation: 0,
+        flipX: false,
+        flipY: false
+    });
+    await page.locator("#redoButton").click();
+    await expect.poll(() => readImageState("Untitled Grid")).toMatchObject({
+        rotation: 90,
+        flipX: false,
+        flipY: false
+    });
+
     // Switch to B again and confirm its flip and image source are intact.
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const gridB = page.locator("#libraryContent .library-grid").filter({ hasText: "Edited Grid B" });
     await gridB.locator(".library-grid-name").click();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
