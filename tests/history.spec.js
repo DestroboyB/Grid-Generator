@@ -368,6 +368,21 @@ test("switching between grids restores each grid's layout and Undo/Redo history"
 
     await page.locator("#imageRatio").selectOption("4:3");
     await expect(page.locator("#undoButton")).toBeEnabled();
+    await expect.poll(async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return records.some(grid => grid.name === "Untitled Grid" && grid.ratio === "4:3");
+    })).toBe(true);
 
     await page.locator("#libraryButton").click();
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
@@ -407,7 +422,7 @@ test("grid names are trimmed and duplicate names are rejected", async ({ page })
     await page.locator("#newGridNameInput").fill("  Second Grid  ");
     await page.locator("#createNewGridButton").click();
 
-    await expect(page.locator("#libraryContent .library-grid")).toContainText("Second Grid");
+    await expect(page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" })).toHaveCount(1);
 
     page.on("dialog", dialog => dialog.accept());
     const secondRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" });
