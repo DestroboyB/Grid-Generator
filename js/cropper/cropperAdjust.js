@@ -403,7 +403,7 @@ export function setupAdjustments() {
 
 
                 cropperState.filterName =
-                    "none";
+                    "custom";
 
 
                 updateActiveFilterButton();
@@ -434,7 +434,7 @@ export function setupAdjustments() {
 
 
                 cropperState.filterName =
-                    "none";
+                    "custom";
 
 
                 updateActiveFilterButton();
@@ -465,7 +465,7 @@ export function setupAdjustments() {
 
 
                 cropperState.filterName =
-                    "none";
+                    "custom";
 
 
                 updateActiveFilterButton();
@@ -496,7 +496,7 @@ export function setupAdjustments() {
 
 
                 cropperState.filterName =
-                    "none";
+                    "custom";
 
 
                 updateActiveFilterButton();
