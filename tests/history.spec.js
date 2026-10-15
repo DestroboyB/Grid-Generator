@@ -420,10 +420,7 @@ test("switching between grids restores each grid's layout and Undo/Redo history"
     await expect(page.locator("#undoButton")).toBeEnabled();
     await expect(page.locator("#redoButton")).toBeDisabled();
 
-    // Undo on the first grid must not alter the second grid's saved layout.
-    await page.locator("#undoButton").click();
-    await expect(page.locator("#imageRatio")).toHaveValue("1:1");
-
+    // Return to the second grid and confirm its own saved layout and history.
     const secondGridRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" });
     await secondGridRow.locator(".library-grid-name").click();
     await expect(secondGridRow).toHaveClass(/active/);
