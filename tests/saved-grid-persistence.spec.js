@@ -116,7 +116,27 @@ test("saved grid settings and image data survive switching away and reopening", 
 
     // Creating a grid leaves the library open; select the original grid directly.
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
-    await page.locator(`.library-grid[data-grid-id="${gridId}"]`).click();
+    const originalGridLocator = page.locator(`.library-grid[data-grid-id="${gridId}"]`);
+    console.log("Persistence debug before reopen:", JSON.stringify({
+        gridId,
+        targetCount: await originalGridLocator.count(),
+        targetVisible: await originalGridLocator.isVisible(),
+        activeGridIds: await page.locator(".library-grid.active").evaluateAll(items => items.map(item => item.dataset.gridId)),
+        storedGrid: await readGrid(page, gridId)
+    }));
+    page.on("dialog", async dialog => {
+        console.log("Persistence debug dialog:", dialog.message());
+        await dialog.dismiss();
+    });
+    await originalGridLocator.click();
+    await page.waitForTimeout(250);
+    console.log("Persistence debug after reopen:", JSON.stringify({
+        gridId,
+        activeGridIds: await page.locator(".library-grid.active").evaluateAll(items => items.map(item => item.dataset.gridId)),
+        rows: await page.locator("#rows").inputValue(),
+        columns: await page.locator("#columns").inputValue(),
+        storedGrid: await readGrid(page, gridId)
+    }));
 
     await expect(page.locator("#rows")).toHaveValue("2");
     await expect(page.locator("#columns")).toHaveValue("4");
