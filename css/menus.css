@@ -24,13 +24,13 @@
 
     padding: 10px 20px;
 
-    border: 1px solid #2563eb;
+    border: 1px solid var(--color-primary);
 
-    border-radius: 7px;
+    border-radius: var(--radius-control);
 
-    background: #2563eb;
+    background: var(--color-primary);
 
-    color: #ffffff;
+    color: var(--color-surface);
 
     font-size: 14px;
 
@@ -45,9 +45,9 @@
 }
 
 .download-button:hover {
-    background: #1d4ed8;
+    background: var(--color-primary-hover);
 
-    border-color: #1d4ed8;
+    border-color: var(--color-primary-hover);
 }
 
 .download-button:active {
@@ -70,9 +70,9 @@
 
     transform: translateX(-50%);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
     border-radius: 8px;
 
@@ -93,7 +93,7 @@
 
     border-radius: 5px;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 9px 25px;
 
@@ -103,13 +103,13 @@
 
     white-space: nowrap;
 
-    color: #1f2937;
+    color: var(--color-text);
 
     font-size: 14px;
 }
 
 .download-menu button:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 
@@ -122,11 +122,11 @@
 
     position: fixed;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 8px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
     border-radius: 8px;
 
@@ -151,19 +151,19 @@
 
     text-align: left;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 9px 12px;
 
     cursor: pointer;
 
-    color: #1f2937;
+    color: var(--color-text);
 
     font-size: 14px;
 }
 
 .image-menu button:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 .image-menu .danger-button:hover {
@@ -180,11 +180,11 @@
 
     position: fixed;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 8px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
     border-radius: 8px;
 
@@ -209,19 +209,19 @@
 
     text-align: left;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 9px 12px;
 
     cursor: pointer;
 
-    color: #1f2937;
+    color: var(--color-text);
 
     font-size: 14px;
 }
 
 .add-image-menu button:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 /* ========================================
@@ -233,11 +233,11 @@
 
     position: fixed;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 8px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
 
     box-shadow:
@@ -263,20 +263,20 @@
 
     text-align: left;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     padding: 9px 12px;
 
     cursor: pointer;
 
-    color: #1f2937;
+    color: var(--color-text);
 
     font-size: 14px;
 }
 
 
 .image-source-menu button:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 
@@ -295,14 +295,14 @@
 
 
 .image-source-menu .menu-back-button:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 
 .image-source-menu .menu-divider {
     height: 1px;
 
-    background: #e5e7eb;
+    background: var(--color-border-subtle);
 
     margin: 3px 0;
 }
@@ -315,5 +315,5 @@
 
     line-height: 14px;
 
-    color: #9ca3af;
+    color: var(--color-text-subtle);
 }
