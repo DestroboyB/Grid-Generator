@@ -25,9 +25,39 @@ export function trimHistoryStack(
     maxStates = MAX_HISTORY_STATES,
     maxDataChars = MAX_HISTORY_DATA_CHARS
 ) {
-    const stateSizes = stack.map(
-        state => JSON.stringify(state).length
-    );
+    // Image data often stays identical across many setting-only edits
+    // (for example, changing aspect ratio). Share adjacent identical image
+    // arrays and count their payload once, while still counting each state's
+    // own settings. This keeps those edits undoable without multiplying the
+    // same large data URLs against the history budget.
+    const seenImageArrays = new WeakSet();
+    const stateSizes = stack.map((state, index) => {
+        if (
+            index > 0 &&
+            JSON.stringify(stack[index - 1].images ?? []) ===
+                JSON.stringify(state.images ?? [])
+        ) {
+            state.images = stack[index - 1].images;
+        }
+
+        const metadata = {
+            ...state,
+            images: undefined
+        };
+        const metadataSize = JSON.stringify(metadata).length;
+        let imageSize = 0;
+
+        if (
+            state.images &&
+            typeof state.images === "object" &&
+            !seenImageArrays.has(state.images)
+        ) {
+            seenImageArrays.add(state.images);
+            imageSize = JSON.stringify(state.images).length;
+        }
+
+        return metadataSize + imageSize;
+    });
     let totalChars = stateSizes.reduce(
         (total, size) => total + size,
         0
@@ -130,6 +160,16 @@ export function saveHistoryState() {
             JSON.stringify(currentState)
     ) {
         return;
+    }
+
+    // Reuse unchanged image data between consecutive history states so
+    // setting-only edits do not create another in-memory copy of every image.
+    if (
+        lastState &&
+        JSON.stringify(lastState.images ?? []) ===
+            JSON.stringify(currentState.images ?? [])
+    ) {
+        currentState.images = lastState.images;
     }
 
     appState.undoStack.push(
