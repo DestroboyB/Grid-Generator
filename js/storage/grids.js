@@ -613,9 +613,40 @@ async function saveCurrentGridSnapshot(snapshot) {
     grid.redoStack = snapshot.redoStack;
     grid.updatedAt = Date.now();
 
-    await saveGrid(grid);
+    // For existing grids, check and write in the same read/write
+    // transaction. A separate getGrid() followed by saveGrid() leaves a
+    // race where a queued save can recreate a grid deleted in between.
+    if (snapshot.initialGrid) {
+        await saveGrid(grid);
+        return grid;
+    }
 
-    return grid;
+    const db = await openDatabase();
+    const transaction = db.transaction(GRID_STORE, "readwrite");
+    const store = transaction.objectStore(GRID_STORE);
+    const request = store.get(snapshot.gridId);
+    let gridStillExists = false;
+
+    request.onsuccess = () => {
+        if (!request.result) {
+            return;
+        }
+
+        gridStillExists = true;
+        store.put(cloneData(grid));
+    };
+
+    await new Promise((resolve, reject) => {
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(
+            transaction.error || new Error("Failed to save grid.")
+        );
+        transaction.onabort = () => reject(
+            transaction.error || new Error("Grid save transaction aborted.")
+        );
+    });
+
+    return gridStillExists ? grid : null;
 }
 
 
