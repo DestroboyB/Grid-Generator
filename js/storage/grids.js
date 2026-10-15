@@ -549,10 +549,8 @@ async function saveCurrentGridSnapshot(snapshot) {
     }
 
     if (!grid) {
-        // The saved record may have been deleted before this queued save ran.
-        // Recreate it using the captured ID, not whichever grid is now active.
-        grid = createGridData();
-        grid.id = snapshot.gridId;
+        // If a grid was deleted while this save was queued, do not resurrect it.
+        return null;
     }
 
     grid.rows = snapshot.rows;
