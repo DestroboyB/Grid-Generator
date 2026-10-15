@@ -81,6 +81,6 @@ export async function importAnimatedGif(source, element) {
     };
 
     saveHistoryState();
-    saveBoard();
+    await saveBoard();
     renderImage(element, appState.savedImages[boxIndex]);
 }
