@@ -1817,8 +1817,9 @@ test("animated GIF uploads stay animated-format data URLs and persist after relo
     });
 
     await expect(page.locator("#cropModal")).toBeVisible();
-    await expect(page.locator("#useAnimatedGifButton")).toBeVisible();
-    await page.locator("#useAnimatedGifButton").click();
+    await expect(page.locator("#animatedGifToggle")).toBeVisible();
+    await page.locator("#animatedGifToggle").check();
+    await page.locator("#cropButton").click();
 
     const tileImage = page.locator('#board .image[data-index="0"] img');
     await expect(tileImage).toHaveCount(1);
