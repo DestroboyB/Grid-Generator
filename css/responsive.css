@@ -168,3 +168,10 @@ body.portrait-lock-active .portrait-orientation-notice {
     line-height: 1.5;
     color: #4b5563;
 }
+
+/* Keep the Board Settings button aligned with dropdowns when controls wrap. */
+@media (min-width: 551px) and (max-width: 800px) {
+    .board-settings-wrapper {
+        align-self: flex-end;
+    }
+}
