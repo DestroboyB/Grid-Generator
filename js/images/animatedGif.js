@@ -30,7 +30,7 @@ function findBoxIndex(element) {
  * through CropperJS/canvas, which would flatten it to a single frame.
  * Opening the GIF in the editor later can still create a normal static edit.
  */
-export async function importAnimatedGif(source, element) {
+export async function importAnimatedGif(source, element, editState = {}) {
     const boxIndex = findBoxIndex(element);
 
     if (boxIndex < 0) {
@@ -71,18 +71,20 @@ export async function importAnimatedGif(source, element) {
         source: dataURL,
         originalSource: dataURL,
         animatedGif: true,
-        crop: null,
-        rotation: 0,
-        flipX: false,
-        flipY: false,
+        crop: editState.crop || null,
+        rotation: editState.rotation || 0,
+        flipX: Boolean(editState.flipX),
+        flipY: Boolean(editState.flipY),
+        sourceWidth: editState.sourceWidth || null,
+        sourceHeight: editState.sourceHeight || null,
         filterName: "none",
-        brightness: 100,
-        contrast: 100,
-        saturation: 100,
-        blur: 0,
-        grayscale: 0,
-        sepia: 0,
-        hueRotate: 0,
+        brightness: editState.brightness ?? 100,
+        contrast: editState.contrast ?? 100,
+        saturation: editState.saturation ?? 100,
+        blur: editState.blur ?? 0,
+        grayscale: editState.grayscale ?? 0,
+        sepia: editState.sepia ?? 0,
+        hueRotate: editState.hueRotate ?? 0,
         x: 0,
         y: 0,
         zoom: 1
