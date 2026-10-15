@@ -477,10 +477,14 @@ test("switching grids immediately after Undo does not fail saves or lose either 
     const originalRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Untitled Grid" });
     await originalRow.locator(".library-grid-name").click();
     await expect(page.locator("#imageRatio")).toHaveValue("4:3");
+    await page.locator("#libraryCloseButton").click();
+    await expect(page.locator("#libraryPanel")).not.toHaveClass(/open/);
 
     await page.locator("#undoButton").click();
     await expect(page.locator("#imageRatio")).toHaveValue("1:1");
 
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const targetRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Undo Switch Target" });
     await targetRow.locator(".library-grid-name").click();
     await expect(page.locator("#imageRatio")).toHaveValue("16:9");
