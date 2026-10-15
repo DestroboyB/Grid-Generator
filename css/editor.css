@@ -297,7 +297,7 @@
     }
 
     .editor-tools {
-        overflow-x: hidden;
+        overflow: hidden;
     }
 
     .editor-tool {
