@@ -346,6 +346,26 @@ export function renderImage(
         img.style.objectPosition =
             "center";
 
+        // Animated GIFs retain their original multi-frame source. Apply the
+        // crop as an image viewport instead of flattening the GIF to a PNG.
+        const gifCrop = imageData.animatedGif === true ? imageData.crop : null;
+        if (gifCrop && gifCrop.width > 0 && gifCrop.height > 0) {
+            const applyAnimatedGifCrop = () => {
+                const sourceWidth = imageData.sourceWidth || img.naturalWidth;
+                const sourceHeight = imageData.sourceHeight || img.naturalHeight;
+                if (!sourceWidth || !sourceHeight) return;
+
+                img.style.objectFit = "fill";
+                img.style.width = `${(sourceWidth / gifCrop.width) * 100}%`;
+                img.style.height = `${(sourceHeight / gifCrop.height) * 100}%`;
+                img.style.left = `${(-gifCrop.x / gifCrop.width) * 100}%`;
+                img.style.top = `${(-gifCrop.y / gifCrop.height) * 100}%`;
+            };
+
+            img.addEventListener("load", applyAnimatedGifCrop);
+            applyAnimatedGifCrop();
+        }
+
 
         // ====================================
         // Apply Adjustments
