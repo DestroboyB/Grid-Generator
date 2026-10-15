@@ -5,10 +5,10 @@
 .controls {
     width: 100%;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-panel);
 
     padding: 20px 22px;
 
@@ -37,7 +37,7 @@
     font-size: 13px;
     font-weight: 600;
 
-    color: #4b5563;
+    color: var(--color-text-secondary);
 }
 
 
@@ -49,7 +49,7 @@
     font-size: 20px;
     font-weight: 600;
 
-    color: #9ca3af;
+    color: var(--color-text-subtle);
 
     padding-bottom: 7px;
 }
@@ -82,11 +82,11 @@ select {
 
     padding: 8px 30px 8px 10px;
 
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
 
-    background: #ffffff;
-    color: #1f2937;
+    background: var(--color-surface);
+    color: var(--color-text);
 
     font-size: 14px;
 
@@ -94,7 +94,7 @@ select {
 }
 
 select:focus {
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 
     box-shadow:
         0 0 0 3px
@@ -112,10 +112,10 @@ input[type="color"] {
 
     padding: 3px;
 
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     cursor: pointer;
 }
@@ -141,7 +141,7 @@ input[type="range"] {
 
     font-size: 13px;
 
-    color: #6b7280;
+    color: var(--color-text-muted);
 }
 
 
@@ -158,7 +158,7 @@ input[type="range"] {
 
     margin-left: auto;
     padding-left: 16px;
-    border-left: 1px solid #e5e7eb;
+    border-left: 1px solid var(--color-border-subtle);
 }
 
 .control-actions button {
@@ -173,27 +173,27 @@ input[type="range"] {
 .control-actions .library-button {
     margin-left: 8px;
 
-    border-color: #9ca3af;
-    background: #ffffff;
+    border-color: var(--color-text-subtle);
+    background: var(--color-surface);
 
     font-weight: 600;
 }
 
 .control-actions .library-button:hover {
-    background: #f3f4f6;
-    border-color: #6b7280;
+    background: var(--color-page-background);
+    border-color: var(--color-text-muted);
 }
 
 #generateBoard {
-    border-color: #2563eb;
-    background: #2563eb;
-    color: #ffffff;
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-surface);
     font-weight: 600;
 }
 
 #generateBoard:hover {
-    border-color: #1d4ed8;
-    background: #1d4ed8;
+    border-color: var(--color-primary-hover);
+    background: var(--color-primary-hover);
 }
 
 .toggle-switch {
@@ -219,7 +219,7 @@ input[type="range"] {
 
     inset: 0;
 
-    background: #d1d5db;
+    background: var(--color-border);
 
     border-radius: 999px;
 
@@ -238,7 +238,7 @@ input[type="range"] {
     left: 3px;
     top: 3px;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     border-radius: 50%;
 
@@ -253,7 +253,7 @@ input[type="range"] {
 .toggle-switch input:checked
     + .toggle-slider {
 
-    background: #2563eb;
+    background: var(--color-primary);
 }
 
 .toggle-switch input:checked
@@ -316,9 +316,9 @@ input[type="range"] {
 
     padding: 14px;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 10px;
 
     box-shadow:
@@ -360,7 +360,7 @@ input[type="range"] {
     font-size: 13px;
     font-weight: 600;
 
-    color: #4b5563;
+    color: var(--color-text-secondary);
 }
 
 
