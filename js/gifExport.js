@@ -203,5 +203,6 @@ export function installGifDownloadOption(board, state = appState) {
     const observer = new MutationObserver(updateVisibility);
     observer.observe(board, { childList: true, subtree: true, attributes: true, attributeFilter: ["src"] });
     window.addEventListener("pageshow", updateVisibility);
+    window.addEventListener("animated-gif-added", updateVisibility);
     updateVisibility();
 }
