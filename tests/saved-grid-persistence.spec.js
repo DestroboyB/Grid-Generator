@@ -30,30 +30,14 @@ test("saved grid settings and image data survive switching away and reopening", 
     await page.goto("/");
     await expect(page.locator("#board .image")).toHaveCount(9);
 
-    const originalGridId = await page.evaluate(() => window.appState?.currentGridId ?? null)
-        .catch(() => null);
-
-    // Capture the current grid ID from IndexedDB rather than depending on app internals.
-    const initialGrid = await page.evaluate(async () => {
-        const request = indexedDB.open("gridBoardDatabase", 2);
-        const db = await new Promise((resolve, reject) => {
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-        try {
-            const transaction = db.transaction("grids", "readonly");
-            return await new Promise((resolve, reject) => {
-                const getAll = transaction.objectStore("grids").getAll();
-                getAll.onsuccess = () => resolve(getAll.result[0] ?? null);
-                getAll.onerror = () => reject(getAll.error);
-            });
-        } finally {
-            db.close();
-        }
-    });
-
-    const gridId = originalGridId || initialGrid?.id;
+    // Read the active grid ID from the library UI; IndexedDB ordering is not
+    // guaranteed to match the currently selected grid.
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    const gridId = await page.locator(".library-grid.active").getAttribute("data-grid-id");
     expect(gridId).toBeTruthy();
+    await page.locator("#libraryCloseButton").click();
+    await expect(page.locator("#libraryPanel")).not.toHaveClass(/open/);
 
     await page.locator("#rows").selectOption("2");
     await page.locator("#columns").selectOption("4");
