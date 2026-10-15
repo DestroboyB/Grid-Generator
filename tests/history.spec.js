@@ -25,7 +25,7 @@ async function addImageToFirstTile(page) {
     });
 
     await expect(page.locator("#cropModal")).toBeVisible();
-    await expect(page.locator("#cropImage")).toHaveJSProperty("complete", true);
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
     await page.locator("#cropButton").click();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
 }
@@ -72,8 +72,7 @@ test("adding an image, undo, redo, and a new edit update history correctly", asy
     await page.locator("#undoButton").click();
     await expect(page.locator("#redoButton")).toBeEnabled();
 
-    await page.locator("#backgroundColor").fill("#aabbcc");
-    await page.locator("#backgroundColor").dispatchEvent("change");
+    await page.locator("#imageRatio").selectOption("4:3");
 
     await expect(page.locator("#redoButton")).toBeDisabled();
 });
