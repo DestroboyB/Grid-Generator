@@ -6,6 +6,7 @@
 .image-editor {
     width: min(1000px, 95vw);
     max-height: 90vh;
+    max-height: calc(100dvh - 32px);
     display: flex;
     flex-direction: column;
     background: #ffffff;
@@ -289,11 +290,14 @@
     .image-editor {
         width: 95vw;
         max-height: 95vh;
+        max-height: calc(100dvh - 24px);
     }
 
     .editor-preview {
         height: 45vh;
-        min-height: 300px;
+        height: 45dvh;
+        min-height: min(300px, 35vh);
+        min-height: min(300px, 35dvh);
     }
 
     .editor-tools {
@@ -356,6 +360,7 @@
     .image-editor {
         width: 96vw;
         max-height: 95vh;
+        max-height: calc(100dvh - 16px);
         border-radius: 10px;
     }
 
@@ -364,7 +369,8 @@
     }
 
     .editor-preview {
-        min-height: 300px;
+        min-height: min(260px, 32vh);
+        min-height: min(260px, 32dvh);
     }
 
     .editor-panel {
@@ -424,16 +430,36 @@
 @media (max-width: 700px) and (max-height: 600px) {
     .image-editor {
         max-height: calc(100vh - 16px);
+        max-height: calc(100dvh - 16px);
     }
 
     .editor-preview {
         height: 30vh;
-        min-height: 160px;
+        height: 30dvh;
+        min-height: min(160px, 28vh);
+        min-height: min(160px, 28dvh);
     }
 
     .editor-panel {
         height: 72px;
         min-height: 72px;
         max-height: 72px;
+    }
+}
+
+
+/* Extra-narrow phones: reduce adjustment-panel crowding. */
+@media (max-width: 380px) {
+    .adjust-controls {
+        column-gap: 8px;
+    }
+
+    .editor-control label {
+        font-size: 12px;
+    }
+
+    .editor-panel {
+        padding-left: 10px;
+        padding-right: 10px;
     }
 }
