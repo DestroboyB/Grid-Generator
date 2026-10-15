@@ -262,16 +262,6 @@
    Selected Saved Grid
 ======================================== */
 
-:root[data-theme="dark"] .library-grid.active {
-    background: #1d4ed8;
-    color: #ffffff;
-}
-
-:root[data-theme="dark"] .library-grid.active .library-grid-name,
-:root[data-theme="dark"] .library-grid.active .library-grid-icon {
-    color: #ffffff;
-}
-
 :root[data-theme="dark"] .library-grid.active .library-grid-action {
     background: #eff6ff;
     border-color: #bfdbfe;
@@ -393,11 +383,6 @@
 :root[data-theme="dark"] .library-grid.active,
 :root[data-theme="dark"] .library-grid.active:hover {
     background-color: #1d4ed8;
-    color: #ffffff;
-}
-
-:root[data-theme="dark"] .library-grid.active .library-grid-name,
-:root[data-theme="dark"] .library-grid.active .library-grid-icon {
     color: #ffffff;
 }
 
