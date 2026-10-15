@@ -13,8 +13,10 @@ async function waitForApp(page) {
 }
 
 async function addImageToFirstTile(page) {
-    const chooserPromise = page.waitForEvent("filechooser");
     await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
     const chooser = await chooserPromise;
     await chooser.setFiles({
         name: "test-image.png",
