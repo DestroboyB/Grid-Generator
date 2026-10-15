@@ -23,6 +23,7 @@ async function uploadImageToFirstTile(page, name, buffer) {
         await chooser.setFiles({ name, mimeType: "image/png", buffer });
     } else {
         await page.locator("#replaceImageButton").click();
+        await page.locator("#replaceUploadImageButton").click();
         const chooserPromise = page.waitForEvent("filechooser");
         await page.locator("#uploadImageButton").click();
         const chooser = await chooserPromise;
