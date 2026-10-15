@@ -1424,3 +1424,27 @@ test("main workspace and controls do not overflow narrow viewports", async ({ pa
         expect(layout.headerRight, `header ends off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
     }
 });
+
+
+test("touch-sized landscape view shows the portrait orientation notice", async ({ page }) => {
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, "maxTouchPoints", {
+            configurable: true,
+            get: () => 1
+        });
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expect(page.locator("#board .image")).toHaveCount(9);
+    await expect(page.locator("body")).not.toHaveClass(/portrait-lock-active/);
+    await expect(page.locator(".portrait-orientation-notice")).toBeHidden();
+
+    await page.setViewportSize({ width: 844, height: 390 });
+    await expect(page.locator("body")).toHaveClass(/portrait-lock-active/);
+    await expect(page.locator(".portrait-orientation-notice")).toBeVisible();
+
+    // Returning to portrait should remove the blocking notice.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator("body")).not.toHaveClass(/portrait-lock-active/);
+    await expect(page.locator(".portrait-orientation-notice")).toBeHidden();
+});
