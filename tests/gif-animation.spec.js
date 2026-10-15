@@ -42,11 +42,20 @@ async function samplePixel(page, selector = "#animatedGifPreview") {
 
 
 test("Chromium advances an attached image using the animated GIF fixture", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await waitForApp(page);
 
     const result = await page.evaluate(async base64 => {
         const image = document.createElement("img");
         image.id = "gifTimelineBaseline";
+        Object.assign(image.style, {
+            position: "fixed",
+            left: "0",
+            top: "0",
+            width: "64px",
+            height: "64px",
+            zIndex: "99999"
+        });
         document.body.appendChild(image);
         image.src = `data:image/gif;base64,${base64}`;
         await image.decode();
@@ -127,8 +136,9 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
     expect(exported.length).toBeGreaterThan(100);
 
     // Decode the exported GIF in Chromium and compare rendered pixels over
-    // time. Distinct compressed LZW payloads alone do not prove that the
-    // exported frames visibly differ.
+    // time. Keep the test image visible and explicitly disable reduced-motion
+    // emulation so browser animation policy does not freeze the fixture.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     const firstCell = await page.locator('#board .image[data-index="0"]').boundingBox();
     const boardBox = await page.locator("#board").boundingBox();
     expect(firstCell).not.toBeNull();
@@ -144,7 +154,7 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
             top: "0",
             width: "32px",
             height: "32px",
-            opacity: "0.01",
+            zIndex: "99999",
             pointerEvents: "none"
         });
         // Keep the image in the document: Chromium may not advance animated
