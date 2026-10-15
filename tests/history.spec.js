@@ -450,3 +450,44 @@ test("grid names are trimmed and duplicate names are rejected", async ({ page })
     await page.locator(".library-grid-rename-input").press("Escape");
     await expect(page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" })).toHaveCount(1);
 });
+
+test("switching grids immediately after Undo does not fail saves or lose either grid", async ({ page }) => {
+    const consoleErrors = [];
+    page.on("console", message => {
+        if (message.type() === "error") consoleErrors.push(message.text());
+    });
+
+    await waitForApp(page);
+    await page.locator("#imageRatio").selectOption("4:3");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await page.locator("#newGridButton").click();
+    await page.locator("#newGridNameInput").fill("Undo Switch Target");
+    await page.locator("#createNewGridButton").click();
+    await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
+
+    await page.locator("#imageRatio").selectOption("16:9");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+
+    // Reopen the first grid, then immediately switch away after Undo to
+    // exercise the race between the history save and the grid-load save.
+    await page.locator("#libraryButton").click();
+    const originalRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Untitled Grid" });
+    await originalRow.locator(".library-grid-name").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("4:3");
+
+    await page.locator("#undoButton").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("1:1");
+
+    const targetRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Undo Switch Target" });
+    await targetRow.locator(".library-grid-name").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("16:9");
+
+    await expect(page.locator("#gridSaveStatus")).toBeHidden();
+    expect(consoleErrors.filter(message => message.includes("Failed to save the current grid"))).toEqual([]);
+
+    await page.reload();
+    await expect(page.locator("#imageRatio")).toHaveValue("16:9");
+});
