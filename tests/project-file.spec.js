@@ -101,8 +101,8 @@ test("import rejects invalid dimensions and image payloads without changing the 
         const { appState } = await import("/js/state.js");
         return {
             id: appState.currentGridId,
-            rows: appState.rows,
-            columns: appState.columns
+            rows: document.querySelector("#rows").value,
+            columns: document.querySelector("#columns").value
         };
     });
 
