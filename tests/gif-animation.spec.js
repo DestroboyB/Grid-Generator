@@ -28,6 +28,15 @@ test("GIF upload opens the editor and offers a way to preserve animation", async
     await expect(page.locator("#cropModal")).toBeVisible();
     await expect(page.locator("#animatedGifToggle")).toBeVisible();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(0);
+
+    // Animation mode should show the native GIF preview; turning it off
+    // returns to the still-frame crop editor.
+    await page.locator("#animatedGifToggle").check();
+    await expect(page.locator("#animatedGifPreview")).toBeVisible();
+    await expect(page.locator("#cropModal .editor-preview .cropper-container")).toHaveCSS("visibility", "hidden");
+    await page.locator("#animatedGifToggle").uncheck();
+    await expect(page.locator("#animatedGifPreview")).toBeHidden();
+    await expect(page.locator("#cropModal .editor-preview .cropper-container")).toHaveCSS("visibility", "visible");
 });
 
 test("GIF download option is hidden until an animated GIF is on the board", async ({ page }) => {
@@ -76,4 +85,34 @@ test("GIF download option is hidden until an animated GIF is on the board", asyn
     await page.locator("#downloadGifButton").click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("grid-board.gif");
+});
+
+
+test("a GIF saved as a still frame can be switched back to animation when reopened", async ({ page }) => {
+    await waitForApp(page);
+
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({
+        name: "test-animation.gif",
+        mimeType: "image/gif",
+        buffer: tinyGif
+    });
+
+    await expect(page.locator("#animatedGifToggle")).toBeVisible();
+    await page.locator("#cropButton").click();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#animatedGifToggle")).toBeVisible();
+    await expect(page.locator("#animatedGifToggle")).not.toBeChecked();
+
+    await page.locator("#animatedGifToggle").check();
+    await expect(page.locator("#animatedGifPreview")).toBeVisible();
+    await expect(page.locator("#cropButton")).toBeEnabled();
 });
