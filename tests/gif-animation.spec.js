@@ -50,8 +50,8 @@ test("GIF animation defaults on, while the normal crop editor remains usable", a
     await expect(page.locator("#cropModal .cropper-crop-box")).toBeVisible();
     await expect(page.locator("#animatedGifPreview")).toBeVisible();
 
-    const firstFrame = await sampleCropperPixel(page);
-    await expect.poll(async () => sampleCropperPixel(page), { timeout: 4000, intervals: [150, 250, 400] }).not.toEqual(firstFrame);
+    const firstFrame = await samplePixel(page);
+    await expect.poll(async () => samplePixel(page), { timeout: 4000, intervals: [150, 250, 400] }).not.toEqual(firstFrame);
 
     await toggle.uncheck();
     const frozenSource = await page.locator("#cropModal .cropper-canvas img:not(#animatedGifPreview)").getAttribute("src");
