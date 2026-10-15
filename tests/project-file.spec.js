@@ -93,3 +93,47 @@ test("import restores a project as a separate grid and rejects invalid files saf
         return appState.currentGridId;
     })).toBe(importedId);
 });
+
+
+test("import rejects invalid dimensions and image payloads without changing the active grid", async ({ page }) => {
+    await page.goto("/");
+    const before = await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return {
+            id: appState.currentGridId,
+            rows: appState.rows,
+            columns: appState.columns
+        };
+    });
+
+    const invalidProjects = [
+        {
+            format: "grid-generator-project",
+            version: 1,
+            grid: { name: "Invalid Dimensions", rows: 11, columns: 2, ratio: "1:1", images: [] }
+        },
+        {
+            format: "grid-generator-project",
+            version: 1,
+            grid: { name: "Invalid Image", rows: 1, columns: 1, ratio: "1:1", images: ["https://example.com/image.png"] }
+        }
+    ];
+
+    for (const [index, project] of invalidProjects.entries()) {
+        page.once("dialog", dialog => dialog.accept());
+        await page.locator("#importProjectButton").click();
+        await page.locator("#projectFileInput").setInputFiles({
+            name: `invalid-${index}.gridproject`,
+            mimeType: "application/json",
+            buffer: Buffer.from(JSON.stringify(project))
+        });
+
+        await expect.poll(async () => page.evaluate(async () => {
+            const { appState } = await import("/js/state.js");
+            return appState.currentGridId;
+        })).toBe(before.id);
+    }
+
+    await expect(page.locator("#rows")).toHaveValue(String(before.rows));
+    await expect(page.locator("#columns")).toHaveValue(String(before.columns));
+});
