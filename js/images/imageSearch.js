@@ -3,6 +3,7 @@ import { appState } from "../state.js";
 import {
     openCropForURL
 } from "../cropper/cropper.js";
+import { importAnimatedGif } from "./animatedGif.js";
 
 
 // ========================================
@@ -250,6 +251,7 @@ async function performSearch({ keepResults = false } = {}) {
                     title: (page.title || "Untitled").replace(/^File:/i, "").replace(/_/g, " "),
                     thumbnail: imageInfo.thumburl || imageInfo.url,
                     url: imageInfo.url,
+                    mime: imageInfo.mime,
                     pageUrl: imageInfo.descriptionurl
                 };
             })
@@ -394,6 +396,14 @@ function selectImage(result) {
 
         closeImageSearch();
 
+        if (result.mime === "image/gif" || /\\.gif(?:[?#]|$)/i.test(result.url)) {
+            imageSearchStatus.textContent = "Importing animated GIF...";
+            importAnimatedGif(result.url, selectedDiv).catch(error => {
+                console.error("Unable to import animated GIF:", error);
+                alert(error.message || "Unable to import this GIF.");
+            });
+            return;
+        }
 
         openCropForURL(
             result.url,
