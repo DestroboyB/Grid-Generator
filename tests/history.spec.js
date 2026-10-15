@@ -1529,3 +1529,104 @@ test("MyAnimeList character search renders mocked results without relying on the
     expect(requests).toHaveLength(1);
     expect(new URL(requests[0]).searchParams.get("q")).toBe("Shima Rin");
 });
+
+
+
+test("MyAnimeList picture selection imports into the chosen tile and persists after reload", async ({ page }) => {
+    const imageDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=";
+
+    await page.route("https://jikan.lucashdo.com/v1/**", async route => {
+        const url = new URL(route.request().url());
+
+        if (url.pathname === "/v1/characters") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [{
+                        mal_id: 1,
+                        name: "Shima Rin",
+                        imageUrl: imageDataUrl,
+                        animeTitle: "Laid-Back Camp",
+                        role: "Main"
+                    }],
+                    meta: {
+                        pagination: {
+                            currentPage: 1,
+                            hasNextPage: false,
+                            lastVisiblePage: 1
+                        }
+                    }
+                })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/characters/1/pictures") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [{ imageUrl: imageDataUrl }] })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/characters/1") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: {
+                        mal_id: 1,
+                        name: "Shima Rin",
+                        imageUrl: imageDataUrl
+                    }
+                })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/characters/1/anime") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [] })
+            });
+            return;
+        }
+
+        await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ data: [] })
+        });
+    });
+
+    await waitForApp(page);
+    const tile = page.locator('#board .image[data-index="0"]');
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+    await page.locator("#malSearchInput").fill("Shima Rin");
+    await page.locator("#malSearchButton").click();
+
+    const result = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(result).toBeVisible();
+    await result.click();
+
+    const picture = page.locator("#malSearchResults .mal-gallery-picture").first();
+    await expect(picture).toBeVisible();
+    await picture.click();
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#cropButton").click();
+
+    await expect(tile.locator("img")).toHaveCount(1);
+    const importedSource = await tile.locator("img").getAttribute("src");
+    expect(importedSource).toBeTruthy();
+
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", importedSource);
+});
