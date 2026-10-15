@@ -231,7 +231,7 @@ export function openCropForFile(
             if (file.type === "image/gif" || /\\.gif$/i.test(file.name)) {
                 // Reuse the data URL already created for the editor when
                 // animation mode is enabled, avoiding a second FileReader pass.
-                showAnimatedGifOption(reader.result, element, false);
+                showAnimatedGifOption(reader.result, element, true);
             }
 
 
