@@ -201,11 +201,11 @@ test("rapid saves stay attached to their original grid when switching grids", as
     });
 });
 
-test("history is capped at 30 states and remains usable after reload", async ({ page }) => {
+test("history is capped at 10 states and remains usable after reload", async ({ page }) => {
     await waitForApp(page);
 
     // Each ratio change creates a distinct history state. Cycle through
-    // valid options to create more edits than the 30-state retention limit.
+    // valid options to create more edits than the 10-state retention limit.
     const ratios = ["4:3", "3:2", "16:9", "3:4", "2:3", "9:16", "1:1"];
     for (let i = 0; i < 36; i++) {
         await page.locator("#imageRatio").selectOption(ratios[i % ratios.length]);
@@ -228,7 +228,7 @@ test("history is capped at 30 states and remains usable after reload", async ({ 
         return records[0];
     });
 
-    expect(historyBeforeReload.undoStack).toHaveLength(30);
+    expect(historyBeforeReload.undoStack).toHaveLength(10);
     expect(historyBeforeReload.redoStack).toHaveLength(0);
 
     await page.reload();
