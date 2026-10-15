@@ -413,7 +413,6 @@ test("grid names are trimmed and duplicate names are rejected", async ({ page })
     const secondRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" });
     await secondRow.locator('button[title="Rename this grid"]').click();
     await page.locator(".library-grid-rename-input").fill("Untitled Grid");
-    await page.locator(".library-grid-actions button[title="Save grid name"]');
 
     await page.locator(".library-grid-rename-input").press("Enter");
     await expect.poll(() => page.locator(".library-grid-rename-input").inputValue()).toBe("Untitled Grid");
