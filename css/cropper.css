@@ -8,12 +8,14 @@
     inset: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: rgba(15, 23, 42, 0.78);
     justify-content: center;
     align-items: center;
     padding: 20px;
     z-index: 3000;
     box-sizing: border-box;
+    overflow-y: auto;
 }
 
 /* ========================================
