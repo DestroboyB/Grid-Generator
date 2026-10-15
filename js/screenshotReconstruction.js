@@ -1,3 +1,4 @@
+import { detectGridDimensions } from "./gridDetection.js";
 import { appState } from "./state.js";
 import { generateBoard } from "./board.js";
 import { initializeHistory } from "./history.js";
@@ -12,6 +13,7 @@ const image = document.getElementById("screenshotReconstructionImage");
 const preview = document.getElementById("screenshotReconstructionPreview");
 const rowsInput = document.getElementById("screenshotRows");
 const columnsInput = document.getElementById("screenshotColumns");
+const autoDetectButton = document.getElementById("screenshotAutoDetectButton");
 const status = document.getElementById("screenshotReconstructionStatus");
 const createButton = document.getElementById("screenshotReconstructionCreateButton");
 
@@ -120,6 +122,39 @@ function loadScreenshot(file) {
         setStatus("This image could not be opened. Please choose a PNG, JPEG, or WebP screenshot.", true);
     };
     image.src = imageObjectUrl;
+}
+
+
+function autoDetectGridDimensions() {
+    if (!cropper) return;
+
+    try {
+        const crop = cropper.getData(true);
+        const scale = Math.min(1, 1200 / Math.max(crop.width, crop.height));
+        const canvas = cropper.getCroppedCanvas({
+            width: Math.max(2, Math.round(crop.width * scale)),
+            height: Math.max(2, Math.round(crop.height * scale)),
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: "medium"
+        });
+        const context = canvas?.getContext("2d", { willReadFrequently: true });
+        if (!context || !canvas.width || !canvas.height) {
+            throw new Error("The selected area could not be analyzed.");
+        }
+
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        const dimensions = detectGridDimensions(pixels.data, canvas.width, canvas.height);
+        rowsInput.value = String(dimensions.rows);
+        columnsInput.value = String(dimensions.columns);
+        setStatus(
+            dimensions.rows === 1 && dimensions.columns === 1
+                ? "No clear grid separators were detected. Choose the row and column counts manually."
+                : `Estimated ${dimensions.rows} rows × ${dimensions.columns} columns. Check the values before creating the grid; complex images may confuse detection.`
+        );
+    } catch (error) {
+        console.error("Could not detect screenshot grid dimensions:", error);
+        setStatus("Automatic detection could not analyze this crop. Choose the row and column counts manually.", true);
+    }
 }
 
 async function createGridFromScreenshot() {
@@ -238,6 +273,7 @@ async function createGridFromScreenshot() {
     } finally {
         isCreating = false;
         createButton.disabled = false;
+        autoDetectButton.disabled = false;
         cancelButton.disabled = false;
         closeButton.disabled = false;
     }
@@ -257,6 +293,7 @@ closeButton?.addEventListener("click", closeModal);
 cancelButton?.addEventListener("click", closeModal);
 fileInput?.addEventListener("change", () => loadScreenshot(fileInput.files?.[0]));
 createButton?.addEventListener("click", createGridFromScreenshot);
+autoDetectButton?.addEventListener("click", autoDetectGridDimensions);
 
 modal?.addEventListener("click", event => {
     if (event.target === modal) closeModal();
