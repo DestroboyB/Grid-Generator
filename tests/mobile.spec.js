@@ -127,7 +127,7 @@ test("mobile library scrolls internally with many saved grids", async ({ page })
 
     await page.locator("#libraryButton").click();
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
-    await expect(page.locator(".library-grid-item")).toHaveCount(30);
+    await expect(page.locator("#libraryContent .library-grid")).toHaveCount(30);
 
     const scrollState = await page.locator("#libraryContent").evaluate(element => {
         const before = element.scrollTop;
