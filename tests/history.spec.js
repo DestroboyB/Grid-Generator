@@ -1484,3 +1484,48 @@ test("MyAnimeList search modes switch tabs and placeholders without a request", 
 
     expect(requests).toEqual([]);
 });
+
+
+test("MyAnimeList character search renders mocked results without relying on the live API", async ({ page }) => {
+    const requests = [];
+    await page.route(/https:\/\/jikan\.lucashdo\.com\/v1\/characters\?/, async route => {
+        requests.push(route.request().url());
+        await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+                data: [{
+                    mal_id: 1,
+                    name: "Shima Rin",
+                    imageUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=",
+                    animeTitle: "Laid-Back Camp",
+                    role: "Main"
+                }],
+                meta: {
+                    pagination: {
+                        currentPage: 1,
+                        hasNextPage: false,
+                        lastVisiblePage: 1
+                    }
+                }
+            })
+        });
+    });
+
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+    await expect(page.locator("#malSearchModal")).toBeVisible();
+
+    await page.locator("#malSearchInput").fill("Shima Rin");
+    await page.locator("#malSearchButton").click();
+
+    const result = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(result).toBeVisible();
+    await expect(result).toContainText("Shima Rin");
+    await expect(result).toContainText("Laid-Back Camp");
+    await expect(page.locator("#malSearchStatus")).toContainText("Shima Rin");
+    expect(requests).toHaveLength(1);
+    expect(new URL(requests[0]).searchParams.get("q")).toBe("Shima Rin");
+});
