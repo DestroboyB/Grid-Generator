@@ -24,6 +24,13 @@ function attachPreviewToCropper() {
     }
 }
 
+function setPreviewSource(source) {
+    if (!preview || !source) return;
+    const crossOrigin = /^data:/i.test(source) ? null : "anonymous";
+    if (preview.crossOrigin !== crossOrigin) preview.crossOrigin = crossOrigin;
+    if (preview.src !== source) preview.src = source;
+}
+
 function setCropperImageSource(source) {
     const cropperImage = getCropperImage();
     if (!cropperImage || !source) return false;
@@ -69,7 +76,7 @@ function applyPreviewMode() {
     // present and its controls remain interactive in either mode.
     if (toggle.checked && animatedGifSource) {
         attachPreviewToCropper();
-        if (preview && preview.src !== animatedGifSource) preview.src = animatedGifSource;
+        setPreviewSource(animatedGifSource);
         if (cropperImage) {
             cropperImage.style.opacity = "0";
             cropperImage.style.pointerEvents = "none";
@@ -163,7 +170,7 @@ export function showAnimatedGifOption(source, target, enabled = true) {
     controls.toggle.closest("label").hidden = false;
     controls.toggle.checked = Boolean(enabled);
     lastFrozenFrame = null;
-    controls.preview.src = source || "";
+    if (source) setPreviewSource(source);
     setCropperImageSource(source);
     applyPreviewMode();
 }
