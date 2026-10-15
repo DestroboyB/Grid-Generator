@@ -259,3 +259,39 @@ test("history is capped at 30 states and remains usable after reload", async ({ 
     await page.locator("#imageRatio").selectOption(nextRatio);
     await expect(page.locator("#redoButton")).toBeDisabled();
 });
+
+test("a failed IndexedDB save is reported and a later save succeeds", async ({ page }) => {
+    await page.addInitScript(() => {
+        const originalPut = IDBObjectStore.prototype.put;
+        let shouldFail = true;
+
+        IDBObjectStore.prototype.put = function (...args) {
+            const request = originalPut.apply(this, args);
+            if (shouldFail && this.transaction.mode === "readwrite") {
+                shouldFail = false;
+                queueMicrotask(() => {
+                    try {
+                        this.transaction.abort();
+                    } catch {
+                        // The transaction may already have completed.
+                    }
+                });
+            }
+            return request;
+        };
+    });
+
+    await waitForApp(page);
+
+    await page.locator("#imageRatio").selectOption("4:3");
+    await expect(page.locator("#gridSaveStatus")).toBeVisible();
+    await expect(page.locator("#gridSaveStatus")).toContainText("Couldn't save");
+
+    // The queue must continue after the first failed transaction.
+    await page.locator("#imageRatio").selectOption("3:2");
+    await expect(page.locator("#gridSaveStatus")).toBeHidden();
+
+    await page.reload();
+    await expect(page.locator("#imageRatio")).toHaveValue("3:2");
+    await expect(page.locator("#gridSaveStatus")).toBeHidden();
+});
