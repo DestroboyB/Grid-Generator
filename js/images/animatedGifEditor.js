@@ -21,6 +21,14 @@ function attachPreviewToCropper() {
 
     if (preview.parentElement !== canvas) {
         canvas.appendChild(preview);
+
+        // Chromium may keep an animated image on its first decoded frame if
+        // its source was assigned while the image was detached. Start the GIF
+        // timeline after it has been inserted into the live Cropper canvas.
+        if (animatedGifSource) {
+            preview.removeAttribute("src");
+            preview.src = animatedGifSource;
+        }
     }
 }
 
