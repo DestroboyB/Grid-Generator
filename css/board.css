@@ -16,11 +16,11 @@
 
     padding: 36px;
 
-    background: #f9fafb;
+    background: var(--color-surface-subtle);
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
-    border-radius: 14px;
+    border-radius: var(--radius-workspace);
 
     overflow: auto;
 
@@ -50,7 +50,7 @@
     justify-content: center;
     align-content: center;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     box-shadow:
         0 8px 24px
@@ -78,12 +78,12 @@
     box-sizing: border-box;
     min-width: 0;
     min-height: 0;
-    color: #9ca3af;
+    color: var(--color-text-subtle);
     font-size: 14px;
     font-weight: 600;
 
     --cell-border-size: 0px;
-    --cell-border-color: #9ca3af;
+    --cell-border-color: var(--color-text-subtle);
 
     transition:
         box-shadow 0.15s ease,
@@ -110,12 +110,12 @@
 
 .image.drag-over {
     outline: none;
-    background: #eff6ff;
+    background: var(--color-primary-soft);
     z-index: 3;
 }
 
 .image.drag-over::after {
-    border: 3px dashed #2563eb;
+    border: 3px dashed var(--color-primary);
 }
 
 
@@ -124,7 +124,7 @@
 ======================================== */
 
 .image:hover:not(.has-image) {
-    background-color: #eff6ff;
+    background-color: var(--color-primary-soft);
 }
 
 
@@ -157,13 +157,13 @@
      */
 
     outline:
-        3px dashed #2563eb;
+        3px dashed var(--color-primary);
 
     outline-offset:
         -3px;
 
     background:
-        #eff6ff;
+        var(--color-primary-soft);
 }
 
 
@@ -182,7 +182,7 @@
 
 .image.swap-target {
     outline:
-        4px dashed #2563eb;
+        4px dashed var(--color-primary);
 
     outline-offset:
         -4px;
