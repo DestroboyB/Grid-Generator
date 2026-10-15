@@ -238,9 +238,9 @@ export function createGridElement(grid, categories, searchResult = false, depend
                         appState.savedImages = [];
                         appState.undoStack = [];
                         appState.redoStack = [];
-                        initializeHistory();
                     }
 
+                    initializeHistory();
                     generateBoard();
                     updateCurrentGridName();
                 }
