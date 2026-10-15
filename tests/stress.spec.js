@@ -737,3 +737,113 @@ test("storage reliability: failed category rename preserves the original name", 
     expect(result.categoryExists).toBe(true);
     expect(result.storedName).toBe("Rename rollback original");
 });
+
+
+test("storage reliability: failed grid rename preserves the original name", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { createGrid, getGrid, renameGrid } = await import(
+            `/js/storage/grids.js?grid-rename-failure=${Date.now()}`
+        );
+
+        const grid = await createGrid({ name: "Grid rename original" });
+        const originalPut = IDBObjectStore.prototype.put;
+
+        Object.defineProperty(IDBObjectStore.prototype, "put", {
+            configurable: true,
+            writable: true,
+            value: function (...args) {
+                throw new DOMException(
+                    "Simulated storage write failure",
+                    "UnknownError"
+                );
+            }
+        });
+
+        let renameError = null;
+
+        try {
+            await renameGrid(grid.id, "Grid rename replacement");
+        } catch (error) {
+            renameError = error.name;
+        } finally {
+            Object.defineProperty(IDBObjectStore.prototype, "put", {
+                configurable: true,
+                writable: true,
+                value: originalPut
+            });
+        }
+
+        const storedGrid = await getGrid(grid.id);
+
+        return {
+            renameError,
+            gridExists: Boolean(storedGrid),
+            storedName: storedGrid?.name ?? null
+        };
+    });
+
+    expect(result.renameError).toBeTruthy();
+    expect(result.gridExists).toBe(true);
+    expect(result.storedName).toBe("Grid rename original");
+});
+
+test("storage reliability: failed grid category move preserves the original assignment", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { createCategory } = await import(
+            `/js/storage/categories.js?grid-move-category-setup=${Date.now()}`
+        );
+        const { createGrid, getGrid, moveGridToCategory } = await import(
+            `/js/storage/grids.js?grid-move-category-failure=${Date.now()}`
+        );
+
+        const originalCategory = await createCategory("Original grid category");
+        const destinationCategory = await createCategory("Destination grid category");
+        const grid = await createGrid({
+            name: "Category move rollback grid",
+            categoryId: originalCategory.id
+        });
+        const originalPut = IDBObjectStore.prototype.put;
+
+        Object.defineProperty(IDBObjectStore.prototype, "put", {
+            configurable: true,
+            writable: true,
+            value: function (...args) {
+                throw new DOMException(
+                    "Simulated storage write failure",
+                    "UnknownError"
+                );
+            }
+        });
+
+        let moveError = null;
+
+        try {
+            await moveGridToCategory(grid.id, destinationCategory.id);
+        } catch (error) {
+            moveError = error.name;
+        } finally {
+            Object.defineProperty(IDBObjectStore.prototype, "put", {
+                configurable: true,
+                writable: true,
+                value: originalPut
+            });
+        }
+
+        const storedGrid = await getGrid(grid.id);
+
+        return {
+            moveError,
+            gridExists: Boolean(storedGrid),
+            storedCategoryId: storedGrid?.categoryId ?? null,
+            originalCategoryId: originalCategory.id
+        };
+    });
+
+    expect(result.moveError).toBeTruthy();
+    expect(result.gridExists).toBe(true);
+    expect(result.storedCategoryId).toBe(result.originalCategoryId);
+});
