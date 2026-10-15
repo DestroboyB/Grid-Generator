@@ -828,7 +828,21 @@ cropButton.addEventListener(
             cropButton.textContent = "Saving GIF…";
 
             try {
-                await applyAnimatedGifMode();
+                await applyAnimatedGifMode({
+                    crop: appState.cropper?.getData() || null,
+                    rotation: cropperState.rotation || 0,
+                    flipX: cropperState.flipX || false,
+                    flipY: cropperState.flipY || false,
+                    sourceWidth: cropImage.naturalWidth,
+                    sourceHeight: cropImage.naturalHeight,
+                    brightness: cropperState.brightness ?? 100,
+                    contrast: cropperState.contrast ?? 100,
+                    saturation: cropperState.saturation ?? 100,
+                    blur: cropperState.blur ?? 0,
+                    grayscale: cropperState.grayscale ?? 0,
+                    sepia: cropperState.sepia ?? 0,
+                    hueRotate: cropperState.hueRotate ?? 0
+                });
                 closeCropper(cropModal, cropImage);
             } catch (error) {
                 console.error("Unable to save animated GIF:", error);
