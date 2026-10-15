@@ -1340,3 +1340,52 @@ test("edited images stay with their own grids when switching back and forth", as
     expect(stateB).toMatchObject({ rotation: 0, flipX: true, flipY: false });
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", stateB.source);
 });
+
+
+test("MyAnimeList search tabs stay within the viewport at responsive widths", async ({ page }) => {
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+    await expect(page.locator("#malSearchModal")).toBeVisible();
+
+    for (const width of [1280, 850, 600, 390, 320]) {
+        await page.setViewportSize({ width, height: 900 });
+
+        const layout = await page.evaluate(() => {
+            const modal = document.getElementById("malSearchModal");
+            const container = modal.querySelector(".mal-search-container");
+            const tabs = modal.querySelector(".mal-search-tabs");
+            const modalRect = modal.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const tabsRect = tabs.getBoundingClientRect();
+
+            return {
+                viewportWidth: window.innerWidth,
+                documentWidth: document.documentElement.scrollWidth,
+                modalWidth: modalRect.width,
+                containerLeft: containerRect.left,
+                containerRight: containerRect.right,
+                tabsLeft: tabsRect.left,
+                tabsRight: tabsRect.right,
+                tabsClientWidth: tabs.clientWidth,
+                tabsScrollWidth: tabs.scrollWidth,
+                buttons: ["malCharacterNameTab", "malCharacterTab", "malByAnimeTab", "malAnimeTab"].map(id => {
+                    const rect = document.getElementById(id).getBoundingClientRect();
+                    return { id, left: rect.left, right: rect.right };
+                })
+            };
+        });
+
+        expect(layout.documentWidth, `document horizontal overflow at ${width}px`).toBeLessThanOrEqual(width);
+        expect(layout.modalWidth).toBeLessThanOrEqual(width);
+        expect(layout.containerLeft).toBeGreaterThanOrEqual(-1);
+        expect(layout.containerRight).toBeLessThanOrEqual(width + 1);
+        expect(layout.tabsScrollWidth, `search tabs overflow at ${width}px`).toBeLessThanOrEqual(layout.tabsClientWidth + 2);
+
+        for (const button of layout.buttons) {
+            expect(button.left, `${button.id} starts outside tabs at ${width}px`).toBeGreaterThanOrEqual(layout.tabsLeft - 1);
+            expect(button.right, `${button.id} ends outside tabs at ${width}px`).toBeLessThanOrEqual(layout.tabsRight + 1);
+        }
+    }
+});
