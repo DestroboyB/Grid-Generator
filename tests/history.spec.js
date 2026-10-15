@@ -495,3 +495,109 @@ test("switching grids immediately after Undo does not fail saves or lose either 
     await page.reload();
     await expect(page.locator("#imageRatio")).toHaveValue("16:9");
 });
+
+test("images and appearance settings remain isolated when switching between grids", async ({ page }) => {
+    await waitForApp(page);
+    await addImageToFirstTile(page);
+
+    const setRange = async (selector, value) => page.locator(selector).evaluate((element, nextValue) => {
+        element.value = String(nextValue);
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+
+    await page.locator("#imageRatio").selectOption("4:3");
+    await setRange("#spacing", 11);
+    await page.locator("#backgroundColor").fill("#ff0000");
+    await page.locator("#borderEnabled").uncheck();
+    await page.locator("#borderColor").fill("#0000ff");
+    await setRange("#borderSize", 4);
+
+    await expect.poll(async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return records.find(grid => grid.name === "Untitled Grid");
+    })).toMatchObject({
+        ratio: "4:3",
+        spacing: 11,
+        backgroundColor: "#ff0000",
+        borderEnabled: false,
+        borderColor: "#0000ff",
+        borderSize: 4
+    });
+
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await page.locator("#newGridButton").click();
+    await page.locator("#newGridNameInput").fill("Appearance Target");
+    await page.locator("#createNewGridButton").click();
+    await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
+
+    await page.locator("#imageRatio").selectOption("16:9");
+    await setRange("#spacing", 3);
+    await page.locator("#backgroundColor").fill("#00ff00");
+    await page.locator("#borderEnabled").check();
+    await page.locator("#borderColor").fill("#ff00ff");
+    await setRange("#borderSize", 6);
+
+    await expect.poll(async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return records.find(grid => grid.name === "Appearance Target");
+    })).toMatchObject({
+        ratio: "16:9",
+        spacing: 3,
+        backgroundColor: "#00ff00",
+        borderEnabled: true,
+        borderColor: "#ff00ff",
+        borderSize: 6
+    });
+
+    const originalRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" });
+    await originalRow.locator(".library-grid-name").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("4:3");
+    await expect(page.locator("#spacing")).toHaveValue("11");
+    await expect(page.locator("#backgroundColor")).toHaveValue("#ff0000");
+    await expect(page.locator("#borderEnabled")).not.toBeChecked();
+    await expect(page.locator("#borderColor")).toHaveValue("#0000ff");
+    await expect(page.locator("#borderSize")).toHaveValue("4");
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+
+    const targetRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Appearance Target" });
+    await targetRow.locator(".library-grid-name").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("16:9");
+    await expect(page.locator("#spacing")).toHaveValue("3");
+    await expect(page.locator("#backgroundColor")).toHaveValue("#00ff00");
+    await expect(page.locator("#borderEnabled")).toBeChecked();
+    await expect(page.locator("#borderColor")).toHaveValue("#ff00ff");
+    await expect(page.locator("#borderSize")).toHaveValue("6");
+    await expect(page.locator("#board .image img")).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.locator("#imageRatio")).toHaveValue("16:9");
+    await expect(page.locator("#spacing")).toHaveValue("3");
+    await expect(page.locator("#backgroundColor")).toHaveValue("#00ff00");
+    await expect(page.locator("#borderEnabled")).toBeChecked();
+    await expect(page.locator("#borderColor")).toHaveValue("#ff00ff");
+    await expect(page.locator("#borderSize")).toHaveValue("6");
+});
