@@ -396,6 +396,21 @@ test("switching between grids restores each grid's layout and Undo/Redo history"
 
     await page.locator("#imageRatio").selectOption("16:9");
     await expect(page.locator("#undoButton")).toBeEnabled();
+    await expect.poll(async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return records.some(grid => grid.name === "Second Grid" && grid.ratio === "16:9");
+    })).toBe(true);
 
     // Switch back to the original grid and check its own history.
     await page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" }).click();
@@ -430,6 +445,7 @@ test("grid names are trimmed and duplicate names are rejected", async ({ page })
     await page.locator(".library-grid-rename-input").fill("Untitled Grid");
 
     await page.locator(".library-grid-rename-input").press("Enter");
-    await expect.poll(() => page.locator(".library-grid-rename-input").inputValue()).toBe("Untitled Grid");
+    await expect(page.locator(".library-grid-rename-input")).toHaveValue("Untitled Grid");
+    await page.locator(".library-grid-rename-input").press("Escape");
     await expect(page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" })).toHaveCount(1);
 });
