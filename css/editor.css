@@ -222,15 +222,17 @@
 
 .filter-buttons {
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    gap: clamp(6px, 1vw, 14px);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-content: center;
+    align-items: stretch;
+    gap: 8px;
 }
 
 .filter-buttons button {
-    width: clamp(75px, 9vw, 130px);
-    padding: clamp(6px, 0.6vw, 10px) clamp(6px, 0.8vw, 12px);
+    width: 100%;
+    min-width: 0;
+    padding: clamp(6px, 0.6vw, 10px) clamp(4px, 0.6vw, 10px);
     border: 1px solid #d1d5db;
     border-radius: 7px;
     background: #ffffff;
@@ -344,13 +346,20 @@
     }
 
     .filter-buttons {
-        gap: 5px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
     }
 
     .filter-buttons button {
-        width: clamp(70px, 16vw, 110px);
-        padding: 6px 5px;
+        width: 100%;
+        padding: 6px 4px;
         font-size: clamp(10px, 2vw, 13px);
+    }
+
+    .editor-panel[data-panel="filters"] {
+        height: 116px;
+        min-height: 116px;
+        max-height: 116px;
     }
 }
 
@@ -415,11 +424,11 @@
     }
 
     .filter-buttons {
-        gap: 3px;
+        gap: 5px;
     }
 
     .filter-buttons button {
-        width: clamp(58px, 17vw, 90px);
+        width: 100%;
         padding: 6px 3px;
         font-size: clamp(9px, 2.4vw, 12px);
     }
@@ -444,6 +453,23 @@
         height: 72px;
         min-height: 72px;
         max-height: 72px;
+    }
+
+    .filter-buttons {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+    }
+
+    .filter-buttons button {
+        padding: 4px 2px;
+        font-size: 10px;
+    }
+
+    .editor-panel[data-panel="filters"] {
+        height: 72px;
+        min-height: 72px;
+        max-height: 72px;
+        padding: 6px 10px;
     }
 }
 
