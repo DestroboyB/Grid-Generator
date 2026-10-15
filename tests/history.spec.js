@@ -235,9 +235,9 @@ test("history is capped at 10 states and remains usable after reload", async ({ 
     await expect(page.locator("#undoButton")).toBeEnabled();
     await expect(page.locator("#redoButton")).toBeDisabled();
 
-    // Undo until the oldest retained state. It should stop at the cap,
-    // not continue to the original state from before the retained window.
-    for (let i = 0; i < 29; i++) {
+    // Ten retained states contain nine undo steps after the current state.
+    // Stop at the history boundary instead of clicking a disabled button.
+    for (let i = 0; i < 9; i++) {
         await page.locator("#undoButton").click();
     }
     await expect(page.locator("#undoButton")).toBeDisabled();
