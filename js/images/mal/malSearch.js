@@ -713,6 +713,9 @@ async function loadApiPage(
     allResults.push(
         ...apiResults.map((item, index) => ({
             ...item,
+            // Keep the API's mal_id field while exposing the camelCase
+            // property used by gallery/detail navigation throughout the UI.
+            malId: item.malId ?? item.mal_id,
             _sortIndex: startIndex + index
         }))
     );
