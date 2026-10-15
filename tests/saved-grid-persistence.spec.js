@@ -62,18 +62,25 @@ test("saved grid settings and image data survive switching away and reopening", 
     await page.locator("#imageRatio").selectOption("4:3");
 
     await page.locator("#boardSettingsButton").click();
-    await page.locator("#spacing").fill("12");
-    await page.locator("#spacing").dispatchEvent("change");
+    await page.locator("#spacing").evaluate(el => {
+        el.value = "12";
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
     await page.locator("#backgroundColor").fill("#123456");
     await page.locator("#backgroundColor").dispatchEvent("input");
     await page.locator("#backgroundColor").dispatchEvent("change");
-    await page.locator("#borderEnabled").uncheck();
+    // The checkbox input is visually hidden inside a custom toggle; click its visible label.
+    await page.locator("label.toggle-switch").click();
+    await expect(page.locator("#borderEnabled")).not.toBeChecked();
     await page.locator("#borderColor").fill("#654321");
     await page.locator("#borderColor").dispatchEvent("input");
     await page.locator("#borderColor").dispatchEvent("change");
-    await page.locator("#borderSize").fill("5");
-    await page.locator("#borderSize").dispatchEvent("input");
-    await page.locator("#borderSize").dispatchEvent("change");
+    await page.locator("#borderSize").evaluate(el => {
+        el.value = "5";
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
 
     await page.locator('#board .image[data-index="0"]').click();
     await page.locator("#openImageSourceMenuButton").click();
