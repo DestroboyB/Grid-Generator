@@ -54,3 +54,44 @@ test("dragging an image to another tile swaps the images and supports undo/redo"
     await expect(firstTile.locator("img")).toHaveAttribute("src", secondSourceBefore);
     await expect(secondTile.locator("img")).toHaveAttribute("src", firstSourceBefore);
 });
+
+test("dropping an external image file opens the editor and imports it into the target tile", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#board .image")).toHaveCount(9);
+
+    const tile = page.locator('#board .image[data-index="2"]');
+    const fileDispatched = await page.evaluate(async () => {
+        const target = document.querySelector('#board .image[data-index="2"]');
+        const response = await fetch("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=");
+        const blob = await response.blob();
+        const file = new File([blob], "external-drop.png", { type: "image/png" });
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+
+        target.dispatchEvent(new DragEvent("dragover", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: transfer
+        }));
+        const dropEvent = new DragEvent("drop", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: transfer
+        });
+        target.dispatchEvent(dropEvent);
+        return dropEvent.defaultPrevented;
+    });
+
+    expect(fileDispatched).toBe(true);
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#cropButton").click();
+
+    await expect(tile.locator("img")).toHaveCount(1);
+    await expect.poll(() => tile.locator("img").getAttribute("src")).not.toBeNull();
+    await expect(page.locator("#undoButton")).toBeEnabled();
+
+    const importedSource = await tile.locator("img").getAttribute("src");
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="2"] img')).toHaveAttribute("src", importedSource);
+});
