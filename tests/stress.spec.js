@@ -498,3 +498,69 @@ test("storage reliability: save warnings explain quota and unavailable-storage e
     expect(messages.unavailable).toContain("Browser storage is unavailable");
     expect(messages.unknown).toContain("export important grids");
 });
+
+test("storage reliability: quota failure warns and preserves the last saved grid version", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const { saveCurrentGrid, getGrid } = await import(
+            `/js/storage/grids.js?existing-grid-quota-test=${Date.now()}`
+        );
+        const storePrototype = IDBObjectStore.prototype;
+        const originalPut = storePrototype.put;
+        const originalSpacing = appState.spacing;
+
+        try {
+            // Ensure the test begins with a real, persisted version of this grid.
+            const initialSaveSucceeded = await saveCurrentGrid();
+            const gridId = appState.currentGridId;
+            const beforeFailure = await getGrid(gridId);
+            if (!initialSaveSucceeded || !beforeFailure) {
+                throw new Error("Could not establish the initial saved grid.");
+            }
+
+            appState.spacing = originalSpacing === 29 ? 28 : 29;
+            const unsavedSpacing = appState.spacing;
+
+            Object.defineProperty(storePrototype, "put", {
+                configurable: true,
+                writable: true,
+                value: function (...args) {
+                    throw new DOMException(
+                        "Simulated full browser storage",
+                        "QuotaExceededError"
+                    );
+                }
+            });
+
+            const saveSucceeded = await saveCurrentGrid();
+            const warning = document.querySelector("#gridSaveStatus")?.textContent ?? "";
+            const afterFailure = await getGrid(gridId);
+
+            return {
+                saveSucceeded,
+                warning,
+                originalSpacing: beforeFailure.spacing,
+                unsavedSpacing,
+                storedSpacing: afterFailure?.spacing ?? null,
+                gridIdExists: afterFailure?.id === gridId
+            };
+        } finally {
+            Object.defineProperty(storePrototype, "put", {
+                configurable: true,
+                writable: true,
+                value: originalPut
+            });
+            appState.spacing = originalSpacing;
+        }
+    });
+
+    expect(result.saveSucceeded).toBe(false);
+    expect(result.warning).toContain("browser storage is full");
+    expect(result.warning).toContain("couldn't be saved");
+    expect(result.gridIdExists).toBe(true);
+    expect(result.storedSpacing).toBe(result.originalSpacing);
+    expect(result.storedSpacing).not.toBe(result.unsavedSpacing);
+});
+
