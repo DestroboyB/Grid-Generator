@@ -8,7 +8,7 @@ Draft PR: https://github.com/DestroboyB/Grid-Generator/pull/2
 Do not merge this PR without the user's explicit approval.
 
 ## Collaboration rules
-Keep responses concise and action-oriented; the user explicitly wants to avoid long visible analysis and repeated diagnostic writeups. Use GitHub state and CI as the source of truth. Before any code changes, inspect the latest relevant CI run and logs. Do not change application code based on an unconfirmed guess. When ending a chat, update this file and give the user a one-line prompt for the next chat.
+Keep responses concise and action-oriented; the user explicitly wants to avoid long visible analysis and repeated diagnostic writeups. Use GitHub state and CI as the source of truth. Before any code changes, inspect the latest relevant CI run and logs. Do not change application code based on an unconfirmed guess. Update this file when the user asks or when a handoff is explicitly needed; do not repeatedly offer a next-chat prompt unless requested.
 
 ## Current task
 Finish experimental animated GIF support without regressing existing behavior:
@@ -62,5 +62,5 @@ Both data URL and Blob URL stay on the red frame during sampling. This supports 
 - `playwright.config.js`
 - `package.json`
 
-## Starting prompt for the next chat
-“Read `CHATGPT_HANDOFF.md` in https://github.com/DestroboyB/Grid-Generator on branch `test/gif-animation-support`. Check the latest CI run and logs first; browser-mode experiment `channel: "chromium"` failed with the same 3 GIF frame-advance/export tests (run #136, 45 passed). Investigate Playwright version reproducibility and a minimal browser-only GIF playback reproduction. Keep responses concise; don't change app code or merge the PR without evidence and my approval.”
+## Starting prompt for a future handoff (only if requested)
+“Read `CHATGPT_HANDOFF.md` in https://github.com/DestroboyB/Grid-Generator on branch `test/gif-animation-support`. Inspect the latest CI run/logs first. Run #141 (45 passed, 4 failed) shows both the repository's valid two-frame GIF and a Pillow-generated two-frame GIF remain on the red frame in a blank-page Chromium diagnostic (Playwright 1.64.1 / Chromium 156.0.8078.4). The diagnostic samples via canvas only, so next compare visible screenshot pixels with canvas sampling and verify animation-frame callbacks before changing app code. Keep responses concise; don't change app code or merge the PR without evidence and my approval.”
