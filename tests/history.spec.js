@@ -107,3 +107,96 @@ test("board and undo/redo state persist after reload", async ({ page }) => {
     await page.locator("#redoButton").click();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
 });
+
+test("rapid saves stay attached to their original grid when switching grids", async ({ page }) => {
+    await waitForApp(page);
+
+    const originalGridId = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        const transaction = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const getAll = transaction.objectStore("grids").getAll();
+            getAll.onsuccess = () => resolve(getAll.result);
+            getAll.onerror = () => reject(getAll.error);
+        });
+
+        db.close();
+        return records[0]?.id;
+    });
+
+    expect(originalGridId).toBeTruthy();
+
+    // Trigger several saves close together, then switch to a different grid.
+    await page.locator("#rows").selectOption("2");
+    await page.locator("#generateBoard").click();
+    await page.locator("#columns").selectOption("4");
+    await page.locator("#generateBoard").click();
+    await page.locator("#imageRatio").selectOption("4:3");
+
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await page.locator("#newGridButton").click();
+    await page.locator("#newGridNameInput").fill("Rapid Switch Target");
+    await page.locator("#createNewGridButton").click();
+    await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
+    await expect(page.locator("#board .image")).toHaveCount(9);
+
+    await expect.poll(async () => page.evaluate(async id => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        const transaction = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const getAll = transaction.objectStore("grids").getAll();
+            getAll.onsuccess = () => resolve(getAll.result);
+            getAll.onerror = () => reject(getAll.error);
+        });
+
+        db.close();
+        return records.find(grid => grid.id === id) ?? null;
+    }, originalGridId)).toMatchObject({
+        rows: 2,
+        columns: 4,
+        ratio: "4:3"
+    });
+
+    const grids = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        const transaction = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const getAll = transaction.objectStore("grids").getAll();
+            getAll.onsuccess = () => resolve(getAll.result);
+            getAll.onerror = () => reject(getAll.error);
+        });
+
+        db.close();
+        return records;
+    });
+
+    const originalGrid = grids.find(grid => grid.id === originalGridId);
+    const newGrid = grids.find(grid => grid.name === "Rapid Switch Target");
+
+    expect(originalGrid).toMatchObject({
+        rows: 2,
+        columns: 4,
+        ratio: "4:3"
+    });
+    expect(newGrid).toMatchObject({
+        rows: 3,
+        columns: 3,
+        ratio: "1:1"
+    });
+});
