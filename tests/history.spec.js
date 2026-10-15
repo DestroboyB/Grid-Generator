@@ -1204,4 +1204,25 @@ test("Restore Original clears rotation and filter adjustments before saving", as
         sepia: 0,
         hueRotate: 0
     });
+
+    const restoredPixels = await page.evaluate(async source => {
+        const image = new Image();
+        image.src = source;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(image, 0, 0);
+        const y = Math.floor(canvas.height / 2);
+        return {
+            left: Array.from(context.getImageData(5, y, 1, 1).data),
+            right: Array.from(context.getImageData(canvas.width - 6, y, 1, 1).data)
+        };
+    }, savedImage.source);
+
+    expect(restoredPixels.left[0]).toBeGreaterThan(200);
+    expect(restoredPixels.left[2]).toBeLessThan(40);
+    expect(restoredPixels.right[2]).toBeGreaterThan(200);
+    expect(restoredPixels.right[0]).toBeLessThan(40);
 });
