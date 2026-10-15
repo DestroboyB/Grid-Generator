@@ -29,8 +29,8 @@ async function uploadGifToFirstTile(page) {
     await expect(page.locator("#animatedGifToggle")).toBeVisible();
 }
 
-async function sampleCropperPixel(page) {
-    return page.locator("#animatedGifPreview").evaluate(img => {
+async function samplePixel(page, selector = "#animatedGifPreview") {
+    return page.locator(selector).evaluate(img => {
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
@@ -56,9 +56,10 @@ test("GIF animation defaults on, while the normal crop editor remains usable", a
     await toggle.uncheck();
     const frozenSource = await page.locator("#cropModal .cropper-canvas img:not(#animatedGifPreview)").getAttribute("src");
     expect(frozenSource).toMatch(/^data:image\/png/);
-    const frozenFrame = await sampleCropperPixel(page);
-    await page.waitForTimeout(350);
-    expect(await sampleCropperPixel(page)).toEqual(frozenFrame);
+    const frozenSelector = '#cropModal .cropper-canvas img:not(#animatedGifPreview)';
+    const frozenFrame = await samplePixel(page, frozenSelector);
+    await page.waitForTimeout(650);
+    expect(await samplePixel(page, frozenSelector)).toEqual(frozenFrame);
 
     await toggle.check();
     await expect(page.locator("#cropModal .cropper-canvas img")).toHaveAttribute("src", /data:image\/gif/);
@@ -96,6 +97,7 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
     const packed = exported[10];
     if (packed & 0x80) offset += 3 * (2 ** ((packed & 0x07) + 1));
     let frameCount = 0;
+    const framePayloads = [];
     while (offset < exported.length) {
         const marker = exported[offset++];
         if (marker === 0x3B) break; // trailer
@@ -112,16 +114,20 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
             const imagePacked = exported[offset++];
             if (imagePacked & 0x80) offset += 3 * (2 ** ((imagePacked & 0x07) + 1));
             offset++; // LZW minimum code size
+            const payload = [];
             while (offset < exported.length) {
                 const size = exported[offset++];
                 if (size === 0) break;
+                payload.push(exported.subarray(offset, offset + size));
                 offset += size;
             }
+            framePayloads.push(Buffer.concat(payload).toString("hex"));
         } else {
             break;
         }
     }
     expect(frameCount).toBeGreaterThan(1);
+    expect(new Set(framePayloads).size).toBeGreaterThan(1);
 });
 
 test("a GIF saved as a still frame can be switched back to animation when reopened", async ({ page }) => {
