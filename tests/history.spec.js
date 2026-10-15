@@ -1525,7 +1525,7 @@ test("MyAnimeList character search renders mocked results without relying on the
     await expect(result).toBeVisible();
     await expect(result).toContainText("Shima Rin");
     await expect(result).toContainText("Laid-Back Camp");
-    await expect(page.locator("#malSearchStatus")).toContainText("Shima Rin");
+    await expect(page.locator("#malSearchStatus")).toContainText("Found 1 results");
     expect(requests).toHaveLength(1);
     expect(new URL(requests[0]).searchParams.get("q")).toBe("Shima Rin");
 });
