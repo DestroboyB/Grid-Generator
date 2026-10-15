@@ -96,7 +96,9 @@ export async function saveGrid(grid) {
     );
 
     const store = transaction.objectStore(GRID_STORE);
-    const writeRequest = store.put(cloneData(grid));
+    // IndexedDB structured-clones the value passed to put(); an extra deep clone
+    // here needlessly duplicates image data in memory before the write.
+    const writeRequest = store.put(grid);
 
     return new Promise((resolve, reject) => {
         transaction.oncomplete = () => resolve(grid);
@@ -635,7 +637,8 @@ async function saveCurrentGridSnapshot(snapshot) {
         }
 
         gridStillExists = true;
-        writeRequest = store.put(cloneData(grid));
+        // IndexedDB clones on put, so avoid an additional full copy of images/history.
+        writeRequest = store.put(grid);
     };
 
     await new Promise((resolve, reject) => {
