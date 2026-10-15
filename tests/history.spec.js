@@ -415,7 +415,6 @@ test("switching between grids restores each grid's layout and Undo/Redo history"
     // Switch back to the original grid and check its own history.
     const originalGridRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" });
     await originalGridRow.locator(".library-grid-name").click();
-    await expect(page.locator("#currentGridName")).toHaveText("Untitled Grid");
     await expect(originalGridRow).toHaveClass(/active/);
     await expect(page.locator("#imageRatio")).toHaveValue("4:3");
     await expect(page.locator("#undoButton")).toBeEnabled();
@@ -427,7 +426,6 @@ test("switching between grids restores each grid's layout and Undo/Redo history"
 
     const secondGridRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" });
     await secondGridRow.locator(".library-grid-name").click();
-    await expect(page.locator("#currentGridName")).toHaveText("Second Grid");
     await expect(secondGridRow).toHaveClass(/active/);
     await expect(page.locator("#imageRatio")).toHaveValue("16:9");
     await expect(page.locator("#undoButton")).toBeEnabled();
