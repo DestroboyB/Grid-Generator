@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // Two real frames: red then blue. A single-frame fixture cannot catch
 // animation regressions in the editor or GIF export.
 const animatedGif = Buffer.from(
-    "R0lGODlhAgACAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQIDAAAACwAAAAAAgACAAAIBgABCAQQEAAh+QQIDAAAACwAAAAAAgACAIEAAP8AAAAAAAAAAAAIBgABCAQQEAA7",
+    "R0lGODlhEAAQAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQIMgAAACwAAAAAEAAQAAAIHQABCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFgQEBACH5BAgyAAAALAAAAAAQABAAgQAA/wAAAAAAAAAAAAgdAAEIHEiwoMGDCBMqXMiwocOHECNKnEixosWBAQEAOw==",
     "base64"
 );
 
@@ -48,9 +48,10 @@ test("GIF animation defaults on, while the normal crop editor remains usable", a
     await expect(toggle).toBeChecked();
     await expect(page.locator("#cropModal .editor-preview .cropper-container")).toBeVisible();
     await expect(page.locator("#cropModal .cropper-crop-box")).toBeVisible();
+    await expect(page.locator("#animatedGifPreview")).toBeVisible();
 
     const firstFrame = await sampleCropperPixel(page);
-    await expect.poll(async () => sampleCropperPixel(page), { timeout: 3000, intervals: [100, 150, 250] }).not.toEqual(firstFrame);
+    await expect.poll(async () => sampleCropperPixel(page), { timeout: 4000, intervals: [150, 250, 400] }).not.toEqual(firstFrame);
 
     await toggle.uncheck();
     const frozenSource = await page.locator("#cropModal .cropper-canvas img:not(#animatedGifPreview)").getAttribute("src");
