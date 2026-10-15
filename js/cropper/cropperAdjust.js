@@ -402,9 +402,16 @@ export function setupAdjustments() {
                     );
 
 
-                cropperState.filterName =
-                    "custom";
-
+                // Keep the selected preset highlighted while its
+                // effects remain in the filter stack. Only mark the
+                // state as custom when adjusting from the neutral preset
+                // or when it was already a custom combination.
+                if (
+                    cropperState.filterName === "none" ||
+                    cropperState.filterName === "custom"
+                ) {
+                    cropperState.filterName = "custom";
+                }
 
                 updateActiveFilterButton();
                 updateAdjustmentValues();
@@ -433,9 +440,16 @@ export function setupAdjustments() {
                     );
 
 
-                cropperState.filterName =
-                    "custom";
-
+                // Keep the selected preset highlighted while its
+                // effects remain in the filter stack. Only mark the
+                // state as custom when adjusting from the neutral preset
+                // or when it was already a custom combination.
+                if (
+                    cropperState.filterName === "none" ||
+                    cropperState.filterName === "custom"
+                ) {
+                    cropperState.filterName = "custom";
+                }
 
                 updateActiveFilterButton();
                 updateAdjustmentValues();
@@ -464,9 +478,16 @@ export function setupAdjustments() {
                     );
 
 
-                cropperState.filterName =
-                    "custom";
-
+                // Keep the selected preset highlighted while its
+                // effects remain in the filter stack. Only mark the
+                // state as custom when adjusting from the neutral preset
+                // or when it was already a custom combination.
+                if (
+                    cropperState.filterName === "none" ||
+                    cropperState.filterName === "custom"
+                ) {
+                    cropperState.filterName = "custom";
+                }
 
                 updateActiveFilterButton();
                 updateAdjustmentValues();
@@ -495,9 +516,16 @@ export function setupAdjustments() {
                     );
 
 
-                cropperState.filterName =
-                    "custom";
-
+                // Keep the selected preset highlighted while its
+                // effects remain in the filter stack. Only mark the
+                // state as custom when adjusting from the neutral preset
+                // or when it was already a custom combination.
+                if (
+                    cropperState.filterName === "none" ||
+                    cropperState.filterName === "custom"
+                ) {
+                    cropperState.filterName = "custom";
+                }
 
                 updateActiveFilterButton();
                 updateAdjustmentValues();
