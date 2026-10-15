@@ -93,7 +93,10 @@ export function bulkImport() {
 
             // ========================================
             // Import Images
+            // Continue if an individual file is invalid or cannot be read.
             // ========================================
+
+            let failedImports = 0;
 
             for (
                 let i = 0;
@@ -101,10 +104,19 @@ export function bulkImport() {
                 i++
             ) {
 
-                await importBulkImage(
-                    filesToImport[i],
-                    emptyBoxes[i]
-                );
+                try {
+                    await importBulkImage(
+                        filesToImport[i],
+                        emptyBoxes[i]
+                    );
+                } catch (error) {
+                    failedImports += 1;
+                    console.error(
+                        "Could not import image:",
+                        filesToImport[i]?.name,
+                        error
+                    );
+                }
             }
 
 
@@ -113,6 +125,14 @@ export function bulkImport() {
             // ========================================
 
             saveHistoryState();
+
+            if (failedImports > 0) {
+                alert(
+                    failedImports === 1
+                        ? "1 image could not be imported. Please check that it is a valid image file."
+                        : `${failedImports} images could not be imported. Please check that they are valid image files.`
+                );
+            }
         }
     );
 
