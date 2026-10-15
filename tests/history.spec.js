@@ -467,6 +467,8 @@ test("switching grids immediately after Undo does not fail saves or lose either 
     await page.locator("#newGridNameInput").fill("Undo Switch Target");
     await page.locator("#createNewGridButton").click();
     await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
+    await page.locator("#libraryCloseButton").click();
+    await expect(page.locator("#libraryPanel")).not.toHaveClass(/open/);
 
     await page.locator("#imageRatio").selectOption("16:9");
     await expect(page.locator("#undoButton")).toBeEnabled();
@@ -500,18 +502,22 @@ test("images and appearance settings remain isolated when switching between grid
     await waitForApp(page);
     await addImageToFirstTile(page);
 
-    const setRange = async (selector, value) => page.locator(selector).evaluate((element, nextValue) => {
-        element.value = String(nextValue);
+    const setControl = async (selector, value) => page.locator(selector).evaluate((element, nextValue) => {
+        if (element.type === "checkbox") {
+            element.checked = Boolean(nextValue);
+        } else {
+            element.value = String(nextValue);
+        }
         element.dispatchEvent(new Event("input", { bubbles: true }));
         element.dispatchEvent(new Event("change", { bubbles: true }));
     }, value);
 
     await page.locator("#imageRatio").selectOption("4:3");
-    await setRange("#spacing", 11);
-    await page.locator("#backgroundColor").fill("#ff0000");
-    await page.locator("#borderEnabled").uncheck();
-    await page.locator("#borderColor").fill("#0000ff");
-    await setRange("#borderSize", 4);
+    await setControl("#spacing", 11);
+    await setControl("#backgroundColor", "#ff0000");
+    await setControl("#borderEnabled", false);
+    await setControl("#borderColor", "#0000ff");
+    await setControl("#borderSize", 4);
 
     await expect.poll(async () => page.evaluate(async () => {
         const request = indexedDB.open("gridBoardDatabase", 2);
@@ -544,11 +550,11 @@ test("images and appearance settings remain isolated when switching between grid
     await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
 
     await page.locator("#imageRatio").selectOption("16:9");
-    await setRange("#spacing", 3);
-    await page.locator("#backgroundColor").fill("#00ff00");
-    await page.locator("#borderEnabled").check();
-    await page.locator("#borderColor").fill("#ff00ff");
-    await setRange("#borderSize", 6);
+    await setControl("#spacing", 3);
+    await setControl("#backgroundColor", "#00ff00");
+    await setControl("#borderEnabled", true);
+    await setControl("#borderColor", "#ff00ff");
+    await setControl("#borderSize", 6);
 
     await expect.poll(async () => page.evaluate(async () => {
         const request = indexedDB.open("gridBoardDatabase", 2);
@@ -573,6 +579,8 @@ test("images and appearance settings remain isolated when switching between grid
         borderSize: 6
     });
 
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const originalRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" });
     await originalRow.locator(".library-grid-name").click();
     await expect(page.locator("#imageRatio")).toHaveValue("4:3");
