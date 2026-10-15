@@ -21,43 +21,38 @@ Finish experimental animated GIF support without regressing existing behavior:
 
 Do not work on anime search, Wikimedia image search, mobile redesign, or unrelated features unless a proven dependency requires it.
 
-## Latest confirmed failing CI run before the browser-mode experiment
-Run #135: https://github.com/DestroboyB/Grid-Generator/actions/runs/38763820979
-Run ID: `38763820979`
-Browser regression job ID: `116521716412` — failed
-JavaScript syntax job ID: `116521716874` — passed
-Result: 45 passed, 3 failed.
+## Latest CI run after diagnostic commit — still failing
+Run #136: https://github.com/DestroboyB/Grid-Generator/actions/runs/38764466094
+Run ID: `38764466094`
+Commit tested by PR merge checkout: `e4ffaa2734d9dd87956476458626eabd2092af30`, which includes diagnostic commit `c3d5ead34410b714786f4e9110d6d13957c82b84`.
+- JavaScript syntax job ID `116523939932`: passed.
+- Browser regression job ID `116523940359`: failed.
+- Result: 45 passed, 3 failed.
+Full browser logs: https://github.com/DestroboyB/Grid-Generator/actions/runs/38764466094/job/116523940359
 
-Failures:
-- `tests/gif-animation.spec.js:44` — “Chromium advances an attached image using the animated GIF fixture”
-- `tests/gif-animation.spec.js:87` — “GIF animation defaults on, while the normal crop editor remains usable”
-- `tests/gif-animation.spec.js:113` — GIF export animation pixel assertion
+The isolated `channel: "chromium"` configuration experiment did NOT fix playback. The same three tests fail:
+- `tests/gif-animation.spec.js:44` — “Chromium advances an attached image using the animated GIF fixture”; assertion at line 84 says sampled second frame equals first.
+- `tests/gif-animation.spec.js:87` — “GIF animation defaults on, while the normal crop editor remains usable”; polling at line 98 timed out after 4 seconds waiting for a frame change.
+- `tests/gif-animation.spec.js:113` — GIF export animation pixel assertion at line 187; exported frame samples are identical.
 
-Actual CI log diagnostic:
+The logs again show the independent source diagnostic:
 `GIF source diagnostic: {"dataUrl":{"first":[255,0,0,255],"second":[255,0,0,255],"width":16,"height":16},"blob":{"first":[255,0,0,255],"second":[255,0,0,255],"width":16,"height":16}}`
-Both data URL and Blob URL remained on the red frame during sampling. The fixture is a valid two-frame 16x16 GIF (red then blue, 500ms per frame); this is not explained by a single-frame fixture. The editor/export failures may be downstream of the same playback issue. Root cause remains unconfirmed.
+Both data URL and Blob URL stay on the red frame during sampling. This supports that the failure is still present before the app's GIF export logic; root cause remains unconfirmed. Do not change application code based on this alone.
 
 ## Browser/CI investigation completed
-- Current test config used `devices["Desktop Chrome"]` with no `channel`, which makes Playwright use its default Chromium headless-shell binary in CI.
-- CI log shows it installed Chrome for Testing / Chromium `156.0.8078.4` (Playwright chromium build v1248) and a separate Chromium Headless Shell `156.0.8078.4`.
-- `package.json` declares `"@playwright/test": "^1.55.0"`; this is a version range, not a pinned exact version.
-- The test explicitly sets reduced motion to `no-preference` in the baseline and export animation tests; the editor test does not, but that alone does not explain why the independent baseline test fails.
-- Playwright docs distinguish default headless shell from the regular Chromium build/new headless mode and note that behavior can differ. This makes browser mode a reasonable controlled experiment, not a confirmed root cause.
-- The workflow run above has no downloadable artifacts listed. Logs refer to failure screenshots/traces in the runner workspace, but they are not available through the run's artifact list.
+- Before the experiment, Playwright config used `devices["Desktop Chrome"]` with no `channel`, selecting default Chromium headless shell in CI.
+- The current config now sets `channel: "chromium"` to use the regular Chromium build/new headless mode. This experiment failed to change the outcome.
+- CI installs dependencies with `npm install`; `package.json` declares `"@playwright/test": "^1.55.0"`, a version range. A `package-lock.json` was not found at the branch root. Thus the Playwright package version is not pinned, making CI resolution less reproducible.
+- The valid fixture is a two-frame 16x16 GIF (red then blue, 500ms per frame); prior diagnostics showed both data URL and Blob URL remain red.
+- The workflow run has no downloadable artifacts listed. Logs refer to failure screenshots/traces in the runner workspace, but they are not available through the run's artifact list.
 - Do not repeat the already completed data-URL-vs-Blob-URL experiment.
 
-## Controlled diagnostic change just committed
-Commit: https://github.com/DestroboyB/Grid-Generator/commit/c3d5ead34410b714786f4e9110d6d13957c82b84
-Only file changed: `playwright.config.js`
-The Chromium project now sets `channel: "chromium"`, requesting Playwright's regular Chromium build/new headless mode instead of its default headless-shell binary. This is an isolated test-environment experiment; no app implementation or test fixture code was changed in this experiment.
-At the time of this handoff update, `fetch_commit_workflow_runs` did not return a run associated with this commit. Check the PR/Actions page for a newly triggered run before drawing conclusions:
-https://github.com/DestroboyB/Grid-Generator/actions
-
 ## Next steps
-1. Check for a workflow run after commit `c3d5ead34410b714786f4e9110d6d13957c82b84`. Inspect its jobs and full browser-test logs.
-2. If GIF playback starts working with `channel: "chromium"`, record that as the likely browser-mode cause, verify all tests pass, then decide whether to keep this config or use a more explicit supported setup.
-3. If playback still fails, do not change app code yet. Next investigate the exact installed Playwright package version / lockfile and obtain a reproducible browser-level test or trace. Consider a tiny GIF fixture generated by a known-good encoder as a separate test, but keep the valid two-frame fixture as a baseline until evidence says otherwise.
-4. Keep any next experiment isolated and inspect CI before proceeding. Do not merge PR #2 without the user's explicit approval.
+1. Do not change application code yet. The browser-mode experiment is disproven as a fix.
+2. Investigate the exact installed Playwright version and dependency reproducibility. The workflow uses `npm install`, package.json uses `^1.55.0`, and no package lock was found. Inspect the CI log for resolved package/browser versions and current workflow configuration.
+3. Build a minimal browser-only reproduction independent of Grid Generator: load the existing two-frame fixture directly in a page, sample the image after adequate time, and record browser/version details. Consider a known-good encoder-generated fixture as a separate comparison, while keeping the current valid fixture as baseline.
+4. Make the next experiment isolated and evidence-driven; inspect its CI logs before touching application implementation.
+5. Do not merge PR #2 without the user's explicit approval.
 
 ## Relevant files
 - `js/images/animatedGif.js`
@@ -69,4 +64,4 @@ https://github.com/DestroboyB/Grid-Generator/actions
 - `package.json`
 
 ## Starting prompt for the next chat
-“Read `CHATGPT_HANDOFF.md` in https://github.com/DestroboyB/Grid-Generator on branch `test/gif-animation-support`. Check Actions for a run after commit `c3d5ead34410b714786f4e9110d6d13957c82b84`, inspect its logs, and continue from the results. Keep replies concise; don't make app-code changes or merge the PR without evidence and my approval.”
+“Read `CHATGPT_HANDOFF.md` in https://github.com/DestroboyB/Grid-Generator on branch `test/gif-animation-support`. Check the latest CI run and logs first; browser-mode experiment `channel: "chromium"` failed with the same 3 GIF frame-advance/export tests (run #136, 45 passed). Investigate Playwright version reproducibility and a minimal browser-only GIF playback reproduction. Keep responses concise; don't change app code or merge the PR without evidence and my approval.”
