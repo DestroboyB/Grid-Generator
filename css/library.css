@@ -37,9 +37,14 @@
     width: 320px;
     max-width: 85vw;
     height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
+    padding-bottom: env(safe-area-inset-bottom);
     z-index: 1100;
     display: flex;
     flex-direction: column;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
     background: #fff;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
     transform: translateX(-100%);
@@ -116,9 +121,16 @@
 
 .library-actions {
     display: flex;
+    flex: 0 0 auto;
     gap: 8px;
     padding: 14px 16px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
     border-bottom: 1px solid #e5e5e5;
+}
+
+/* Prevent touch scrolling from moving the page behind the open drawer. */
+body.library-open {
+    overflow: hidden;
 }
 
 .library-actions button {
@@ -148,9 +160,13 @@
 ======================================== */
 
 .library-content {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     padding: 10px;
 }
 
