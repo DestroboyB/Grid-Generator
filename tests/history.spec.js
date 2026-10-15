@@ -620,6 +620,57 @@ test("images and appearance settings remain isolated when switching between grid
 });
 
 
+test("filter preset remains highlighted when combining it with manual adjustments", async ({ page }) => {
+    await waitForApp(page);
+    await addImageToFirstTile(page);
+
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+
+    await page.locator('[data-tool="filters"]').click();
+    const coolButton = page.locator('.filter-button[data-filter="cool"]');
+    await coolButton.click();
+    await expect(coolButton).toHaveClass(/active/);
+
+    await page.locator('[data-tool="adjust"]').click();
+    await page.locator("#brightnessInput").evaluate(element => {
+        element.value = "125";
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    // Manual brightness changes should combine with Cool, not clear its highlight.
+    await expect(coolButton).toHaveClass(/active/);
+    await expect(page.locator("#brightnessInput")).toHaveValue("125");
+
+    await page.locator("#cropButton").click();
+    await expect(page.locator("#cropModal")).toBeHidden();
+
+    const saved = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return grids.find(item => item.name === "Untitled Grid")?.images?.[0] ?? null;
+    });
+
+    expect(saved).toMatchObject({
+        filterName: "cool",
+        brightness: 125,
+        hueRotate: 180
+    });
+});
+
+
 test("image rotation, adjustments, and filter persist after reload and support Undo/Redo", async ({ page }) => {
     await waitForApp(page);
     await addImageToFirstTile(page);
@@ -666,7 +717,7 @@ test("image rotation, adjustments, and filter persist after reload and support U
         rotation: 90,
         brightness: 135,
         contrast: 120,
-        filterName: "none"
+        filterName: "custom"
     });
 
     // Reload and confirm custom adjustment values return in the editor.
