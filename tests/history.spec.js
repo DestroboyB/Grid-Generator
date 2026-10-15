@@ -200,3 +200,61 @@ test("rapid saves stay attached to their original grid when switching grids", as
         ratio: "1:1"
     });
 });
+
+test("history is capped at 30 states and remains usable after reload", async ({ page }) => {
+    await waitForApp(page);
+
+    // Each ratio change creates a distinct history state. Cycle through
+    // valid options to create more edits than the 30-state retention limit.
+    const ratios = ["4:3", "3:2", "16:9", "3:4", "2:3", "9:16", "1:1"];
+    for (let i = 0; i < 36; i++) {
+        await page.locator("#imageRatio").selectOption(ratios[i % ratios.length]);
+        await expect(page.locator("#undoButton")).toBeEnabled();
+    }
+
+    const historyBeforeReload = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const transaction = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const getAll = transaction.objectStore("grids").getAll();
+            getAll.onsuccess = () => resolve(getAll.result);
+            getAll.onerror = () => reject(getAll.error);
+        });
+        db.close();
+        return records[0];
+    });
+
+    expect(historyBeforeReload.undoStack).toHaveLength(30);
+    expect(historyBeforeReload.redoStack).toHaveLength(0);
+
+    await page.reload();
+    await expect(page.locator("#undoButton")).toBeEnabled();
+    await expect(page.locator("#redoButton")).toBeDisabled();
+
+    // Undo until the oldest retained state. It should stop at the cap,
+    // not continue to the original state from before the retained window.
+    for (let i = 0; i < 29; i++) {
+        await page.locator("#undoButton").click();
+    }
+    await expect(page.locator("#undoButton")).toBeDisabled();
+    await expect(page.locator("#redoButton")).toBeEnabled();
+
+    const oldestRetainedRatio = await page.locator("#imageRatio").inputValue();
+    await page.locator("#undoButton").click();
+    await expect(page.locator("#imageRatio")).toHaveValue(oldestRetainedRatio);
+
+    // Redo several states and verify that a new edit clears the redo stack.
+    for (let i = 0; i < 5; i++) {
+        await page.locator("#redoButton").click();
+    }
+    await expect(page.locator("#redoButton")).toBeEnabled();
+
+    const currentRatio = await page.locator("#imageRatio").inputValue();
+    const nextRatio = ratios.find(ratio => ratio !== currentRatio);
+    await page.locator("#imageRatio").selectOption(nextRatio);
+    await expect(page.locator("#redoButton")).toBeDisabled();
+});
