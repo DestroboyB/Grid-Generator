@@ -58,7 +58,7 @@ export function bulkImport() {
         "file";
 
     fileInput.accept =
-        "image/jpeg, image/png, image/webp";
+        "image/jpeg, image/png, image/webp, image/gif,.gif";
 
     fileInput.multiple =
         true;
