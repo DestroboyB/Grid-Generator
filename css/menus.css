@@ -2,12 +2,26 @@
    Download Container
 ======================================== */
 
+.bottom-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    margin: 24px auto 0;
+}
+
+.bottom-actions > .library-button {
+    white-space: nowrap;
+}
+
 .download-container {
     position: relative;
 
     width: fit-content;
 
-    margin: 24px auto 0;
+    margin: 0;
 
     display: flex;
 
