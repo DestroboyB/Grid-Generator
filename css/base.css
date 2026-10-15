@@ -6,6 +6,28 @@
     box-sizing: border-box;
 }
 
+/* Prevent accidental text/image highlighting across the app. */
+body,
+body * {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Keep normal text selection available where users edit or search text. */
+input,
+textarea,
+[contenteditable="true"],
+[contenteditable=""] {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* MAL result names remain selectable for copying/highlighting. */
+#malSearchModal .mal-result-name {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
 html,
 body {
     margin: 0;
