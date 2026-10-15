@@ -430,6 +430,7 @@
 
             <button id="exportProjectButton" type="button" class="library-button">Export Grid</button>
             <button id="importProjectButton" type="button" class="library-button">Import Grid</button>
+            <button id="rebuildFromScreenshotButton" type="button" class="library-button">Rebuild from Screenshot</button>
 
         <div class="download-container">
 
@@ -1416,6 +1417,31 @@
     </div>
 
 
+    <!-- Screenshot Grid Reconstruction Modal -->
+    <div id="screenshotReconstructionModal" class="screenshot-reconstruction-modal" aria-hidden="true">
+        <div class="screenshot-reconstruction-window" role="dialog" aria-modal="true" aria-labelledby="screenshotReconstructionTitle">
+            <div class="screenshot-reconstruction-header">
+                <h2 id="screenshotReconstructionTitle">Rebuild Grid from Screenshot</h2>
+                <button id="screenshotReconstructionCloseButton" type="button" aria-label="Close screenshot reconstruction">×</button>
+            </div>
+            <p class="screenshot-reconstruction-help">Upload an image of a grid, crop to the grid's outer edges, then choose its row and column count. Each cell will become an editable image in a new saved grid.</p>
+            <label class="screenshot-file-label" for="screenshotReconstructionFile">Screenshot image</label>
+            <input id="screenshotReconstructionFile" type="file" accept="image/png,image/jpeg,image/webp">
+            <div id="screenshotReconstructionPreview" class="screenshot-reconstruction-preview" hidden>
+                <img id="screenshotReconstructionImage" alt="Screenshot to crop into grid tiles">
+            </div>
+            <div class="screenshot-reconstruction-dimensions">
+                <div><label for="screenshotRows">Rows</label><select id="screenshotRows"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
+                <div><label for="screenshotColumns">Columns</label><select id="screenshotColumns"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
+            </div>
+            <p id="screenshotReconstructionStatus" class="screenshot-reconstruction-status" role="status" aria-live="polite">Choose a screenshot, then crop to the grid you want to rebuild.</p>
+            <div class="screenshot-reconstruction-footer">
+                <button id="screenshotReconstructionCancelButton" type="button">Cancel</button>
+                <button id="screenshotReconstructionCreateButton" type="button" disabled>Create Grid</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========================================
          CropperJS
     ========================================= -->
@@ -1428,6 +1454,11 @@
     <!-- ========================================
          Main JavaScript
     ========================================= -->
+
+    <script
+        type="module"
+        src="./js/screenshotReconstruction.js"
+    ></script>
 
     <script
         type="module"
