@@ -187,7 +187,7 @@ export function openFileSelector(
 
 
     fileInput.accept =
-        "image/jpeg, image/png, image/webp";
+        "image/jpeg, image/png, image/webp, image/gif,.gif";
 
 
     fileInput.addEventListener(
@@ -204,6 +204,14 @@ export function openFileSelector(
 
             }
 
+
+            if (file.type === "image/gif" || /\\.gif$/i.test(file.name)) {
+                importAnimatedGif(file, element).catch(error => {
+                    console.error("Unable to import animated GIF:", error);
+                    alert(error.message || "Unable to import this GIF.");
+                });
+                return;
+            }
 
             openCropForFile(
                 file,
