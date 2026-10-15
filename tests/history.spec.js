@@ -900,4 +900,50 @@ test("horizontal flip changes the saved image pixels, not just its metadata", as
     expect(pixels.left[0]).toBeLessThan(40);
     expect(pixels.right[0]).toBeGreaterThan(200);
     expect(pixels.right[2]).toBeLessThan(40);
+
+    // Confirm the exported PNG preserves the same left/right orientation.
+    const tileLayout = await page.locator('#board .image[data-index="0"]').evaluate(tile => {
+        const board = document.getElementById("board");
+        const boardRect = board.getBoundingClientRect();
+        const tileRect = tile.getBoundingClientRect();
+        return {
+            x: tileRect.left - boardRect.left,
+            y: tileRect.top - boardRect.top,
+            width: tileRect.width,
+            height: tileRect.height
+        };
+    });
+
+    await page.locator("#downloadButton").click();
+    const downloadPromise = page.waitForEvent("download");
+    await page.locator("#downloadPngButton").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    const exportedBase64 = Buffer.concat(chunks).toString("base64");
+
+    const exportedPixels = await page.evaluate(async ({ exportedBase64, tileLayout }) => {
+        const image = new Image();
+        image.src = "data:image/png;base64," + exportedBase64;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(image, 0, 0);
+
+        const leftX = Math.round((tileLayout.x + tileLayout.width * 0.25) * 2);
+        const rightX = Math.round((tileLayout.x + tileLayout.width * 0.75) * 2);
+        const y = Math.round((tileLayout.y + tileLayout.height * 0.5) * 2);
+        return {
+            left: Array.from(context.getImageData(leftX, y, 1, 1).data),
+            right: Array.from(context.getImageData(rightX, y, 1, 1).data)
+        };
+    }, { exportedBase64, tileLayout });
+
+    expect(exportedPixels.left[2]).toBeGreaterThan(180);
+    expect(exportedPixels.left[0]).toBeLessThan(60);
+    expect(exportedPixels.right[0]).toBeGreaterThan(180);
+    expect(exportedPixels.right[2]).toBeLessThan(60);
 });
