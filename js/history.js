@@ -10,10 +10,28 @@ import {
     renderAllImages
 } from "./board.js";
 
-// Image data is stored inside each snapshot. Keeping 10 snapshots limits
-// memory pressure on phones when grids contain large photos.
-const MAX_HISTORY_STATES =
-    10;
+// History snapshots include image data URLs, which can be large. Limit both
+// the number of snapshots and their serialized size to avoid unbounded memory
+// and IndexedDB pressure on mobile browsers.
+const MAX_HISTORY_STATES = 10;
+const MAX_HISTORY_DATA_CHARS = 16 * 1024 * 1024;
+
+// Keep at least two states so Undo remains available after an edit, even if
+// a single image is larger than the preferred history budget.
+function trimHistory() {
+    while (
+        appState.undoStack.length > MAX_HISTORY_STATES ||
+        (
+            appState.undoStack.length > 2 &&
+            appState.undoStack.reduce(
+                (total, state) => total + JSON.stringify(state).length,
+                0
+            ) > MAX_HISTORY_DATA_CHARS
+        )
+    ) {
+        appState.undoStack.shift();
+    }
+}
 
 const rowsInput =
     document.getElementById(
@@ -107,20 +125,8 @@ export function saveHistoryState() {
     appState.redoStack =
         [];
 
-    /*
-     * Keep only the most recent
-     * 30 undo states.
-     */
-    if (
-        appState.undoStack.length >
-        MAX_HISTORY_STATES
-    ) {
-
-        appState.undoStack =
-            appState.undoStack.slice(
-                -MAX_HISTORY_STATES
-            );
-    }
+    // Bound history by both count and image-data size.
+    trimHistory();
 
     updateHistoryButtons();
 
@@ -348,20 +354,8 @@ export function initializeHistory() {
         appState.undoStack.length > 0
     ) {
 
-        /*
-         * Make sure old/oversized history
-         * doesn't exceed our limit.
-         */
-        if (
-            appState.undoStack.length >
-            MAX_HISTORY_STATES
-        ) {
-
-            appState.undoStack =
-                appState.undoStack.slice(
-                    -MAX_HISTORY_STATES
-                );
-        }
+        // Also trim history saved by an older app version.
+        trimHistory();
 
         updateHistoryButtons();
 
