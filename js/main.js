@@ -33,9 +33,14 @@ import {
 
 import { appState } from "./state.js";
 
+import { initializeProjectFileControls } from "./projectFile.js";
+
 import "./theme.js";
 
 import "./library/library.js";
+
+
+initializeProjectFileControls();
 
 
 // ========================================
