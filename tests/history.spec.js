@@ -1630,3 +1630,118 @@ test("MyAnimeList picture selection imports into the chosen tile and persists af
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", importedSource);
 });
+
+
+
+test("MyAnimeList anime search can browse characters and import a character picture", async ({ page }) => {
+    const imageDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=";
+
+    await page.route("https://jikan.lucashdo.com/v1/**", async route => {
+        const url = new URL(route.request().url());
+
+        if (url.pathname === "/v1/anime") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [{
+                        mal_id: 10,
+                        title: "Laid-Back Camp",
+                        imageUrl: imageDataUrl,
+                        type: "TV",
+                        episodes: 12,
+                        score: 8.0
+                    }],
+                    meta: { pagination: { currentPage: 1, hasNextPage: false, lastVisiblePage: 1 } }
+                })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/anime/10/characters") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [{
+                        character: {
+                            mal_id: 1,
+                            name: "Shima Rin",
+                            imageUrl: imageDataUrl
+                        },
+                        role: "Main"
+                    }]
+                })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/characters/1/pictures") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [{ imageUrl: imageDataUrl }] })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/characters/1") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: { mal_id: 1, name: "Shima Rin", imageUrl: imageDataUrl } })
+            });
+            return;
+        }
+
+        if (url.pathname === "/v1/characters/1/anime") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [] })
+            });
+            return;
+        }
+
+        await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ data: [] })
+        });
+    });
+
+    await waitForApp(page);
+    const tile = page.locator('#board .image[data-index="0"]');
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+
+    await page.locator("#malByAnimeTab").click();
+    await page.locator("#malSearchInput").fill("Laid-Back Camp");
+    await page.locator("#malSearchButton").click();
+
+    const animeResult = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(animeResult).toBeVisible();
+    await expect(animeResult).toContainText("Laid-Back Camp");
+    await animeResult.click();
+
+    const characterResult = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(characterResult).toBeVisible();
+    await expect(characterResult).toContainText("Shima Rin");
+    await characterResult.click();
+
+    const picture = page.locator("#malSearchResults .mal-gallery-picture").first();
+    await expect(picture).toBeVisible();
+    await picture.click();
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#cropButton").click();
+    await expect(tile.locator("img")).toHaveCount(1);
+
+    const importedSource = await tile.locator("img").getAttribute("src");
+    expect(importedSource).toBeTruthy();
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", importedSource);
+});
