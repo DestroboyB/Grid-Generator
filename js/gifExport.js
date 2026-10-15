@@ -91,18 +91,40 @@ function drawBoardFrame(ctx, board, boxes, state, boardRect) {
                 `hue-rotate(${imageData.hueRotate ?? 0}deg)`
             ].join(" ");
 
-            const ratio = img.naturalWidth / img.naturalHeight;
-            const boxRatio = w / h;
-            let drawW = w;
-            let drawH = h;
+            const gifCrop = imageData.animatedGif === true ? imageData.crop : null;
+            const canUseGifCrop = gifCrop &&
+                gifCrop.width > 0 &&
+                gifCrop.height > 0 &&
+                !(imageData.rotation || imageData.flipX || imageData.flipY);
 
-            if (ratio > boxRatio) {
-                drawW = h * ratio;
+            if (canUseGifCrop) {
+                // Sample the currently displayed frame, but crop it using the
+                // same source-image coordinates as the editor's crop box.
+                ctx.drawImage(
+                    img,
+                    gifCrop.x,
+                    gifCrop.y,
+                    gifCrop.width,
+                    gifCrop.height,
+                    x,
+                    y,
+                    w,
+                    h
+                );
             } else {
-                drawH = w / ratio;
-            }
+                const ratio = img.naturalWidth / img.naturalHeight;
+                const boxRatio = w / h;
+                let drawW = w;
+                let drawH = h;
 
-            ctx.drawImage(img, x + (w - drawW) / 2, y + (h - drawH) / 2, drawW, drawH);
+                if (ratio > boxRatio) {
+                    drawW = h * ratio;
+                } else {
+                    drawH = w / ratio;
+                }
+
+                ctx.drawImage(img, x + (w - drawW) / 2, y + (h - drawH) / 2, drawW, drawH);
+            }
             ctx.restore();
         }
 
