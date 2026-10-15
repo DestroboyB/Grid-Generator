@@ -37,23 +37,31 @@ export async function importAnimatedGif(source, element) {
         throw new Error("Could not find the selected image box.");
     }
 
-    let blob;
+    // If the editor already loaded this GIF as a data URL, reuse it rather
+    // than downloading/reading the same image a second time.
+    let dataURL;
 
-    if (source instanceof Blob) {
-        blob = source;
+    if (typeof source === "string" && source.startsWith("data:image/gif")) {
+        dataURL = source;
     } else {
-        const response = await fetch(source, { mode: "cors" });
-        if (!response.ok) {
-            throw new Error(`The GIF could not be downloaded (HTTP ${response.status}).`);
+        let blob;
+
+        if (source instanceof Blob) {
+            blob = source;
+        } else {
+            const response = await fetch(source, { mode: "cors" });
+            if (!response.ok) {
+                throw new Error(`The GIF could not be downloaded (HTTP ${response.status}).`);
+            }
+            blob = await response.blob();
         }
-        blob = await response.blob();
-    }
 
-    if (blob.type && blob.type !== "image/gif") {
-        throw new Error("The selected file is not a GIF image.");
-    }
+        if (blob.type && blob.type !== "image/gif") {
+            throw new Error("The selected file is not a GIF image.");
+        }
 
-    const dataURL = await readBlobAsDataURL(blob);
+        dataURL = await readBlobAsDataURL(blob);
+    }
 
     if (typeof dataURL !== "string" || !dataURL.startsWith("data:image/gif")) {
         throw new Error("The GIF could not be saved in an animated format.");
