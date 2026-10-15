@@ -6,11 +6,14 @@ import {
 
 
 // ========================================
-// Openverse API
+// Wikimedia Commons API
 // ========================================
 
 const API_URL =
-    "https://api.openverse.org/v1/images/";
+    "https://commons.wikimedia.org/w/api.php";
+
+const RESULTS_PER_PAGE = 12;
+const SEARCH_TIMEOUT_MS = 15000;
 
 
 // ========================================
@@ -174,13 +177,11 @@ async function performSearch({ keepResults = false } = {}) {
     }
 
     imageSearchStatus.textContent =
-        keepResults ? "Loading page..." : "Searching...";
+        keepResults ? "Loading page..." : "Searching Wikimedia Commons...";
 
     updatePagination();
 
-
     try {
-
         const cacheKey = `${currentQuery.trim().toLocaleLowerCase()}|${currentPage}`;
         let data = searchCache.get(cacheKey);
         const cacheHit = Boolean(data);
@@ -188,84 +189,99 @@ async function performSearch({ keepResults = false } = {}) {
 
         if (!cacheHit) {
             const params = new URLSearchParams({
-                q: currentQuery,
-                page: currentPage,
-                page_size: 12
+                action: "query",
+                format: "json",
+                origin: "*",
+                generator: "search",
+                gsrsearch: currentQuery,
+                gsrnamespace: "6",
+                gsrlimit: String(RESULTS_PER_PAGE),
+                gsroffset: String((currentPage - 1) * RESULTS_PER_PAGE),
+                prop: "imageinfo",
+                iiprop: "url|mime",
+                iiurlwidth: "300"
             });
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(
+                () => controller.abort(),
+                SEARCH_TIMEOUT_MS
+            );
             const requestStartedAt = performance.now();
-            const response = await fetch(`${API_URL}?${params.toString()}`);
-            requestDuration = performance.now() - requestStartedAt;
 
-            if (!response.ok) {
-                if (response.status === 429) {
-                    throw new Error("Search rate limit reached. Please wait a moment and try again.");
+            try {
+                const response = await fetch(
+                    `${API_URL}?${params.toString()}`,
+                    { signal: controller.signal }
+                );
+
+                if (!response.ok) {
+                    if (response.status === 429 || response.status === 503) {
+                        throw new Error("Wikimedia search is temporarily busy. Please wait a moment and retry.");
+                    }
+                    throw new Error(`Image search failed (${response.status}).`);
                 }
-                throw new Error(`Image search failed (${response.status}).`);
+
+                data = await response.json();
+                requestDuration = performance.now() - requestStartedAt;
+            } finally {
+                clearTimeout(timeoutId);
             }
 
-            data = await response.json();
+            if (data.error) {
+                throw new Error(data.error.info || "Wikimedia image search failed.");
+            }
+
             searchCache.set(cacheKey, data);
             if (searchCache.size > MAX_CACHED_SEARCHES) {
                 searchCache.delete(searchCache.keys().next().value);
             }
         }
-        totalPages =
-            data.page_count || 1;
 
+        const pages = Object.values(data.query?.pages || {});
+        const results = pages
+            .map(page => {
+                const imageInfo = page.imageinfo?.[0];
+                if (!imageInfo || !imageInfo.mime?.startsWith("image/")) {
+                    return null;
+                }
 
-        renderResults(
-            data.results || []
-        );
+                return {
+                    title: (page.title || "Untitled").replace(/^File:/i, "").replace(/_/g, " "),
+                    thumbnail: imageInfo.thumburl || imageInfo.url,
+                    url: imageInfo.url,
+                    pageUrl: imageInfo.descriptionurl
+                };
+            })
+            .filter(result => result && result.thumbnail && result.url);
 
+        // Commons doesn't provide a total hit count in the generator response.
+        // Reveal the next page when the API says more results are available.
+        totalPages = data.continue ? currentPage + 1 : currentPage;
 
+        renderResults(results);
         updatePagination();
 
-
-        if (
-            !data.results ||
-            data.results.length === 0
-        ) {
-
-            imageSearchStatus.textContent =
-                "No images found.";
-
+        if (results.length === 0) {
+            imageSearchStatus.textContent = "No images found. Try a different search.";
         } else {
-
-            const resultCount =
-                data.result_count ||
-                data.results.length;
-
-
             imageSearchStatus.textContent = cacheHit
-                ? `${resultCount} results found (cached).`
-                : `${resultCount} results found in ${(requestDuration / 1000).toFixed(1)}s.`;
-
+                ? `${results.length} images found on Wikimedia Commons (cached).`
+                : `${results.length} images found on Wikimedia Commons in ${(requestDuration / 1000).toFixed(1)}s.`;
         }
-
     } catch (error) {
+        console.error("Wikimedia Commons image search failed:", error);
 
-        console.error(
-            "Openverse image search failed:",
-            error
-        );
+        imageSearchResults.innerHTML = "";
 
-
-        imageSearchResults.innerHTML =
-            "";
-
-
-        imageSearchStatus.textContent =
-            error.message ||
-            "Unable to search for images.";
-
+        imageSearchStatus.textContent = error.name === "AbortError"
+            ? "Wikimedia search timed out after 15 seconds. Please retry."
+            : (error.message || "Unable to search for images.");
 
         totalPages = 1;
-
         updatePagination();
     }
 }
-
 
 function renderResults(results) {
     imageSearchResults.innerHTML = "";
