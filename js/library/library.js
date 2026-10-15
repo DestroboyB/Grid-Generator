@@ -150,6 +150,7 @@ function stopClick(event) {
 function openLibrary() {
     if (!libraryPanel) return;
 
+    document.body.classList.add("library-open");
     libraryPanel.classList.add("open");
     libraryPanel.setAttribute("aria-hidden", "false");
 
@@ -171,6 +172,7 @@ function closeLibrary() {
     libraryPanel.classList.remove("open");
     libraryPanel.setAttribute("aria-hidden", "true");
 
+    document.body.classList.remove("library-open");
     libraryOverlay?.classList.remove("visible");
 }
 
