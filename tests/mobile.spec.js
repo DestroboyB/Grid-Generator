@@ -86,3 +86,62 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
     await expect(page.locator("#cropButton")).toBeVisible();
     await expect(page.locator("#restoreOriginalButton")).toBeVisible();
 });
+
+test("mobile library scrolls internally with many saved grids", async ({ page }) => {
+    await waitForApp(page, 375, 812);
+
+    await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        await new Promise((resolve, reject) => {
+            const transaction = db.transaction("grids", "readwrite");
+            const store = transaction.objectStore("grids");
+
+            for (let index = 0; index < 30; index += 1) {
+                store.put({
+                    id: `mobile-scroll-grid-${index}`,
+                    name: `Mobile Scroll Grid ${String(index + 1).padStart(2, "0")}`,
+                    categoryId: null,
+                    createdAt: Date.now() + index,
+                    updatedAt: Date.now() + index,
+                    rows: 3,
+                    columns: 3,
+                    ratio: "1:1",
+                    images: [],
+                    undoStack: [],
+                    redoStack: []
+                });
+            }
+
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = () => reject(transaction.error);
+            transaction.onabort = () => reject(transaction.error);
+        });
+
+        db.close();
+    });
+
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await expect(page.locator(".library-grid-item")).toHaveCount(30);
+
+    const scrollState = await page.locator("#libraryContent").evaluate(element => {
+        const before = element.scrollTop;
+        element.scrollTop = element.scrollHeight;
+        return {
+            before,
+            after: element.scrollTop,
+            clientHeight: element.clientHeight,
+            scrollHeight: element.scrollHeight,
+            bodyLocked: document.body.classList.contains("library-open")
+        };
+    });
+
+    expect(scrollState.scrollHeight).toBeGreaterThan(scrollState.clientHeight);
+    expect(scrollState.after).toBeGreaterThan(scrollState.before);
+    expect(scrollState.bodyLocked).toBe(true);
+});
