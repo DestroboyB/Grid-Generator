@@ -411,7 +411,7 @@ test("grid names are trimmed and duplicate names are rejected", async ({ page })
 
     page.on("dialog", dialog => dialog.accept());
     const secondRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" });
-    await secondRow.locator('button[title="Rename grid name"]').click();
+    await secondRow.locator('button[title="Rename this grid"]').click();
     await page.locator(".library-grid-rename-input").fill("Untitled Grid");
     await page.locator(".library-grid-actions button[title="Save grid name"]');
 
