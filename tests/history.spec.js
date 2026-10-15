@@ -754,7 +754,7 @@ test("image rotation, adjustments, and filter persist after reload and support U
         rotation: 90,
         brightness: 135,
         contrast: 120,
-        filterName: "none"
+        filterName: "custom"
     });
 
     await page.locator("#redoButton").click();
