@@ -662,6 +662,7 @@ async function saveCurrentGridSnapshot(snapshot) {
     const store = transaction.objectStore(GRID_STORE);
     const request = store.get(snapshot.gridId);
     let writeRequest = null;
+    let writeError = null;
     let gridStillExists = false;
 
     request.onsuccess = () => {
@@ -671,17 +672,29 @@ async function saveCurrentGridSnapshot(snapshot) {
 
         gridStillExists = true;
         // IndexedDB clones on put, so avoid an additional full copy of images/history.
-        writeRequest = store.put(grid);
+        try {
+            writeRequest = store.put(grid);
+        } catch (error) {
+            // A synchronous write failure (such as QuotaExceededError) may cause
+            // IndexedDB to abort with a less specific transaction error. Preserve
+            // the original exception so the user receives the correct guidance.
+            writeError = error;
+            try {
+                transaction.abort();
+            } catch {
+                // The transaction may already be aborting.
+            }
+        }
     };
 
     await new Promise((resolve, reject) => {
         transaction.oncomplete = resolve;
         transaction.onerror = () => reject(
-            writeRequest?.error || request.error || transaction.error ||
+            writeError || writeRequest?.error || request.error || transaction.error ||
             new Error("Failed to save grid.")
         );
         transaction.onabort = () => reject(
-            writeRequest?.error || request.error || transaction.error ||
+            writeError || writeRequest?.error || request.error || transaction.error ||
             new Error("Grid save transaction aborted.")
         );
     });
