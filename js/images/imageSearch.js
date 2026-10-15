@@ -71,6 +71,10 @@ let currentPage = 1;
 let currentQuery = "";
 let totalPages = 1;
 
+// Keep recent API responses in memory so repeat searches are immediate.
+const searchCache = new Map();
+const MAX_CACHED_SEARCHES = 30;
+
 
 // ========================================
 // Open Image Search
@@ -177,42 +181,35 @@ async function performSearch({ keepResults = false } = {}) {
 
     try {
 
-        const params =
-            new URLSearchParams({
+        const cacheKey = `${currentQuery.trim().toLocaleLowerCase()}|${currentPage}`;
+        let data = searchCache.get(cacheKey);
+        const cacheHit = Boolean(data);
+        let requestDuration = 0;
+
+        if (!cacheHit) {
+            const params = new URLSearchParams({
                 q: currentQuery,
                 page: currentPage,
                 page_size: 12
             });
 
+            const requestStartedAt = performance.now();
+            const response = await fetch(`${API_URL}?${params.toString()}`);
+            requestDuration = performance.now() - requestStartedAt;
 
-        const response =
-            await fetch(
-                `${API_URL}?${params.toString()}`
-            );
-
-
-        if (!response.ok) {
-
-            if (
-                response.status === 429
-            ) {
-
-                throw new Error(
-                    "Search rate limit reached. Please wait a moment and try again."
-                );
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error("Search rate limit reached. Please wait a moment and try again.");
+                }
+                throw new Error(`Image search failed (${response.status}).`);
             }
 
-
-            throw new Error(
-                `Image search failed (${response.status}).`
-            );
+            data = await response.json();
+            searchCache.set(cacheKey, data);
+            if (searchCache.size > MAX_CACHED_SEARCHES) {
+                searchCache.delete(searchCache.keys().next().value);
+            }
         }
-
-
-        const data =
-            await response.json();
-
-
         totalPages =
             data.page_count || 1;
 
@@ -240,8 +237,9 @@ async function performSearch({ keepResults = false } = {}) {
                 data.results.length;
 
 
-            imageSearchStatus.textContent =
-                `${resultCount} results found.`;
+            imageSearchStatus.textContent = cacheHit
+                ? `${resultCount} results found (cached).`
+                : `${resultCount} results found in ${(requestDuration / 1000).toFixed(1)}s.`;
 
         }
 
