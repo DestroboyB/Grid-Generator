@@ -16,6 +16,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
         deleteGrid,
         getGridSummaries,
         loadGrid,
+        initializeHistory,
         appState,
         generateBoard,
         renderLibrary,
@@ -237,6 +238,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
                         appState.savedImages = [];
                         appState.undoStack = [];
                         appState.redoStack = [];
+                        initializeHistory();
                     }
 
                     generateBoard();
@@ -268,6 +270,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
             const loaded = await loadGrid(grid.id);
             if (!loaded) return;
 
+            initializeHistory();
             generateBoard();
             updateCurrentGridName();
 
