@@ -91,43 +91,32 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
     expect(exported.subarray(0, 6).toString()).toMatch(/^GIF8[79]a$/);
     expect(exported.length).toBeGreaterThan(100);
 
-    // Count image-descriptor blocks while skipping data sub-blocks. This
-    // verifies the output contains multiple frames, not merely a GIF header.
-    let offset = 13;
-    const packed = exported[10];
-    if (packed & 0x80) offset += 3 * (2 ** ((packed & 0x07) + 1));
-    let frameCount = 0;
-    const framePayloads = [];
-    while (offset < exported.length) {
-        const marker = exported[offset++];
-        if (marker === 0x3B) break; // trailer
-        if (marker === 0x21) {
-            offset++; // extension label
-            while (offset < exported.length) {
-                const size = exported[offset++];
-                if (size === 0) break;
-                offset += size;
-            }
-        } else if (marker === 0x2C) {
-            frameCount++;
-            offset += 8; // left, top, width, height
-            const imagePacked = exported[offset++];
-            if (imagePacked & 0x80) offset += 3 * (2 ** ((imagePacked & 0x07) + 1));
-            offset++; // LZW minimum code size
-            const payload = [];
-            while (offset < exported.length) {
-                const size = exported[offset++];
-                if (size === 0) break;
-                payload.push(exported.subarray(offset, offset + size));
-                offset += size;
-            }
-            framePayloads.push(Buffer.concat(payload).toString("hex"));
-        } else {
-            break;
-        }
-    }
-    expect(frameCount).toBeGreaterThan(1);
-    expect(new Set(framePayloads).size).toBeGreaterThan(1);
+    // Decode the exported GIF in Chromium and compare rendered pixels over
+    // time. Distinct compressed LZW payloads alone do not prove that the
+    // exported frames visibly differ.
+    const renderedFrames = await page.evaluate(async base64 => {
+        const image = new Image();
+        image.src = `data:image/gif;base64,${base64}`;
+        await image.decode();
+
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        const sample = () => {
+            context.drawImage(image, 0, 0);
+            return Array.from(context.getImageData(25, 25, 1, 1).data);
+        };
+
+        const first = sample();
+        await new Promise(resolve => setTimeout(resolve, 650));
+        const second = sample();
+        return { first, second, width: image.naturalWidth, height: image.naturalHeight };
+    }, exported.toString("base64"));
+
+    expect(renderedFrames.width).toBeGreaterThan(25);
+    expect(renderedFrames.height).toBeGreaterThan(25);
+    expect(renderedFrames.second).not.toEqual(renderedFrames.first);
 });
 
 test("a GIF saved as a still frame can be switched back to animation when reopened", async ({ page }) => {
