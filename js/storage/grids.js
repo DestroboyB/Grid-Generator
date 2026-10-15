@@ -96,14 +96,14 @@ export async function saveGrid(grid) {
     );
 
     const store = transaction.objectStore(GRID_STORE);
-
-    store.put(cloneData(grid));
+    const writeRequest = store.put(cloneData(grid));
 
     return new Promise((resolve, reject) => {
         transaction.oncomplete = () => resolve(grid);
 
         transaction.onerror = () => {
             reject(
+                writeRequest.error ||
                 transaction.error ||
                 new Error("Failed to save grid.")
             );
@@ -111,6 +111,7 @@ export async function saveGrid(grid) {
 
         transaction.onabort = () => {
             reject(
+                writeRequest.error ||
                 transaction.error ||
                 new Error("Grid save transaction aborted.")
             );
@@ -625,6 +626,7 @@ async function saveCurrentGridSnapshot(snapshot) {
     const transaction = db.transaction(GRID_STORE, "readwrite");
     const store = transaction.objectStore(GRID_STORE);
     const request = store.get(snapshot.gridId);
+    let writeRequest = null;
     let gridStillExists = false;
 
     request.onsuccess = () => {
@@ -633,16 +635,18 @@ async function saveCurrentGridSnapshot(snapshot) {
         }
 
         gridStillExists = true;
-        store.put(cloneData(grid));
+        writeRequest = store.put(cloneData(grid));
     };
 
     await new Promise((resolve, reject) => {
         transaction.oncomplete = resolve;
         transaction.onerror = () => reject(
-            transaction.error || new Error("Failed to save grid.")
+            writeRequest?.error || request.error || transaction.error ||
+            new Error("Failed to save grid.")
         );
         transaction.onabort = () => reject(
-            transaction.error || new Error("Grid save transaction aborted.")
+            writeRequest?.error || request.error || transaction.error ||
+            new Error("Grid save transaction aborted.")
         );
     });
 
