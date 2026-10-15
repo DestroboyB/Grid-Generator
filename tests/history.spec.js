@@ -1796,3 +1796,36 @@ test("MyAnimeList anime search can browse characters and import a character pict
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", importedSource);
 });
+
+test("animated GIF uploads stay animated-format data URLs and persist after reload", async ({ page }) => {
+    const animatedGif = Buffer.from(
+        "R0lGODlhAgACAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQADAAAACwAAAAAAgACAAAIBgABCAQQEAAh+QQBDAABACwAAAAAAgACAIEAAP8AAAAAAAAAAAAIBgABCAQQEAA7",
+        "base64"
+    );
+
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({
+        name: "animated-test.gif",
+        mimeType: "image/gif",
+        buffer: animatedGif
+    });
+
+    const tileImage = page.locator('#board .image[data-index="0"] img');
+    await expect(tileImage).toHaveCount(1);
+    await expect(tileImage).toHaveAttribute("src", /^data:image\/gif;base64,/);
+    await expect(page.locator("#cropModal")).toBeHidden();
+
+    const savedSource = await tileImage.getAttribute("src");
+    await page.reload();
+
+    const restoredImage = page.locator('#board .image[data-index="0"] img');
+    await expect(restoredImage).toHaveCount(1);
+    await expect(restoredImage).toHaveAttribute("src", savedSource);
+    await expect(restoredImage).toHaveAttribute("src", /^data:image\/gif;base64,/);
+});
