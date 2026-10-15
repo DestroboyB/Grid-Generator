@@ -4,69 +4,32 @@
 
 .image-editor-modal {
     display: none;
-
     position: fixed;
     inset: 0;
-
     width: 100vw;
     height: 100vh;
-
     background: rgba(15, 23, 42, 0.78);
-
     justify-content: center;
     align-items: center;
-
     padding: 20px;
-
     z-index: 3000;
-
     box-sizing: border-box;
 }
 
-
 /* ========================================
-   Cropper Preview
+   CropperJS-specific Preview Elements
+   General preview layout lives in editor.css.
 ======================================== */
 
-.editor-preview {
-    position: relative;
-
-    width: 100%;
-
-    height: 55vh;
-    min-height: 400px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    background: #111827;
-
-    overflow: hidden;
-
-    flex-shrink: 0;
-}
-
-
-/*
-   CropperJS creates its own container
-   inside the preview.
-*/
-
+/* CropperJS creates its own container inside the preview. */
 .editor-preview > .cropper-container {
     width: 100% !important;
     height: 100% !important;
-
     max-width: none !important;
     max-height: none !important;
 }
 
-
-/*
-   Keep the CropperJS canvas centered.
-*/
-
+/* Keep the CropperJS canvas and selection unconstrained by image sizing. */
 .editor-preview .cropper-canvas,
 .editor-preview .cropper-drag-box,
 .editor-preview .cropper-crop-box {
@@ -74,28 +37,12 @@
     max-height: none;
 }
 
-
 /* ========================================
    CropperJS Image
 ======================================== */
 
 #cropImage {
     display: block;
-
     max-width: 100%;
     max-height: 100%;
-}
-
-
-/* ========================================
-   Mobile
-======================================== */
-
-@media (max-width: 700px) {
-
-    .editor-preview {
-        height: 45vh;
-        min-height: 300px;
-    }
-
 }
