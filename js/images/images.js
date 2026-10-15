@@ -23,6 +23,8 @@ import {
     openUrlImage
 } from "./urlImage.js";
 
+import { importAnimatedGif } from "./animatedGif.js";
+
 // ========================================
 // Elements
 // ========================================
@@ -205,7 +207,7 @@ export function openFileSelector(
             }
 
 
-            if (file.type === "image/gif" || /\\.gif$/i.test(file.name)) {
+            if (file.type === "image/gif" || /\.gif$/i.test(file.name)) {
                 importAnimatedGif(file, element).catch(error => {
                     console.error("Unable to import animated GIF:", error);
                     alert(error.message || "Unable to import this GIF.");
