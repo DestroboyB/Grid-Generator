@@ -203,3 +203,42 @@ test("a GIF saved as a still frame can be switched back to animation when reopen
     await expect(toggle).toBeChecked();
     await expect(page.locator("#cropModal .cropper-crop-box")).toBeVisible();
 });
+
+
+test("diagnostic: compare GIF animation from data URL and Blob URL", async ({ page }) => {
+    await waitForApp(page);
+    const result = await page.evaluate(async base64 => {
+        const bytes = Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+        const blobUrl = URL.createObjectURL(new Blob([bytes], { type: "image/gif" }));
+        async function observe(src) {
+            const image = new Image();
+            Object.assign(image.style, { position: "fixed", left: "0", top: "0", width: "64px", height: "64px" });
+            document.body.appendChild(image);
+            image.src = src;
+            await image.decode();
+            const canvas = document.createElement("canvas");
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+            const context = canvas.getContext("2d");
+            const sample = () => {
+                context.drawImage(image, 0, 0);
+                return Array.from(context.getImageData(0, 0, 1, 1).data);
+            };
+            const first = sample();
+            let second = first;
+            for (let i = 0; i < 15 && second.every((value, index) => value === first[index]); i++) {
+                await new Promise(resolve => setTimeout(resolve, 150));
+                second = sample();
+            }
+            image.remove();
+            return { first, second, width: image.naturalWidth, height: image.naturalHeight };
+        }
+        const dataUrl = await observe("data:image/gif;base64," + base64);
+        const blob = await observe(blobUrl);
+        URL.revokeObjectURL(blobUrl);
+        return { dataUrl, blob };
+    }, animatedGif.toString("base64"));
+    console.log("GIF source diagnostic:", JSON.stringify(result));
+    expect(result.dataUrl.width).toBe(16);
+    expect(result.blob.width).toBe(16);
+});
