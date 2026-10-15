@@ -473,7 +473,7 @@ test("switching grids immediately after Undo does not fail saves or lose either 
 
     // Reopen the first grid, then immediately switch away after Undo to
     // exercise the race between the history save and the grid-load save.
-    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const originalRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Untitled Grid" });
     await originalRow.locator(".library-grid-name").click();
     await expect(page.locator("#imageRatio")).toHaveValue("4:3");
