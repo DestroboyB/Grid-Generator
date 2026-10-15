@@ -80,20 +80,28 @@ function safeFilename(name) {
 }
 
 async function exportCurrentProject() {
-    const grid = appState.currentGridId
+    // Export the live editor state, not a possibly stale IndexedDB snapshot.
+    // Some settings and layout changes are saved asynchronously, and empty
+    // boards intentionally keep savedImages sparse.
+    const stored = appState.currentGridId
         ? await getGrid(appState.currentGridId)
         : null;
-    const fallback = grid || {
-        name: appState.currentGridName || "Untitled Grid",
-        rows: Number(document.getElementById("rows")?.value ?? 3),
-        columns: Number(document.getElementById("columns")?.value ?? 3),
-        ratio: document.getElementById("imageRatio")?.value ?? "1:1",
+    const rows = Number(document.getElementById("rows")?.value ?? 3);
+    const columns = Number(document.getElementById("columns")?.value ?? 3);
+    const grid = {
+        ...(stored || {}),
+        name: appState.currentGridName || stored?.name || "Untitled Grid",
+        rows,
+        columns,
+        ratio: document.getElementById("imageRatio")?.value ?? stored?.ratio ?? "1:1",
         spacing: appState.spacing,
         backgroundColor: appState.backgroundColor,
         borderEnabled: appState.borderEnabled,
         borderSize: appState.borderSize,
         borderColor: appState.borderColor,
-        images: structuredClone(appState.savedImages),
+        images: Array.from({ length: rows * columns }, (_, index) =>
+            appState.savedImages[index] == null ? null : structuredClone(appState.savedImages[index])
+        ),
         undoStack: structuredClone(appState.undoStack),
         redoStack: structuredClone(appState.redoStack)
     };
@@ -101,8 +109,8 @@ async function exportCurrentProject() {
         format: PROJECT_FORMAT,
         version: PROJECT_VERSION,
         exportedAt: new Date().toISOString(),
-        grid: fallback
-    }, safeFilename(fallback.name) + ".gridproject");
+        grid
+    }, safeFilename(grid.name) + ".gridproject");
 }
 
 async function importProjectFile(file) {
