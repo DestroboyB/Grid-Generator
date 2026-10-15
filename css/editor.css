@@ -1,4 +1,7 @@
- /* Image Editor */
+/* ========================================
+   Image Editor
+   Owns editor layout, controls, and responsive behavior.
+======================================== */
 
 .image-editor {
     width: min(1000px, 95vw);
@@ -48,15 +51,19 @@
     color: #1f2937;
 }
 
-/* Preview */
+/* Preview layout. CropperJS-specific internals are in cropper.css. */
 
 .editor-preview {
+    position: relative;
+    width: 100%;
     height: 55vh;
     min-height: 350px;
-    flex-shrink: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: #111827;
     overflow: hidden;
-    position: relative;
+    flex-shrink: 1;
 }
 
 .editor-preview .cropper-container {
@@ -118,7 +125,7 @@
 
 .restore-original-tab:hover {
     background: #f3f4f6;
-    color: #374151;
+    color: #1f2937;
 }
 
 /* Editor panels */
@@ -151,8 +158,7 @@
 
 .editor-button-row button {
     width: clamp(110px, 12vw, 180px);
-    padding: clamp(7px, 0.7vw, 12px)
-             clamp(8px, 1vw, 16px);
+    padding: clamp(7px, 0.7vw, 12px) clamp(8px, 1vw, 16px);
     border: 1px solid #d1d5db;
     border-radius: 7px;
     background: #ffffff;
@@ -172,14 +178,14 @@
 .adjust-controls {
     height: 100%;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px 20px;
     align-content: center;
 }
 
 .editor-control {
     display: grid;
-    grid-template-columns: 90px 1fr 48px;
+    grid-template-columns: 90px minmax(0, 1fr) 48px;
     align-items: center;
     gap: 10px;
 }
@@ -192,6 +198,7 @@
 
 .editor-control input[type="range"] {
     width: 100%;
+    min-width: 0;
 }
 
 .editor-control span {
@@ -212,8 +219,7 @@
 
 .filter-buttons button {
     width: clamp(75px, 9vw, 130px);
-    padding: clamp(6px, 0.6vw, 10px)
-             clamp(6px, 0.8vw, 12px);
+    padding: clamp(6px, 0.6vw, 10px) clamp(6px, 0.8vw, 12px);
     border: 1px solid #d1d5db;
     border-radius: 7px;
     background: #ffffff;
@@ -267,7 +273,7 @@
     background: #1d4ed8;
 }
 
-/* Smaller screens */
+/* Tablet and mobile */
 
 @media (max-width: 700px) {
     .image-editor {
@@ -276,6 +282,7 @@
     }
 
     .editor-preview {
+        height: 45vh;
         min-height: 300px;
     }
 
@@ -288,11 +295,25 @@
     }
 
     .adjust-controls {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
     }
 
     .editor-control {
-        grid-template-columns: 90px 1fr 48px;
+        grid-template-columns: minmax(0, 1fr) 38px;
+        gap: 4px 8px;
+    }
+
+    .editor-control label {
+        grid-column: 1 / -1;
+    }
+
+    .editor-control input[type="range"] {
+        grid-column: 1;
+    }
+
+    .editor-control span {
+        grid-column: 2;
     }
 
     .restore-original-tab {
@@ -343,8 +364,8 @@
     }
 
     .editor-control {
-        grid-template-columns: 80px 1fr 45px;
-        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) 45px;
+        gap: 4px 8px;
     }
 
     .restore-original-tab {
@@ -371,5 +392,24 @@
         width: clamp(58px, 17vw, 90px);
         padding: 6px 3px;
         font-size: clamp(9px, 2.4vw, 12px);
+    }
+}
+
+/* Short phone screens and landscape */
+
+@media (max-width: 700px) and (max-height: 600px) {
+    .image-editor {
+        max-height: calc(100vh - 16px);
+    }
+
+    .editor-preview {
+        height: 30vh;
+        min-height: 160px;
+    }
+
+    .editor-panel {
+        height: 72px;
+        min-height: 72px;
+        max-height: 72px;
     }
 }
