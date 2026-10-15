@@ -1389,3 +1389,38 @@ test("MyAnimeList search tabs stay within the viewport at responsive widths", as
         }
     }
 });
+
+
+test("main workspace and controls do not overflow narrow viewports", async ({ page }) => {
+    await waitForApp(page);
+
+    for (const width of [1280, 1024, 850, 768, 600, 390, 320]) {
+        await page.setViewportSize({ width, height: 900 });
+
+        const layout = await page.evaluate(() => {
+            const board = document.getElementById("board").getBoundingClientRect();
+            const controls = document.querySelector(".controls").getBoundingClientRect();
+            const header = document.querySelector(".app-header").getBoundingClientRect();
+            return {
+                viewportWidth: window.innerWidth,
+                documentWidth: document.documentElement.scrollWidth,
+                bodyWidth: document.body.scrollWidth,
+                boardLeft: board.left,
+                boardRight: board.right,
+                controlsLeft: controls.left,
+                controlsRight: controls.right,
+                headerLeft: header.left,
+                headerRight: header.right
+            };
+        });
+
+        expect(layout.documentWidth, `document overflow at ${width}px`).toBeLessThanOrEqual(width);
+        expect(layout.bodyWidth, `body overflow at ${width}px`).toBeLessThanOrEqual(width);
+        expect(layout.boardLeft, `board starts off-screen at ${width}px`).toBeGreaterThanOrEqual(-1);
+        expect(layout.boardRight, `board ends off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
+        expect(layout.controlsLeft, `controls start off-screen at ${width}px`).toBeGreaterThanOrEqual(-1);
+        expect(layout.controlsRight, `controls end off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
+        expect(layout.headerLeft, `header starts off-screen at ${width}px`).toBeGreaterThanOrEqual(-1);
+        expect(layout.headerRight, `header ends off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
+    }
+});
