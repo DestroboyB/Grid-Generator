@@ -7,10 +7,10 @@
     position: static;
     z-index: auto;
     padding: 9px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
-    background: #ffffff;
-    color: #1f2937;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -208,7 +208,7 @@
 .library-section-divider {
     height: 1px;
     margin: 10px 2px;
-    background: #d1d5db;
+    background: var(--color-border);
 }
 
 .library-category-header:focus-visible {
@@ -249,7 +249,7 @@
     flex: 0 1 auto;
     max-width: 100%;
     padding: 4px 6px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     background: #fff;
     color: #333;
@@ -261,7 +261,7 @@
 }
 
 .library-category-action:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 .library-category-action.delete {
@@ -278,7 +278,7 @@
     min-width: 0;
     margin-left: 8px;
     padding-left: 5px;
-    border-left: 1px solid #e5e7eb;
+    border-left: 1px solid var(--color-border-subtle);
 }
 
 /* JavaScript should add/remove .collapsed on the category
@@ -341,7 +341,7 @@
 .library-grid-action {
     flex: 0 1 auto;
     padding: 4px 6px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     background: #fff;
     color: #333;
@@ -351,7 +351,7 @@
 }
 
 .library-grid-action:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 }
 
 .library-grid-action.delete {
@@ -368,7 +368,7 @@
     min-width: 0;
     width: 100%;
     padding: 5px 6px;
-    border: 1px solid #9ca3af;
+    border: 1px solid var(--color-text-subtle);
     border-radius: 5px;
     font: inherit;
     font-weight: normal;
@@ -525,7 +525,7 @@
     width: 100%;
     box-sizing: border-box;
     padding: 9px 11px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 6px;
     background: #fff;
     color: #222;
@@ -537,7 +537,7 @@
     height: 1px;
     flex-shrink: 0;
     margin: 0;
-    background: #d1d5db;
+    background: var(--color-border);
 }
 
 
