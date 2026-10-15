@@ -14,7 +14,10 @@ export default defineConfig({
     projects: [
         {
             name: "chromium",
-            use: { ...devices["Desktop Chrome"] }
+            // Use Playwright's regular Chromium build in new headless mode
+            // instead of the default separate headless-shell binary. This is
+            // a controlled CI diagnostic for GIF frame advancement.
+            use: { ...devices["Desktop Chrome"], channel: "chromium" }
         }
     ],
     webServer: {
