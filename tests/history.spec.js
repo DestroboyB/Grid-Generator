@@ -1226,3 +1226,99 @@ test("Restore Original clears rotation and filter adjustments before saving", as
     expect(restoredPixels.right[2]).toBeGreaterThan(200);
     expect(restoredPixels.right[0]).toBeLessThan(40);
 });
+
+
+test("edited images stay with their own grids when switching back and forth", async ({ page }) => {
+    await waitForApp(page);
+    await addImageToFirstTile(page);
+
+    // Edit the first grid with a rotation.
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#rotateRightButton").click();
+    await page.locator("#cropButton").click();
+
+    await expect.poll(async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return records.find(grid => grid.name === "Untitled Grid")?.images?.[0]?.rotation ?? null;
+    })).toBe(90);
+
+    // Create a second grid and give it a different image transform.
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await page.locator("#newGridButton").click();
+    await page.locator("#newGridNameInput").fill("Edited Grid B");
+    await page.locator("#createNewGridButton").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("1:1");
+
+    if (await page.locator("#libraryPanel").evaluate(panel => panel.classList.contains("open"))) {
+        await page.locator("#libraryButton").click();
+    }
+    await addImageToFirstTile(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#flipHorizontalButton").click();
+    await page.locator("#cropButton").click();
+
+    const readImageState = async name => page.evaluate(async gridName => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const records = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        const image = records.find(grid => grid.name === gridName)?.images?.[0];
+        return image ? {
+            source: image.source,
+            rotation: image.rotation,
+            flipX: image.flipX,
+            flipY: image.flipY
+        } : null;
+    }, name);
+
+    await expect.poll(() => readImageState("Edited Grid B")).toMatchObject({
+        rotation: 0,
+        flipX: true,
+        flipY: false
+    });
+
+    // Switch back to A and verify its rotated image wasn't replaced by B's.
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    const gridA = page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" });
+    await gridA.locator(".library-grid-name").click();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    const stateA = await readImageState("Untitled Grid");
+    expect(stateA).toMatchObject({ rotation: 90, flipX: false, flipY: false });
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", stateA.source);
+
+    // Switch to B again and confirm its flip and image source are intact.
+    const gridB = page.locator("#libraryContent .library-grid").filter({ hasText: "Edited Grid B" });
+    await gridB.locator(".library-grid-name").click();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    const stateB = await readImageState("Edited Grid B");
+    expect(stateB).toMatchObject({ rotation: 0, flipX: true, flipY: false });
+    expect(stateB.source).not.toBe(stateA.source);
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", stateB.source);
+});
