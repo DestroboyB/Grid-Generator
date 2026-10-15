@@ -197,14 +197,7 @@ const settingsDismissControls = document.querySelectorAll(
 settingsDismissControls.forEach(control => {
     control.addEventListener("pointerdown", closeBoardSettings, true);
 });
-document.addEventListener("click", event => {
-    if (
-        !boardSettingsPanel.contains(event.target) &&
-        !boardSettingsButton.contains(event.target)
-    ) {
-        closeBoardSettings();
-    }
-});
+
 
 
 // ========================================
