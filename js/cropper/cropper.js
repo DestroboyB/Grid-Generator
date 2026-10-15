@@ -30,6 +30,11 @@ import {
     setupFilters
 } from "./cropperAdjust.js";
 
+import {
+    isAnimatedGifMode,
+    applyAnimatedGifMode
+} from "../images/animatedGifEditor.js";
+
 
 // ========================================
 // Elements
@@ -809,14 +814,27 @@ if (
 
 cropButton.addEventListener(
     "click",
-    () => {
+    async () => {
+        if (isAnimatedGifMode()) {
+            cropButton.disabled = true;
+            const originalText = cropButton.textContent;
+            cropButton.textContent = "Saving GIF…";
 
-        applyCrop(
-            cropImage,
-            board,
-            cropModal
-        );
+            try {
+                await applyAnimatedGifMode();
+                closeCropper(cropModal, cropImage);
+            } catch (error) {
+                console.error("Unable to save animated GIF:", error);
+                alert(error.message || "Unable to save this GIF.");
+            } finally {
+                cropButton.disabled = false;
+                cropButton.textContent = originalText;
+            }
 
+            return;
+        }
+
+        applyCrop(cropImage, board, cropModal);
     }
 );
 
