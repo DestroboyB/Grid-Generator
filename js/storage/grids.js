@@ -529,14 +529,60 @@ function captureCurrentGridSnapshot() {
     };
 }
 
+function updateSaveStatus(message, isError = false) {
+    let status = document.getElementById("gridSaveStatus");
+
+    if (!status) {
+        status = document.createElement("div");
+        status.id = "gridSaveStatus";
+        status.setAttribute("role", isError ? "alert" : "status");
+        status.setAttribute("aria-live", isError ? "assertive" : "polite");
+        Object.assign(status.style, {
+            position: "fixed",
+            left: "50%",
+            bottom: "1rem",
+            transform: "translateX(-50%)",
+            zIndex: "10000",
+            maxWidth: "min(90vw, 36rem)",
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+            fontSize: "0.95rem",
+            textAlign: "center"
+        });
+        document.body.append(status);
+    }
+
+    status.textContent = message;
+    status.style.background = isError ? "#991b1b" : "#166534";
+    status.style.color = "#ffffff";
+    status.setAttribute("role", isError ? "alert" : "status");
+    status.setAttribute("aria-live", isError ? "assertive" : "polite");
+    status.hidden = !message;
+}
+
 export function saveCurrentGrid() {
     const snapshot = captureCurrentGridSnapshot();
 
     currentGridSaveQueue = currentGridSaveQueue
         .catch(error => {
+            // Keep the queue usable even if an unexpected rejection escaped.
             console.error("A previous board save failed:", error);
         })
-        .then(() => saveCurrentGridSnapshot(snapshot));
+        .then(async () => {
+            try {
+                await saveCurrentGridSnapshot(snapshot);
+                updateSaveStatus("");
+                return true;
+            } catch (error) {
+                console.error("Failed to save the current grid:", error);
+                updateSaveStatus(
+                    "Couldn't save your latest changes. Keep this tab open and try making another change.",
+                    true
+                );
+                return false;
+            }
+        });
 
     return currentGridSaveQueue;
 }
