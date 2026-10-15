@@ -489,7 +489,20 @@ export async function loadGrid(gridId) {
 // Save Current Grid
 // ========================================
 
-export async function saveCurrentGrid() {
+// Serialize board saves so concurrent edits cannot finish writing out of order.
+let currentGridSaveQueue = Promise.resolve();
+
+export function saveCurrentGrid() {
+    currentGridSaveQueue = currentGridSaveQueue
+        .catch(error => {
+            console.error("A previous board save failed:", error);
+        })
+        .then(() => saveCurrentGridNow());
+
+    return currentGridSaveQueue;
+}
+
+async function saveCurrentGridNow() {
     let grid;
 
     if (appState.currentGridId) {
