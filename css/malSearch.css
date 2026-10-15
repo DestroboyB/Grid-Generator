@@ -48,9 +48,9 @@
     display: flex;
     flex-direction: column;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    border-radius: 12px;
+    border-radius: var(--radius-panel);
 
     box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.35);
@@ -77,9 +77,9 @@
 
     box-sizing: border-box;
 
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border-subtle);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     flex-shrink: 0;
 }
@@ -90,7 +90,7 @@
     font-size: 18px;
     font-weight: 600;
 
-    color: #1f2937;
+    color: var(--color-text);
 }
 
 
@@ -109,7 +109,7 @@
 
     background: transparent;
 
-    color: #6b7280;
+    color: var(--color-text-muted);
 
     font-size: 24px;
     line-height: 1;
@@ -118,8 +118,8 @@
 }
 
 #malSearchModal .mal-search-header button:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--color-page-background);
+    color: var(--color-text);
 }
 
 
@@ -132,9 +132,9 @@
 
     width: 100%;
 
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border-subtle);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     box-sizing: border-box;
 
@@ -158,9 +158,9 @@
     border: none;
     border-bottom: 2px solid transparent;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    color: #6b7280;
+    color: var(--color-text-muted);
 
     font-size: 14px;
     font-weight: 600;
@@ -174,16 +174,16 @@
 }
 
 #malSearchModal .mal-search-tabs button:hover {
-    background: #f9fafb;
+    background: var(--color-surface-subtle);
     color: #374151;
 }
 
 #malSearchModal .mal-search-tabs button.active {
-    background: #ffffff;
+    background: var(--color-surface);
 
-    color: #2563eb;
+    color: var(--color-primary);
 
-    border-bottom-color: #2563eb;
+    border-bottom-color: var(--color-primary);
 }
 
 
@@ -204,7 +204,7 @@
 
     box-sizing: border-box;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     flex-shrink: 0;
 }
@@ -217,13 +217,13 @@
 
     padding: 9px 12px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
-    border-radius: 7px;
+    border-radius: var(--radius-control);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    color: #1f2937;
+    color: var(--color-text);
 
     font-size: 14px;
 
@@ -234,7 +234,7 @@
 
 
 #malSearchModal #malSearchInput:focus {
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 
     box-shadow:
         0 0 0 3px rgba(37, 99, 235, 0.12);
@@ -246,13 +246,13 @@
 
     padding: 9px 16px;
 
-    border: 1px solid #2563eb;
+    border: 1px solid var(--color-primary);
 
-    border-radius: 7px;
+    border-radius: var(--radius-control);
 
-    background: #2563eb;
+    background: var(--color-primary);
 
-    color: #ffffff;
+    color: var(--color-surface);
 
     font-size: 14px;
     font-weight: 600;
@@ -261,8 +261,8 @@
 }
 
 #malSearchModal #malSearchButton:hover {
-    background: #1d4ed8;
-    border-color: #1d4ed8;
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
 }
 
 
@@ -279,9 +279,9 @@
 
     box-sizing: border-box;
 
-    background: #ffffff;
+    background: var(--color-surface);
 
-    color: #6b7280;
+    color: var(--color-text-muted);
 
     font-size: 13px;
     line-height: 1.4;
@@ -334,11 +334,11 @@
 
     padding: 10px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
     border-radius: 8px;
 
-    background: #f9fafb;
+    background: var(--color-surface-subtle);
 
     cursor: pointer;
 
@@ -358,9 +358,9 @@
 #malSearchModal .mal-search-result:hover {
     transform: translateY(-2px);
 
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 
-    background: #eff6ff;
+    background: var(--color-primary-soft);
 
     box-shadow:
         0 4px 10px rgba(0, 0, 0, 0.08);
@@ -369,7 +369,7 @@
 #malSearchModal .mal-search-result:focus {
     outline: none;
 
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 
     box-shadow:
         0 0 0 2px rgba(37, 99, 235, 0.2);
@@ -393,7 +393,7 @@
 
     margin-bottom: 8px;
 
-    background: #e5e7eb;
+    background: var(--color-border-subtle);
 
     display: block;
 }
@@ -416,7 +416,7 @@
 #malSearchModal .mal-result-type {
     font-size: 11px;
 
-    color: #6b7280;
+    color: var(--color-text-muted);
 
     text-align: center;
 }
@@ -439,11 +439,11 @@
 
     padding: 8px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
     border-radius: 8px;
 
-    background: #f9fafb;
+    background: var(--color-surface-subtle);
 
     cursor: pointer;
 
@@ -463,9 +463,9 @@
 #malSearchModal .mal-gallery-picture:hover {
     transform: translateY(-2px);
 
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 
-    background: #eff6ff;
+    background: var(--color-primary-soft);
 
     box-shadow:
         0 4px 10px rgba(0, 0, 0, 0.08);
@@ -474,7 +474,7 @@
 #malSearchModal .mal-gallery-picture:focus {
     outline: none;
 
-    border-color: #2563eb;
+    border-color: var(--color-primary);
 
     box-shadow:
         0 0 0 2px rgba(37, 99, 235, 0.2);
@@ -496,7 +496,7 @@
 
     border-radius: 5px;
 
-    background: #e5e7eb;
+    background: var(--color-border-subtle);
 
     margin-bottom: 0;
 
@@ -513,7 +513,7 @@
 
     font-weight: 600;
 
-    color: #4b5563;
+    color: var(--color-text-secondary);
 
     text-align: center;
 }
@@ -532,11 +532,11 @@
 
     padding: 9px 14px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
-    border-radius: 7px;
+    border-radius: var(--radius-control);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     color: #374151;
 
@@ -549,9 +549,9 @@
 }
 
 #malSearchModal .mal-search-back-button:hover {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 
-    border-color: #9ca3af;
+    border-color: var(--color-text-subtle);
 }
 
 
@@ -761,9 +761,9 @@
 
     padding: 12px 20px;
 
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--color-border-subtle);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     box-sizing: border-box;
 
@@ -775,11 +775,11 @@
 
     padding: 8px 14px;
 
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
 
-    border-radius: 7px;
+    border-radius: var(--radius-control);
 
-    background: #ffffff;
+    background: var(--color-surface);
 
     color: #374151;
 
@@ -791,9 +791,9 @@
 }
 
 #malSearchModal .mal-search-navigation button:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: var(--color-page-background);
 
-    border-color: #9ca3af;
+    border-color: var(--color-text-subtle);
 }
 
 #malSearchModal .mal-search-navigation button:disabled {
@@ -805,7 +805,7 @@
 #malSearchModal #malSearchPageIndicator {
     min-width: 70px;
 
-    color: #6b7280;
+    color: var(--color-text-muted);
 
     font-size: 13px;
 
@@ -832,8 +832,8 @@
 #malSearchModal .mal-picture-loading-message {
     padding: 12px 18px;
     border-radius: 8px;
-    background: #ffffff;
-    border: 1px solid #d1d5db;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.12);
     font-size: 14px;
@@ -849,8 +849,8 @@
     flex: 1;
     min-width: 0;
     flex-direction: column;
-    border-right: 1px solid #e5e7eb;
-    background: #ffffff;
+    border-right: 1px solid var(--color-border-subtle);
+    background: var(--color-surface);
 }
 
 #malSearchModal .mal-character-tab-inner {
@@ -885,7 +885,7 @@
     bottom: 0;
     left: 0;
     height: 2px;
-    background: #2563eb;
+    background: var(--color-primary);
     pointer-events: none;
 }
 
@@ -898,7 +898,7 @@
     grid-row: 1;
     min-width: 0;
     padding: 4px 8px;
-    background: #ffffff;
+    background: var(--color-surface);
     flex-shrink: 0;
 }
 
@@ -907,10 +907,10 @@
     min-width: 0;
     min-height: 0;
     padding: 5px 8px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 999px;
-    background: #f9fafb;
-    color: #4b5563;
+    background: var(--color-surface-subtle);
+    color: var(--color-text-secondary);
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
@@ -924,9 +924,9 @@
 }
 
 #malSearchModal .mal-character-subtabs button.active {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #1d4ed8;
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
 }
 
 /* Compact and consistently order the character sub-tabs on narrower screens. */
@@ -979,7 +979,7 @@
     width: 100%;
     padding: 0 20px 8px;
     box-sizing: border-box;
-    background: #ffffff;
+    background: var(--color-surface);
     flex-shrink: 0;
 }
 
@@ -1001,7 +1001,7 @@
 }
 
 #malSearchModal .mal-character-sort-row label {
-    color: #6b7280;
+    color: var(--color-text-muted);
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
@@ -1010,9 +1010,9 @@
 #malSearchModal #malCharacterSort {
     max-width: 180px;
     padding: 6px 9px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 6px;
-    background: #ffffff;
+    background: var(--color-surface);
     color: #374151;
     font: inherit;
     font-size: 12px;
