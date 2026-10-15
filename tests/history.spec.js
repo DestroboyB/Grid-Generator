@@ -467,7 +467,9 @@ test("switching grids immediately after Undo does not fail saves or lose either 
     await page.locator("#newGridNameInput").fill("Undo Switch Target");
     await page.locator("#createNewGridButton").click();
     await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
-    await page.locator("#libraryCloseButton").click();
+    if ((await page.locator("#libraryPanel").getAttribute("class")).includes("open")) {
+        await page.locator("#libraryCloseButton").click();
+    }
     await expect(page.locator("#libraryPanel")).not.toHaveClass(/open/);
 
     await page.locator("#imageRatio").selectOption("16:9");
@@ -475,6 +477,9 @@ test("switching grids immediately after Undo does not fail saves or lose either 
 
     // Reopen the first grid, then immediately switch away after Undo to
     // exercise the race between the history save and the grid-load save.
+    if (!(await page.locator("#libraryPanel").getAttribute("class")).includes("open")) {
+        await page.locator("#libraryButton").click();
+    }
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const originalRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Untitled Grid" });
     await originalRow.locator(".library-grid-name").click();
@@ -485,7 +490,9 @@ test("switching grids immediately after Undo does not fail saves or lose either 
     await page.locator("#undoButton").click();
     await expect(page.locator("#imageRatio")).toHaveValue("1:1");
 
-    await page.locator("#libraryButton").click();
+    if (!(await page.locator("#libraryPanel").getAttribute("class")).includes("open")) {
+        await page.locator("#libraryButton").click();
+    }
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const targetRow = page.locator('#libraryContent .library-grid').filter({ hasText: "Undo Switch Target" });
     await targetRow.locator(".library-grid-name").click();
@@ -579,7 +586,9 @@ test("images and appearance settings remain isolated when switching between grid
         borderSize: 6
     });
 
-    await page.locator("#libraryButton").click();
+    if (!(await page.locator("#libraryPanel").getAttribute("class")).includes("open")) {
+        await page.locator("#libraryButton").click();
+    }
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const originalRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" });
     await originalRow.locator(".library-grid-name").click();
