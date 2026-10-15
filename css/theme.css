@@ -386,6 +386,11 @@
     color: #ffffff;
 }
 
+:root[data-theme="dark"] .library-grid.active .library-grid-name,
+:root[data-theme="dark"] .library-grid.active .library-grid-icon {
+    color: #ffffff;
+}
+
 :root[data-theme="dark"] .library-category-action,
 :root[data-theme="dark"] .library-grid-action {
     background-color: #1f2937;
