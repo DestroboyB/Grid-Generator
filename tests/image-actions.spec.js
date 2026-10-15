@@ -10,30 +10,14 @@ const replacementPng = Buffer.from(
     "base64"
 );
 
-async function uploadImageToFirstTile(page, name, buffer) {
-    const tile = page.locator('#board .image[data-index="0"]');
-    await tile.click();
-
-    const hasImage = await tile.locator("img").count();
-    if (!hasImage) {
-        await page.locator("#openImageSourceMenuButton").click();
-        const chooserPromise = page.waitForEvent("filechooser");
-        await page.locator("#uploadImageButton").click();
-        const chooser = await chooserPromise;
-        await chooser.setFiles({ name, mimeType: "image/png", buffer });
-    } else {
-        await page.locator("#replaceImageButton").click();
-        await page.locator("#replaceUploadImageButton").click();
-        const chooserPromise = page.waitForEvent("filechooser");
-        await page.locator("#uploadImageButton").click();
-        const chooser = await chooserPromise;
-        await chooser.setFiles({ name, mimeType: "image/png", buffer });
-    }
-
+async function uploadFile(page, buttonSelector, name, buffer) {
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator(buttonSelector).click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({ name, mimeType: "image/png", buffer });
     await expect(page.locator("#cropModal")).toBeVisible();
     await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
     await page.locator("#cropButton").click();
-    await expect(tile.locator("img")).toHaveCount(1);
 }
 
 test("image can be added, replaced, and deleted", async ({ page }) => {
@@ -41,12 +25,16 @@ test("image can be added, replaced, and deleted", async ({ page }) => {
     const tile = page.locator('#board .image[data-index="0"]');
     await expect(tile).toBeVisible();
 
-    await uploadImageToFirstTile(page, "original.png", tinyPng);
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await uploadFile(page, "#uploadImageButton", "original.png", tinyPng);
+    await expect(tile.locator("img")).toHaveCount(1);
     const originalSrc = await tile.locator("img").getAttribute("src");
 
     await tile.click();
-    await expect(page.locator("#replaceImageButton")).toBeVisible();
-    await uploadImageToFirstTile(page, "replacement.png", replacementPng);
+    await page.locator("#replaceImageButton").click();
+    await uploadFile(page, "#replaceUploadImageButton", "replacement.png", replacementPng);
+    await expect(tile.locator("img")).toHaveCount(1);
     const replacementSrc = await tile.locator("img").getAttribute("src");
     expect(replacementSrc).not.toBe(originalSrc);
 
