@@ -95,3 +95,45 @@ test("dropping an external image file opens the editor and imports it into the t
     await page.reload();
     await expect(page.locator('#board .image[data-index="2"] img')).toHaveAttribute("src", importedSource);
 });
+
+
+test("dropping an image URL opens the editor and imports it into the target tile", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#board .image")).toHaveCount(9);
+
+    const tile = page.locator('#board .image[data-index="3"]');
+    const imageURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=";
+
+    const dropPrevented = await page.evaluate(({ imageURL }) => {
+        const target = document.querySelector('#board .image[data-index="3"]');
+        const transfer = new DataTransfer();
+        transfer.setData("text/uri-list", imageURL);
+
+        target.dispatchEvent(new DragEvent("dragover", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: transfer
+        }));
+
+        const dropEvent = new DragEvent("drop", {
+            bubbles: true,
+            cancelable: true,
+            dataTransfer: transfer
+        });
+        target.dispatchEvent(dropEvent);
+        return dropEvent.defaultPrevented;
+    }, { imageURL });
+
+    expect(dropPrevented).toBe(true);
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#cropButton").click();
+
+    await expect(tile.locator("img")).toHaveCount(1);
+    await expect.poll(() => tile.locator("img").evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+
+    const importedSource = await tile.locator("img").getAttribute("src");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="3"] img')).toHaveAttribute("src", importedSource);
+});
