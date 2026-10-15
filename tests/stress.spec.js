@@ -305,3 +305,63 @@ test("mobile library: drawer scrolls independently and keeps creation actions vi
     await page.locator("#libraryCloseButton").click();
     await expect(page.locator("body")).not.toHaveClass(/library-open/);
 });
+
+
+test("storage reliability: IndexedDB retries after a transient open failure", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const indexedDBFactory = window.indexedDB;
+        const originalDescriptor = Object.getOwnPropertyDescriptor(indexedDBFactory, "open");
+        const originalOpen = indexedDBFactory.open;
+        let shouldFail = true;
+        let firstErrorName = null;
+        let db = null;
+
+        Object.defineProperty(indexedDBFactory, "open", {
+            configurable: true,
+            writable: true,
+            value: function (...args) {
+                if (shouldFail) {
+                    shouldFail = false;
+                    throw new DOMException(
+                        "Simulated temporary storage failure",
+                        "UnknownError"
+                    );
+                }
+
+                return originalOpen.apply(indexedDBFactory, args);
+            }
+        });
+
+        try {
+            const moduleUrl = `/js/storage/database.js?retry-test=${Date.now()}`;
+            const { openDatabase } = await import(moduleUrl);
+
+            try {
+                await openDatabase();
+            } catch (error) {
+                firstErrorName = error.name;
+            }
+
+            db = await openDatabase();
+            return {
+                firstErrorName,
+                reopened: db instanceof IDBDatabase,
+                stores: Array.from(db.objectStoreNames).sort()
+            };
+        } finally {
+            db?.close();
+
+            if (originalDescriptor) {
+                Object.defineProperty(indexedDBFactory, "open", originalDescriptor);
+            } else {
+                delete indexedDBFactory.open;
+            }
+        }
+    });
+
+    expect(result.firstErrorName).toBe("UnknownError");
+    expect(result.reopened).toBe(true);
+    expect(result.stores).toEqual(["categories", "grids"]);
+});
