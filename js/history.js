@@ -10,8 +10,10 @@ import {
     renderAllImages
 } from "./board.js";
 
+// Image data is stored inside each snapshot. Keeping 10 snapshots limits
+// memory pressure on phones when grids contain large photos.
 const MAX_HISTORY_STATES =
-    30;
+    10;
 
 const rowsInput =
     document.getElementById(
