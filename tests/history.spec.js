@@ -1816,6 +1816,10 @@ test("animated GIF uploads stay animated-format data URLs and persist after relo
         buffer: animatedGif
     });
 
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect(page.locator("#useAnimatedGifButton")).toBeVisible();
+    await page.locator("#useAnimatedGifButton").click();
+
     const tileImage = page.locator('#board .image[data-index="0"] img');
     await expect(tileImage).toHaveCount(1);
     await expect(tileImage).toHaveAttribute("src", /^data:image\/gif;base64,/);
