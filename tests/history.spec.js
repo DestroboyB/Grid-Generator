@@ -830,3 +830,74 @@ test("PNG, JPG, and WebP downloads produce correctly encoded image files", async
         await expect(page.locator("#downloadMenu")).toBeHidden();
     }
 });
+
+
+test("horizontal flip changes the saved image pixels, not just its metadata", async ({ page }) => {
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const pngBase64 = await page.evaluate(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 100;
+        canvas.height = 100;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#ff0000";
+        context.fillRect(0, 0, 50, 100);
+        context.fillStyle = "#0000ff";
+        context.fillRect(50, 0, 50, 100);
+        return canvas.toDataURL("image/png").split(",")[1];
+    });
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({
+        name: "two-color-test.png",
+        mimeType: "image/png",
+        buffer: Buffer.from(pngBase64, "base64")
+    });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(100);
+    await page.locator("#flipHorizontalButton").click();
+    await page.locator("#cropButton").click();
+
+    const pixels = await page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+
+        const source = grids.find(item => item.name === "Untitled Grid")?.images?.[0]?.source;
+        if (!source) throw new Error("No saved image source found");
+
+        const image = new Image();
+        image.src = source;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(image, 0, 0);
+        const y = Math.floor(canvas.height / 2);
+        const left = Array.from(context.getImageData(5, y, 1, 1).data);
+        const right = Array.from(context.getImageData(canvas.width - 6, y, 1, 1).data);
+        return { width: canvas.width, height: canvas.height, left, right };
+    });
+
+    expect(pixels.width).toBeGreaterThan(10);
+    expect(pixels.height).toBeGreaterThan(10);
+    expect(pixels.left[2]).toBeGreaterThan(200);
+    expect(pixels.left[0]).toBeLessThan(40);
+    expect(pixels.right[0]).toBeGreaterThan(200);
+    expect(pixels.right[2]).toBeLessThan(40);
+});
