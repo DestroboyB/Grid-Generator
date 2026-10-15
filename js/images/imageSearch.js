@@ -3,7 +3,7 @@ import { appState } from "../state.js";
 import {
     openCropForURL
 } from "../cropper/cropper.js";
-import { importAnimatedGif } from "./animatedGif.js";
+import { showAnimatedGifOption, hideAnimatedGifOption } from "./animatedGifEditor.js";
 
 
 // ========================================
@@ -397,14 +397,13 @@ function selectImage(result) {
         closeImageSearch();
 
         if (result.mime === "image/gif" || /\.gif(?:[?#]|$)/i.test(result.url)) {
-            imageSearchStatus.textContent = "Importing animated GIF...";
-            importAnimatedGif(result.url, selectedDiv).catch(error => {
-                console.error("Unable to import animated GIF:", error);
-                alert(error.message || "Unable to import this GIF.");
-            });
+            closeImageSearch();
+            openCropForURL(result.url, selectedDiv);
+            showAnimatedGifOption(result.url, selectedDiv);
             return;
         }
 
+        hideAnimatedGifOption();
         openCropForURL(
             result.url,
             selectedDiv
