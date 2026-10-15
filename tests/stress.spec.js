@@ -365,3 +365,99 @@ test("storage reliability: IndexedDB retries after a transient open failure", as
     expect(result.reopened).toBe(true);
     expect(result.stores).toEqual(["categories", "grids"]);
 });
+
+
+test("storage reliability: failed first save can recover and retry creating the grid", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const { saveCurrentGrid } = await import(
+            `/js/storage/grids.js?first-save-retry=${Date.now()}`
+        );
+        const storePrototype = IDBObjectStore.prototype;
+        const originalPut = storePrototype.put;
+        const originalGridId = appState.currentGridId;
+        let failFirstWrite = true;
+        let firstSave = null;
+        let secondSave = null;
+        let savedGrid = null;
+
+        try {
+            appState.currentGridId = null;
+            Object.defineProperty(storePrototype, "put", {
+                configurable: true,
+                writable: true,
+                value: function (...args) {
+                    if (failFirstWrite) {
+                        failFirstWrite = false;
+                        throw new DOMException(
+                            "Simulated full browser storage",
+                            "QuotaExceededError"
+                        );
+                    }
+
+                    return originalPut.apply(this, args);
+                }
+            });
+
+            firstSave = await saveCurrentGrid();
+            const failedGridId = appState.currentGridId;
+            const warning = document.querySelector("#gridSaveStatus")?.textContent ?? "";
+
+            secondSave = await saveCurrentGrid();
+
+            const request = indexedDB.open("gridBoardDatabase", 2);
+            const db = await new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            const transaction = db.transaction("grids", "readonly");
+            savedGrid = await new Promise((resolve, reject) => {
+                const getRequest = transaction.objectStore("grids").get(failedGridId);
+                getRequest.onsuccess = () => resolve(getRequest.result ?? null);
+                getRequest.onerror = () => reject(getRequest.error);
+            });
+            db.close();
+
+            return {
+                firstSave,
+                secondSave,
+                warning,
+                failedGridId,
+                savedGridId: savedGrid?.id ?? null
+            };
+        } finally {
+            Object.defineProperty(storePrototype, "put", {
+                configurable: true,
+                writable: true,
+                value: originalPut
+            });
+            appState.currentGridId = originalGridId;
+        }
+    });
+
+    expect(result.firstSave).toBe(false);
+    expect(result.warning).toContain("browser storage is full");
+    expect(result.secondSave).toBe(true);
+    expect(result.savedGridId).toBe(result.failedGridId);
+});
+
+test("storage reliability: save warnings explain quota and unavailable-storage errors", async ({ page }) => {
+    await waitForApp(page);
+
+    const messages = await page.evaluate(async () => {
+        const { getSaveErrorMessage } = await import("/js/storage/grids.js");
+
+        return {
+            quota: getSaveErrorMessage(new DOMException("Full", "QuotaExceededError")),
+            unavailable: getSaveErrorMessage(new DOMException("Blocked", "SecurityError")),
+            unknown: getSaveErrorMessage(new Error("Unexpected failure"))
+        };
+    });
+
+    expect(messages.quota).toContain("browser storage is full");
+    expect(messages.quota).toContain("Export important grids");
+    expect(messages.unavailable).toContain("Browser storage is unavailable");
+    expect(messages.unknown).toContain("export important grids");
+});
