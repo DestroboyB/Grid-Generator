@@ -146,6 +146,16 @@
     display: block;
 }
 
+/* Keep panel scrolling available without flashing a visible scrollbar. */
+.editor-panel {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.editor-panel::-webkit-scrollbar {
+    display: none;
+}
+
 /* Transform buttons */
 
 .editor-button-row {
