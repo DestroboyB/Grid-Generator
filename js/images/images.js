@@ -210,7 +210,6 @@ export function openFileSelector(
 
             if (file.type === "image/gif" || /\.gif$/i.test(file.name)) {
                 openCropForFile(file, element);
-                showAnimatedGifOption(file, element);
                 return;
             }
 
@@ -639,10 +638,17 @@ updateImageButton.addEventListener(
             div
         );
 
-        if (imageData.animatedGif) {
+        const originalSource = imageData.originalSource || imageData.source;
+        const isGifSource =
+            imageData.animatedGif === true ||
+            (typeof originalSource === "string" &&
+                (/^data:image\\/gif/i.test(originalSource) || /\\.gif(?:[?#]|$)/i.test(originalSource)));
+
+        if (isGifSource) {
             showAnimatedGifOption(
-                imageData.originalSource || imageData.source,
-                div
+                originalSource,
+                div,
+                imageData.animatedGif === true
             );
         } else {
             hideAnimatedGifOption();
