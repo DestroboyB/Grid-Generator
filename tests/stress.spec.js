@@ -570,7 +570,7 @@ test("storage reliability: failed grid deletion preserves the saved grid and lib
 
     const result = await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
-        const { saveCurrentGrid, getGrid } = await import(
+        const { saveCurrentGrid, getGrid, deleteGrid } = await import(
             `/js/storage/grids.js?delete-failure-test=${Date.now()}`
         );
 
@@ -595,20 +595,7 @@ test("storage reliability: failed grid deletion preserves the saved grid and lib
             let deletionError = null;
 
             try {
-                const dbRequest = indexedDB.open("gridBoardDatabase", 2);
-                const db = await new Promise((resolve, reject) => {
-                    dbRequest.onsuccess = () => resolve(dbRequest.result);
-                    dbRequest.onerror = () => reject(dbRequest.error);
-                });
-
-                const transaction = db.transaction("grids", "readwrite");
-                transaction.objectStore("grids").delete(gridId);
-                await new Promise((resolve, reject) => {
-                    transaction.oncomplete = resolve;
-                    transaction.onerror = () => reject(transaction.error);
-                    transaction.onabort = () => reject(transaction.error);
-                });
-                db.close();
+                await deleteGrid(gridId);
             } catch (error) {
                 deletionError = error.name;
             }
