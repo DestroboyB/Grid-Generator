@@ -3,11 +3,25 @@ import { importAnimatedGif } from "./animatedGif.js";
 let animatedGifSource = null;
 let animatedGifTarget = null;
 let toggle = null;
+let preview = null;
 let previewObserver = null;
 let lastFrozenFrame = null;
 
 function getCropperImage() {
-    return document.querySelector("#cropModal .cropper-canvas img");
+    return document.querySelector("#cropModal .cropper-canvas img:not(#animatedGifPreview)");
+}
+
+function getCropperCanvas() {
+    return document.querySelector("#cropModal .cropper-canvas");
+}
+
+function attachPreviewToCropper() {
+    const canvas = getCropperCanvas();
+    if (!canvas || !preview) return;
+
+    if (preview.parentElement !== canvas) {
+        canvas.appendChild(preview);
+    }
 }
 
 function setCropperImageSource(source) {
@@ -22,22 +36,20 @@ function setCropperImageSource(source) {
 }
 
 function freezeCurrentFrame() {
+    const sourceImage = preview?.complete && preview.naturalWidth ? preview : getCropperImage();
     const cropperImage = getCropperImage();
-    if (!cropperImage?.complete || !cropperImage.naturalWidth || !cropperImage.naturalHeight) {
+    if (!sourceImage?.complete || !sourceImage.naturalWidth || !sourceImage.naturalHeight || !cropperImage) {
         return;
     }
 
     try {
         const canvas = document.createElement("canvas");
-        canvas.width = cropperImage.naturalWidth;
-        canvas.height = cropperImage.naturalHeight;
+        canvas.width = sourceImage.naturalWidth;
+        canvas.height = sourceImage.naturalHeight;
         const context = canvas.getContext("2d");
         if (!context) return;
 
-        // Drawing an animated HTMLImageElement captures the frame currently
-        // being displayed. Replacing Cropper's image with this snapshot keeps
-        // the crop box and transforms intact while ensuring Apply saves it.
-        context.drawImage(cropperImage, 0, 0, canvas.width, canvas.height);
+        context.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
         lastFrozenFrame = canvas.toDataURL("image/png");
         cropperImage.dataset.gifSource = "";
         cropperImage.src = lastFrozenFrame;
@@ -48,16 +60,41 @@ function freezeCurrentFrame() {
 
 function applyPreviewMode() {
     const editorPreview = document.querySelector("#cropModal .editor-preview");
+    const cropperCanvas = getCropperCanvas();
+    const cropperImage = getCropperImage();
     if (!editorPreview || !toggle) return;
 
-    // Keep Cropper's actual image and controls visible in both modes.
-    // Its image element itself is switched between the animated source and
-    // a still-frame snapshot, so crop/rotate/adjust tools remain functional.
-    editorPreview.style.position = "";
-
+    // The animated image is a child of Cropper's moving/scaling canvas, so
+    // it follows the same crop box and transformations. Cropper's image stays
+    // present and its controls remain interactive in either mode.
     if (toggle.checked && animatedGifSource) {
-        setCropperImageSource(animatedGifSource);
+        attachPreviewToCropper();
+        if (preview && preview.src !== animatedGifSource) preview.src = animatedGifSource;
+        if (cropperImage) {
+            cropperImage.style.opacity = "0";
+            cropperImage.style.pointerEvents = "none";
+        }
+        if (preview) {
+            Object.assign(preview.style, {
+                position: "absolute",
+                inset: "0",
+                width: "100%",
+                height: "100%",
+                objectFit: "fill",
+                zIndex: "1",
+                pointerEvents: "none"
+            });
+            preview.hidden = false;
+        }
+    } else {
+        if (preview) preview.hidden = true;
+        if (cropperImage) {
+            cropperImage.style.opacity = "";
+            cropperImage.style.pointerEvents = "";
+        }
     }
+
+    if (cropperCanvas) cropperCanvas.style.position = "absolute";
 }
 
 function handleToggleChange() {
@@ -71,7 +108,7 @@ function handleToggleChange() {
 }
 
 function getControls() {
-    if (toggle) return { toggle };
+    if (toggle && preview) return { toggle, preview };
 
     const footer = document.querySelector("#cropModal .editor-footer");
     const editorPreview = document.querySelector("#cropModal .editor-preview");
@@ -100,12 +137,20 @@ function getControls() {
     const applyButton = footer.querySelector("#cropButton");
     footer.insertBefore(label, applyButton || null);
 
+    preview = document.createElement("img");
+    preview.id = "animatedGifPreview";
+    preview.alt = "Animated GIF preview";
+    preview.hidden = true;
+
     if (!previewObserver) {
-        previewObserver = new MutationObserver(applyPreviewMode);
+        previewObserver = new MutationObserver(() => {
+            attachPreviewToCropper();
+            applyPreviewMode();
+        });
         previewObserver.observe(editorPreview, { childList: true, subtree: true });
     }
 
-    return { toggle };
+    return { toggle, preview };
 }
 
 export function showAnimatedGifOption(source, target, enabled = true) {
@@ -113,11 +158,13 @@ export function showAnimatedGifOption(source, target, enabled = true) {
     animatedGifTarget = target;
 
     const controls = getControls();
-    if (!controls.toggle) return;
+    if (!controls.toggle || !controls.preview) return;
 
     controls.toggle.closest("label").hidden = false;
     controls.toggle.checked = Boolean(enabled);
     lastFrozenFrame = null;
+    controls.preview.src = source || "";
+    setCropperImageSource(source);
     applyPreviewMode();
 }
 
@@ -129,6 +176,13 @@ export function hideAnimatedGifOption() {
     if (toggle) {
         toggle.checked = false;
         toggle.closest("label").hidden = true;
+    }
+
+    if (preview) preview.hidden = true;
+    const cropperImage = getCropperImage();
+    if (cropperImage) {
+        cropperImage.style.opacity = "";
+        cropperImage.style.pointerEvents = "";
     }
 }
 
