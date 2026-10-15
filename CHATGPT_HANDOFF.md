@@ -40,18 +40,17 @@ The logs again show the independent source diagnostic:
 Both data URL and Blob URL stay on the red frame during sampling. This supports that the failure is still present before the app's GIF export logic; root cause remains unconfirmed. Do not change application code based on this alone.
 
 ## Browser/CI investigation completed
-- Before the experiment, Playwright config used `devices["Desktop Chrome"]` with no `channel`, selecting default Chromium headless shell in CI.
-- The current config now sets `channel: "chromium"` to use the regular Chromium build/new headless mode. This experiment failed to change the outcome.
-- CI installs dependencies with `npm install`; `package.json` declares `"@playwright/test": "^1.55.0"`, a version range. A `package-lock.json` was not found at the branch root. Thus the Playwright package version is not pinned, making CI resolution less reproducible.
-- The valid fixture is a two-frame 16x16 GIF (red then blue, 500ms per frame); prior diagnostics showed both data URL and Blob URL remain red.
-- The workflow run has no downloadable artifacts listed. Logs refer to failure screenshots/traces in the runner workspace, but they are not available through the run's artifact list.
-- Do not repeat the already completed data-URL-vs-Blob-URL experiment.
+- `playwright.config.js` sets `channel: "chromium"` to use regular Chromium/new headless mode instead of Playwright's default headless shell. It did not fix the failure.
+- CI currently resolves `@playwright/test` 1.64.1 and Chromium 156.0.8078.4 (revision 1248). `package.json` uses `"^1.55.0"`, CI runs `npm install`, and no root `package-lock.json` is present; versions are not reproducibly pinned.
+- The repository fixture is a valid 2-frame 16×16 GIF (red then blue, 500 ms per frame). Pillow confirms two frames. A separate Pillow-generated fixture also remains red in the browser diagnostic.
+- Run #141 confirms the problem on a blank page in CI, but only through canvas pixel sampling. Next experiment should compare actual rendered screenshots/pixels against canvas sampling and verify the browser's image frame timeline before changing app code.
+- Run logs mention screenshots/traces in the runner workspace, but no downloadable artifacts are currently exposed. Do not repeat the already completed data-URL-vs-Blob-URL experiment.
 
 ## Next steps
-1. Do not change application code yet. The browser-mode experiment is disproven as a fix.
-2. Investigate the exact installed Playwright version and dependency reproducibility. The workflow uses `npm install`, package.json uses `^1.55.0`, and no package lock was found. Inspect the CI log for resolved package/browser versions and current workflow configuration.
-3. Build a minimal browser-only reproduction independent of Grid Generator: load the existing two-frame fixture directly in a page, sample the image after adequate time, and record browser/version details. Consider a known-good encoder-generated fixture as a separate comparison, while keeping the current valid fixture as baseline.
-4. Make the next experiment isolated and evidence-driven; inspect its CI logs before touching application implementation.
+1. Do not change application code yet.
+2. Improve the blank-page diagnostic to sample the rendered image via Playwright screenshots (not only `canvas.drawImage`) and compare the result to canvas sampling. Check whether browser animation-frame callbacks advance and whether an ordinary visible `<img>` is changing on screen.
+3. Then isolate browser/runtime behavior from GIF fixture encoding. If visible rendering also remains frozen, try a controlled Playwright/Chromium version pin or a second browser to determine whether this is CI-specific. Add a lockfile only as a deliberate reproducibility change, not as a speculative fix.
+4. After a reliable browser-level GIF playback test passes, revisit the app editor/export failures. Keep application changes evidence-driven.
 5. Do not merge PR #2 without the user's explicit approval.
 
 ## Relevant files
