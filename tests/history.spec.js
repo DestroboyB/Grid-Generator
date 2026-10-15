@@ -618,3 +618,102 @@ test("images and appearance settings remain isolated when switching between grid
     await expect(page.locator("#borderColor")).toHaveValue("#ff00ff");
     await expect(page.locator("#borderSize")).toHaveValue("6");
 });
+
+
+test("image rotation, adjustments, and filter persist after reload and support Undo/Redo", async ({ page }) => {
+    await waitForApp(page);
+    await addImageToFirstTile(page);
+
+    // Open the saved image in the editor.
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+
+    await page.locator("#rotateRightButton").click();
+    await page.locator('[data-tool="adjust"]').click();
+    await page.locator("#brightnessInput").fill("135");
+    await page.locator("#contrastInput").fill("120");
+    await page.locator('[data-tool="filters"]').click();
+    await page.locator('.filter-button[data-filter="sepia"]').click();
+
+    await expect(page.locator("#brightnessInput")).toHaveValue("135");
+    await expect(page.locator("#contrastInput")).toHaveValue("120");
+    await expect(page.locator('.filter-button[data-filter="sepia"]')).toHaveClass(/active/);
+
+    await page.locator("#cropButton").click();
+    await expect(page.locator("#cropModal")).toBeHidden();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+
+    const readActiveGrid = async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return grids.find(grid => grid.id === window.__unusedActiveGridId) ??
+            grids.find(grid => grid.name === "Untitled Grid");
+    });
+
+    const savedImage = async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        const grid = grids.find(item => item.name === "Untitled Grid");
+        return grid?.images?.[0] ?? grid?.savedImages?.[0] ?? null;
+    });
+
+    await expect.poll(savedImage).toMatchObject({
+        rotation: 90,
+        brightness: 135,
+        contrast: 120,
+        filterName: "sepia"
+    });
+
+    // Reload and reopen the editor; saved controls should match the image data.
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator('[data-tool="adjust"]').click();
+    await expect(page.locator("#brightnessInput")).toHaveValue("135");
+    await expect(page.locator("#contrastInput")).toHaveValue("120");
+    await page.locator('[data-tool="filters"]').click();
+    await expect(page.locator('.filter-button[data-filter="sepia"]')).toHaveClass(/active/);
+
+    // Cancel leaves the saved edit intact. Undo should restore the pre-edit image.
+    await page.locator("#cancelButton").click();
+    await page.locator("#undoButton").click();
+    await expect.poll(savedImage).toMatchObject({
+        rotation: 0,
+        brightness: 100,
+        contrast: 100,
+        filterName: "none"
+    });
+
+    await page.locator("#redoButton").click();
+    await expect.poll(savedImage).toMatchObject({
+        rotation: 90,
+        brightness: 135,
+        contrast: 120,
+        filterName: "sepia"
+    });
+});
