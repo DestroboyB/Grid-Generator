@@ -83,4 +83,5 @@ export async function importAnimatedGif(source, element) {
     saveHistoryState();
     await saveBoard();
     renderImage(element, appState.savedImages[boxIndex]);
+    window.dispatchEvent(new CustomEvent("animated-gif-added"));
 }
