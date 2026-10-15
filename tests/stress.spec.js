@@ -275,3 +275,33 @@ test("history trimming: enforces count and size limits while retaining two state
     expect(result.sharedImageReferences).toBe(true);
 });
 
+
+
+test("mobile library: drawer scrolls independently and keeps creation actions visible", async ({ page }) => {
+    await waitForApp(page, 375, 812);
+    await page.locator("#libraryButton").click();
+
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await expect(page.locator("body")).toHaveClass(/library-open/);
+
+    // Give the drawer enough content to scroll, as it would with many grids/categories.
+    await page.locator("#libraryContent").evaluate(element => {
+        element.innerHTML = '<div style="height: 1800px">Scrollable test content</div>';
+    });
+
+    const actions = await page.locator(".library-actions").boundingBox();
+    expect(actions).not.toBeNull();
+    expect(actions.y + actions.height).toBeLessThanOrEqual(812);
+
+    await page.mouse.move(140, 420);
+    await page.mouse.wheel(0, 500);
+    await expect.poll(
+        () => page.locator("#libraryContent").evaluate(element => element.scrollTop)
+    ).toBeGreaterThan(0);
+
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    expect(await page.locator("body").evaluate(element => getComputedStyle(element).overflow)).toBe("hidden");
+
+    await page.locator("#libraryCloseButton").click();
+    await expect(page.locator("body")).not.toHaveClass(/library-open/);
+});
