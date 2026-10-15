@@ -44,7 +44,11 @@ test("GIF download option is hidden until an animated GIF is on the board", asyn
     });
 
     await waitForApp(page);
+    // Open the menu so this assertion checks the option itself, not just
+    // the fact that its parent menu is closed.
+    await page.locator("#downloadButton").click();
     await expect(page.locator("#downloadGifButton")).toBeHidden();
+    await page.locator("#downloadButton").click();
 
     await page.locator('#board .image[data-index="0"]').click();
     await page.locator("#openImageSourceMenuButton").click();
@@ -61,9 +65,12 @@ test("GIF download option is hidden until an animated GIF is on the board", asyn
     await expect(page.locator("#useAnimatedGifButton")).toBeVisible();
     await page.locator("#useAnimatedGifButton").click();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+
+    // The menu is closed while editing/importing, so reopen it before
+    // asserting that the GIF option is available.
+    await page.locator("#downloadButton").click();
     await expect(page.locator("#downloadGifButton")).toBeVisible();
 
-    await page.locator("#downloadButton").click();
     const downloadPromise = page.waitForEvent("download");
     await page.locator("#downloadGifButton").click();
     const download = await downloadPromise;
