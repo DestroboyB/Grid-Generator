@@ -17,20 +17,38 @@ const MAX_HISTORY_STATES = 10;
 const MAX_HISTORY_DATA_CHARS = 16 * 1024 * 1024;
 
 // Keep at least two states so Undo remains available after an edit, even if
-// a single image is larger than the preferred history budget.
-function trimHistory() {
+// a single image is larger than the preferred history budget. Export the pure
+// helper so the size/count policy can be tested without writing large records
+// into IndexedDB.
+export function trimHistoryStack(
+    stack,
+    maxStates = MAX_HISTORY_STATES,
+    maxDataChars = MAX_HISTORY_DATA_CHARS
+) {
+    const stateSizes = stack.map(
+        state => JSON.stringify(state).length
+    );
+    let totalChars = stateSizes.reduce(
+        (total, size) => total + size,
+        0
+    );
+
     while (
-        appState.undoStack.length > MAX_HISTORY_STATES ||
+        stack.length > maxStates ||
         (
-            appState.undoStack.length > 2 &&
-            appState.undoStack.reduce(
-                (total, state) => total + JSON.stringify(state).length,
-                0
-            ) > MAX_HISTORY_DATA_CHARS
+            stack.length > 2 &&
+            totalChars > maxDataChars
         )
     ) {
-        appState.undoStack.shift();
+        stack.shift();
+        totalChars -= stateSizes.shift();
     }
+
+    return stack;
+}
+
+function trimHistory() {
+    trimHistoryStack(appState.undoStack);
 }
 
 const rowsInput =
