@@ -715,3 +715,68 @@ test("image rotation, adjustments, and filter persist after reload and support U
         sepia: 80
     });
 });
+
+
+test("horizontal and vertical flips persist after reload and support Undo/Redo", async ({ page }) => {
+    await waitForApp(page);
+    await addImageToFirstTile(page);
+
+    const savedImage = async () => page.evaluate(async () => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        const db = await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const tx = db.transaction("grids", "readonly");
+        const grids = await new Promise((resolve, reject) => {
+            const get = tx.objectStore("grids").getAll();
+            get.onsuccess = () => resolve(get.result);
+            get.onerror = () => reject(get.error);
+        });
+        db.close();
+        return grids.find(item => item.name === "Untitled Grid")?.images?.[0] ?? null;
+    });
+
+    // Flip in both directions and save.
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#flipHorizontalButton").click();
+    await page.locator("#flipVerticalButton").click();
+    await page.locator("#cropButton").click();
+
+    await expect.poll(savedImage).toMatchObject({
+        flipX: true,
+        flipY: true
+    });
+
+    // Reload and toggle each restored flip off. If state wasn't restored,
+    // clicking would turn the flip on instead.
+    await page.reload();
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#flipHorizontalButton").click();
+    await page.locator("#flipVerticalButton").click();
+    await page.locator("#cropButton").click();
+
+    await expect.poll(savedImage).toMatchObject({
+        flipX: false,
+        flipY: false
+    });
+
+    await page.locator("#undoButton").click();
+    await expect.poll(savedImage).toMatchObject({
+        flipX: true,
+        flipY: true
+    });
+
+    await page.locator("#redoButton").click();
+    await expect.poll(savedImage).toMatchObject({
+        flipX: false,
+        flipY: false
+    });
+});
