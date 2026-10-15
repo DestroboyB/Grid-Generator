@@ -181,7 +181,7 @@ async function performSearch({ keepResults = false } = {}) {
             new URLSearchParams({
                 q: currentQuery,
                 page: currentPage,
-                page_size: 20
+                page_size: 12
             });
 
 
