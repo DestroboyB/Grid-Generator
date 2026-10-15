@@ -1067,9 +1067,18 @@
     #malSearchModal .mal-search-tabs .mal-character-tab-group > .mal-character-tab-inner > #malCharacterTab {
         grid-column: 2;
         min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        font-size: 11.4px;
+    }
+
+    /* Slightly shrink the mobile Name/Anime character sub-tabs to prevent clipping. */
+    #malSearchModal #malCharacterNameTab,
+    #malSearchModal #malByAnimeTab {
+        width: 85.5%;
         padding-left: 1px;
         padding-right: 1px;
-        font-size: 12px;
+        font-size: 9.5px;
     }
 
     #malSearchModal .mal-character-tab-spacer {
