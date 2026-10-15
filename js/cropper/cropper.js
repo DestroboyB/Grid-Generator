@@ -30,6 +30,12 @@ import {
     setupFilters
 } from "./cropperAdjust.js";
 
+import {
+    isAnimatedGifMode,
+    applyAnimatedGifMode,
+    showAnimatedGifOption
+} from "../images/animatedGifEditor.js";
+
 
 // ========================================
 // Elements
@@ -221,6 +227,12 @@ export function openCropForFile(
 
             cropImage.src =
                 reader.result;
+
+            if (file.type === "image/gif" || /\\.gif$/i.test(file.name)) {
+                // Reuse the data URL already created for the editor when
+                // animation mode is enabled, avoiding a second FileReader pass.
+                showAnimatedGifOption(reader.result, element, true);
+            }
 
 
             cropModal.style.display =
@@ -809,14 +821,41 @@ if (
 
 cropButton.addEventListener(
     "click",
-    () => {
+    async () => {
+        if (isAnimatedGifMode()) {
+            cropButton.disabled = true;
+            const originalText = cropButton.textContent;
+            cropButton.textContent = "Saving GIF…";
 
-        applyCrop(
-            cropImage,
-            board,
-            cropModal
-        );
+            try {
+                await applyAnimatedGifMode({
+                    crop: appState.cropper?.getData() || null,
+                    rotation: cropperState.rotation || 0,
+                    flipX: cropperState.flipX || false,
+                    flipY: cropperState.flipY || false,
+                    sourceWidth: cropImage.naturalWidth,
+                    sourceHeight: cropImage.naturalHeight,
+                    brightness: cropperState.brightness ?? 100,
+                    contrast: cropperState.contrast ?? 100,
+                    saturation: cropperState.saturation ?? 100,
+                    blur: cropperState.blur ?? 0,
+                    grayscale: cropperState.grayscale ?? 0,
+                    sepia: cropperState.sepia ?? 0,
+                    hueRotate: cropperState.hueRotate ?? 0
+                });
+                closeCropper(cropModal, cropImage);
+            } catch (error) {
+                console.error("Unable to save animated GIF:", error);
+                alert(error.message || "Unable to save this GIF.");
+            } finally {
+                cropButton.disabled = false;
+                cropButton.textContent = originalText;
+            }
 
+            return;
+        }
+
+        applyCrop(cropImage, board, cropModal);
     }
 );
 

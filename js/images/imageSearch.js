@@ -3,6 +3,7 @@ import { appState } from "../state.js";
 import {
     openCropForURL
 } from "../cropper/cropper.js";
+import { showAnimatedGifOption, hideAnimatedGifOption } from "./animatedGifEditor.js";
 
 
 // ========================================
@@ -250,6 +251,7 @@ async function performSearch({ keepResults = false } = {}) {
                     title: (page.title || "Untitled").replace(/^File:/i, "").replace(/_/g, " "),
                     thumbnail: imageInfo.thumburl || imageInfo.url,
                     url: imageInfo.url,
+                    mime: imageInfo.mime,
                     pageUrl: imageInfo.descriptionurl
                 };
             })
@@ -394,7 +396,14 @@ function selectImage(result) {
 
         closeImageSearch();
 
+        if (result.mime === "image/gif" || /\.gif(?:[?#]|$)/i.test(result.url)) {
+            closeImageSearch();
+            openCropForURL(result.url, selectedDiv);
+            showAnimatedGifOption(result.url, selectedDiv);
+            return;
+        }
 
+        hideAnimatedGifOption();
         openCropForURL(
             result.url,
             selectedDiv
