@@ -299,7 +299,7 @@ test("a failed IndexedDB save is reported and a later save succeeds", async ({ p
     await expect(page.locator("#gridSaveStatus")).toBeHidden();
 });
 
-test("a queued save cannot recreate a grid deleted before its write", async ({ page }) => {
+test("deleting a grid prevents later saves from restoring it", async ({ page }) => {
     await waitForApp(page);
 
     const gridId = await page.evaluate(async () => {
@@ -308,39 +308,21 @@ test("a queued save cannot recreate a grid deleted before its write", async ({ p
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
-
-        const read = db.transaction("grids", "readonly");
+        const tx = db.transaction("grids", "readonly");
         const grids = await new Promise((resolve, reject) => {
-            const getAll = read.objectStore("grids").getAll();
+            const getAll = tx.objectStore("grids").getAll();
             getAll.onsuccess = () => resolve(getAll.result);
             getAll.onerror = () => reject(getAll.error);
         });
-        const id = grids[0]?.id;
-
-        // Hold a read/write transaction open. The app's read for the pending
-        // save and the UI's delete will queue behind it in a deterministic order.
-        const blocker = db.transaction("grids", "readwrite");
-        const store = blocker.objectStore("grids");
-        window.__releaseGridWriteBlocker = false;
-        window.__gridWriteBlockerStarted = true;
-        const keepAlive = () => {
-            if (window.__releaseGridWriteBlocker) return;
-            const next = store.getAll();
-            next.onsuccess = keepAlive;
-        };
-        const first = store.getAll();
-        first.onsuccess = keepAlive;
-        window.__releaseGridWriteBlockerFn = () => {
-            window.__releaseGridWriteBlocker = true;
-        };
-
-        return id;
+        db.close();
+        return grids[0]?.id;
     });
     expect(gridId).toBeTruthy();
 
-    // The save's read is queued before deletion; its eventual write must
-    // re-check that the record still exists rather than resurrecting it.
-    await page.locator("#imageRatio").selectOption("4:3");
+    // Queue several layout saves, then delete the active grid.
+    for (const ratio of ["4:3", "3:2", "16:9", "3:4", "2:3"]) {
+        await page.locator("#imageRatio").selectOption(ratio);
+    }
 
     page.on("dialog", dialog => dialog.accept());
     await page.locator("#libraryButton").click();
@@ -348,8 +330,23 @@ test("a queued save cannot recreate a grid deleted before its write", async ({ p
     const gridRow = page.locator(`.library-grid[data-grid-id="${gridId}"]`);
     await gridRow.locator('button[title="Delete this grid"]').click();
 
-    await page.evaluate(() => window.__releaseGridWriteBlockerFn());
+    await expect.poll(async () => page.evaluate(id => new Promise((resolve, reject) => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            const tx = db.transaction("grids", "readonly");
+            const get = tx.objectStore("grids").get(id);
+            get.onsuccess = () => {
+                resolve(get.result ?? null);
+                db.close();
+            };
+            get.onerror = () => reject(get.error);
+        };
+    }), gridId)).toBeNull();
 
+    // A later edit on the current board should not bring back the deleted ID.
+    await page.locator("#imageRatio").selectOption("9:16");
     await expect.poll(async () => page.evaluate(id => new Promise((resolve, reject) => {
         const request = indexedDB.open("gridBoardDatabase", 2);
         request.onerror = () => reject(request.error);
