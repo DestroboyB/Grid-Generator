@@ -288,41 +288,30 @@ export function restoreAdjustments() {
     // Restore Filter Button
     // ========================================
 
-    const filterButtons =
-        document.querySelectorAll(
-            ".filter-button"
-        );
+    updateActiveFilterButton();
+}
 
 
-    filterButtons.forEach(
-        button => {
+// ========================================
+// Update Active Filter Button
+// ========================================
 
-            button.classList.remove(
-                "active"
-            );
-
-        }
-    );
-
+function updateActiveFilterButton() {
 
     const activeFilter =
         cropperState.filterName ??
         "none";
 
+    document.querySelectorAll(
+        ".filter-button"
+    ).forEach(button => {
 
-    const activeButton =
-        document.querySelector(
-            `.filter-button[data-filter="${activeFilter}"]`
+        button.classList.toggle(
+            "active",
+            button.dataset.filter === activeFilter
         );
 
-
-    if (activeButton) {
-
-        activeButton.classList.add(
-            "active"
-        );
-
-    }
+    });
 }
 
 
@@ -417,6 +406,7 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateActiveFilterButton();
                 updateAdjustmentValues();
 
                 applyAdjustments();
@@ -447,6 +437,7 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateActiveFilterButton();
                 updateAdjustmentValues();
 
                 applyAdjustments();
@@ -477,6 +468,7 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateActiveFilterButton();
                 updateAdjustmentValues();
 
                 applyAdjustments();
@@ -507,6 +499,7 @@ export function setupAdjustments() {
                     "none";
 
 
+                updateActiveFilterButton();
                 updateAdjustmentValues();
 
                 applyAdjustments();
