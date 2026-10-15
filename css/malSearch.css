@@ -284,6 +284,8 @@
     color: #6b7280;
 
     font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 
     flex-shrink: 0;
 }
@@ -406,22 +408,6 @@
 }
 
 
-/* ========================================
-   Search Result Name
-======================================== */
-
-#malSearchModal .mal-search-status {
-    width: 100%;
-    min-height: 20px;
-    padding: 0 20px 8px;
-    box-sizing: border-box;
-    background: #ffffff;
-    color: #6b7280;
-    font-size: 13px;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-    flex-shrink: 0;
-}
 
 /* ========================================
    Search Result Type
