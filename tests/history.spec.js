@@ -298,3 +298,83 @@ test("a failed IndexedDB save is reported and a later save succeeds", async ({ p
     await expect(page.locator("#imageRatio")).toHaveValue("3:2");
     await expect(page.locator("#gridSaveStatus")).toBeHidden();
 });
+
+test("a queued save cannot recreate a grid deleted before its write", async ({ page }) => {
+    await page.addInitScript(() => {
+        window.__releaseGridWriteBlocker = false;
+        window.__gridWriteBlockerStarted = false;
+
+        const originalTransaction = IDBDatabase.prototype.transaction;
+        IDBDatabase.prototype.transaction = function (storeNames, mode, options) {
+            const transaction = originalTransaction.call(this, storeNames, mode, options);
+
+            if (
+                this.name === "gridBoardDatabase" &&
+                mode === "readwrite" &&
+                !window.__gridWriteBlockerStarted
+            ) {
+                window.__gridWriteBlockerStarted = true;
+                const storeName = Array.isArray(storeNames) ? storeNames[0] : storeNames;
+                if (storeName === "grids") {
+                    const store = transaction.objectStore("grids");
+                    const keepAlive = () => {
+                        if (window.__releaseGridWriteBlocker) return;
+                        const request = store.getAll();
+                        request.onsuccess = keepAlive;
+                    };
+                    const first = store.getAll();
+                    first.onsuccess = keepAlive;
+                }
+            }
+
+            return transaction;
+        };
+    });
+
+    await waitForApp(page);
+    const gridId = await page.evaluate(() => new Promise((resolve, reject) => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            const tx = db.transaction("grids", "readonly");
+            const getAll = tx.objectStore("grids").getAll();
+            getAll.onsuccess = () => {
+                resolve(getAll.result[0]?.id);
+                db.close();
+            };
+            getAll.onerror = () => reject(getAll.error);
+        };
+    }));
+    expect(gridId).toBeTruthy();
+
+    // Queue a layout save behind the blocker, then queue deletion before
+    // allowing the save pipeline to continue.
+    await page.locator("#imageRatio").selectOption("4:3");
+    await expect.poll(() => page.evaluate(() => window.__gridWriteBlockerStarted)).toBe(true);
+
+    page.on("dialog", dialog => dialog.accept());
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    const gridRow = page.locator(`.library-grid[data-grid-id="${gridId}"]`);
+    await gridRow.locator('button[title="Delete this grid"]').click();
+
+    await page.evaluate(() => {
+        window.__releaseGridWriteBlocker = true;
+    });
+
+    await expect.poll(async () => page.evaluate(id => new Promise((resolve, reject) => {
+        const request = indexedDB.open("gridBoardDatabase", 2);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            const tx = db.transaction("grids", "readonly");
+            const get = tx.objectStore("grids").get(id);
+            get.onsuccess = () => {
+                resolve(get.result ?? null);
+                db.close();
+            };
+            get.onerror = () => reject(get.error);
+        };
+    }), gridId)).toBeNull();
+});
