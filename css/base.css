@@ -64,7 +64,7 @@ body {
     line-height: 1.2;
     font-weight: 650;
 
-    color: #111827;
+    color: var(--color-text-strong);
     letter-spacing: -0.02em;
 }
 
