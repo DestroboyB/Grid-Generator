@@ -217,3 +217,46 @@ test("stress: repeated high-resolution edits remain usable with bounded Undo/Red
     expect(pageErrors, "Unexpected uncaught browser errors during repeated image edit/history stress test").toEqual([]);
 });
 
+test("history trimming: enforces count and size limits while retaining two states", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { trimHistoryStack } = await import("/js/history.js");
+
+        const countLimited = Array.from({ length: 12 }, (_, index) => ({
+            marker: index,
+            images: []
+        }));
+        trimHistoryStack(countLimited, 10, Number.POSITIVE_INFINITY);
+
+        const sizeLimited = [
+            { marker: "oldest", payload: "x".repeat(40) },
+            { marker: "middle", payload: "y".repeat(40) },
+            { marker: "recent", payload: "z".repeat(40) }
+        ];
+        trimHistoryStack(sizeLimited, 10, 100);
+
+        const oversizedTwoState = [
+            { marker: "previous", payload: "a".repeat(120) },
+            { marker: "current", payload: "b".repeat(120) }
+        ];
+        trimHistoryStack(oversizedTwoState, 10, 10);
+
+        return {
+            count: countLimited.length,
+            firstCountMarker: countLimited[0].marker,
+            lastCountMarker: countLimited.at(-1).marker,
+            sizeMarkers: sizeLimited.map(state => state.marker),
+            retainedTwoStateCount: oversizedTwoState.length,
+            retainedTwoStateMarkers: oversizedTwoState.map(state => state.marker)
+        };
+    });
+
+    expect(result.count).toBe(10);
+    expect(result.firstCountMarker).toBe(2);
+    expect(result.lastCountMarker).toBe(11);
+    expect(result.sizeMarkers).toEqual(["recent"]);
+    expect(result.retainedTwoStateCount).toBe(2);
+    expect(result.retainedTwoStateMarkers).toEqual(["previous", "current"]);
+});
+
