@@ -345,7 +345,7 @@
     }
 
     .editor-preview {
-        min-height: 260px;
+        min-height: 300px;
     }
 
     .editor-panel {
@@ -364,7 +364,7 @@
     }
 
     .editor-control {
-        grid-template-columns: minmax(0, 1fr) 45px;
+        grid-template-columns: minmax(0, 1fr) 38px;
         gap: 4px 8px;
     }
 
