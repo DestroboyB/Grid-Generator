@@ -223,6 +223,11 @@ if (
 
         originalSource,
 
+        // Applying normal edits intentionally flattens a GIF to a still
+        // frame, but retains originalSource so animation can be re-enabled
+        // the next time this image is opened.
+        animatedGif: false,
+
         crop: {
 
             x:
