@@ -32,7 +32,8 @@ import {
 
 import {
     isAnimatedGifMode,
-    applyAnimatedGifMode
+    applyAnimatedGifMode,
+    showAnimatedGifOption
 } from "../images/animatedGifEditor.js";
 
 
@@ -226,6 +227,12 @@ export function openCropForFile(
 
             cropImage.src =
                 reader.result;
+
+            if (file.type === "image/gif" || /\\.gif$/i.test(file.name)) {
+                // Reuse the data URL already created for the editor when
+                // animation mode is enabled, avoiding a second FileReader pass.
+                showAnimatedGifOption(reader.result, element, false);
+            }
 
 
             cropModal.style.display =
