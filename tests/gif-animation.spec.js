@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { createHash } from "node:crypto";
 
 // Two real frames: red then blue. A single-frame fixture cannot catch
 // animation regressions in the editor or GIF export.
@@ -40,12 +41,20 @@ async function samplePixel(page, selector = "#animatedGifPreview") {
     });
 }
 
+// Use the browser's actual rendered image for animation assertions. In the CI
+// Chromium version, canvas.drawImage() can keep returning frame one even while
+// screenshots of the same animated <img> visibly change.
+async function sampleRenderedFrame(page, selector) {
+    const screenshot = await page.locator(selector).screenshot({ animations: "allow" });
+    return createHash("sha256").update(screenshot).digest("hex");
+}
+
 
 test("Chromium advances an attached image using the animated GIF fixture", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await waitForApp(page);
 
-    const result = await page.evaluate(async base64 => {
+    await page.evaluate(async base64 => {
         const image = document.createElement("img");
         image.id = "gifTimelineBaseline";
         Object.assign(image.style, {
@@ -59,29 +68,16 @@ test("Chromium advances an attached image using the animated GIF fixture", async
         document.body.appendChild(image);
         image.src = `data:image/gif;base64,${base64}`;
         await image.decode();
-
-        const canvas = document.createElement("canvas");
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        const context = canvas.getContext("2d");
-        const sample = () => {
-            context.drawImage(image, 0, 0);
-            return Array.from(context.getImageData(0, 0, 1, 1).data);
-        };
-
-        const first = sample();
-        let second = first;
-        for (let attempt = 0; attempt < 20 && second.every((value, index) => value === first[index]); attempt++) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            second = sample();
-        }
-        image.remove();
-        return { first, second, width: image.naturalWidth, height: image.naturalHeight };
     }, animatedGif.toString("base64"));
 
-    expect(result.width).toBe(16);
-    expect(result.height).toBe(16);
-    expect(result.second).not.toEqual(result.first);
+    const image = page.locator("#gifTimelineBaseline");
+    await expect(image).toHaveJSProperty("naturalWidth", 16);
+    await expect(image).toHaveJSProperty("naturalHeight", 16);
+    const first = await sampleRenderedFrame(page, "#gifTimelineBaseline");
+    await expect.poll(() => sampleRenderedFrame(page, "#gifTimelineBaseline"), {
+        timeout: 4000,
+        intervals: [150, 250, 400]
+    }).not.toBe(first);
 });
 
 test("GIF animation defaults on, while the normal crop editor remains usable", async ({ page }) => {
@@ -94,8 +90,11 @@ test("GIF animation defaults on, while the normal crop editor remains usable", a
     await expect(page.locator("#cropModal .cropper-crop-box")).toBeVisible();
     await expect(page.locator("#animatedGifPreview")).toBeVisible();
 
-    const firstFrame = await samplePixel(page);
-    await expect.poll(async () => samplePixel(page), { timeout: 4000, intervals: [150, 250, 400] }).not.toEqual(firstFrame);
+    const firstFrame = await sampleRenderedFrame(page, "#animatedGifPreview");
+    await expect.poll(() => sampleRenderedFrame(page, "#animatedGifPreview"), {
+        timeout: 4000,
+        intervals: [150, 250, 400]
+    }).not.toBe(firstFrame);
 
     await toggle.uncheck();
     const frozenSource = await page.locator("#cropModal .cropper-canvas img:not(#animatedGifPreview)").getAttribute("src");
@@ -146,8 +145,9 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
     const sampleX = Math.round(firstCell.x - boardBox.x + firstCell.width / 2);
     const sampleY = Math.round(firstCell.y - boardBox.y + firstCell.height / 2);
 
-    const renderedFrames = await page.evaluate(async ({ base64, sampleX, sampleY }) => {
-        const image = new Image();
+    await page.evaluate(async base64 => {
+        const image = document.createElement("img");
+        image.id = "exportedGifPlaybackCheck";
         Object.assign(image.style, {
             position: "fixed",
             left: "0",
@@ -157,34 +157,18 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
             zIndex: "99999",
             pointerEvents: "none"
         });
-        // Keep the image in the document: Chromium may not advance animated
-        // GIFs whose Image object is detached from the DOM.
         document.body.appendChild(image);
         image.src = `data:image/gif;base64,${base64}`;
         await image.decode();
+    }, exported.toString("base64"));
 
-        const canvas = document.createElement("canvas");
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        const context = canvas.getContext("2d");
-        const sample = () => {
-            context.drawImage(image, 0, 0);
-            return Array.from(context.getImageData(sampleX, sampleY, 1, 1).data);
-        };
-
-        const first = sample();
-        let second = first;
-        for (let attempt = 0; attempt < 20 && second.every((value, index) => value === first[index]); attempt++) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            second = sample();
-        }
-        image.remove();
-        return { first, second, width: image.naturalWidth, height: image.naturalHeight };
-    }, { base64: exported.toString("base64"), sampleX, sampleY });
-
-    expect(renderedFrames.width).toBeGreaterThan(25);
-    expect(renderedFrames.height).toBeGreaterThan(25);
-    expect(renderedFrames.second).not.toEqual(renderedFrames.first);
+    await expect(page.locator("#exportedGifPlaybackCheck")).toHaveJSProperty("naturalWidth", expect.any(Number));
+    const exportedImage = page.locator("#exportedGifPlaybackCheck");
+    const firstRenderedFrame = await sampleRenderedFrame(page, "#exportedGifPlaybackCheck");
+    await expect.poll(() => sampleRenderedFrame(page, "#exportedGifPlaybackCheck"), {
+        timeout: 4000,
+        intervals: [150, 250, 400]
+    }).not.toBe(firstRenderedFrame);
 });
 
 test("a GIF saved as a still frame can be switched back to animation when reopened", async ({ page }) => {
