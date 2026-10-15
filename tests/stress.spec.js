@@ -443,11 +443,16 @@ test("storage reliability: failed first save can recover and retry creating the 
     expect(result.savedGridId).toBe(result.failedGridId);
 });
 
-test("storage reliability: latest rapid changes survive an immediate reload", async ({ page }) => {
+test("storage reliability: latest rapid changes and image survive an immediate reload", async ({ page }) => {
     await waitForApp(page);
 
-    // Change several saved settings in quick succession. Unlike the grid-switch
-    // test, deliberately reload without polling IndexedDB for completion first.
+    // Include actual image data, not only layout settings, in the persistence
+    // check. Use a small decoded image so the test remains fast and reliable.
+    const image = await makeLargePng(page, 128);
+    await importImageIntoFirstTile(page, image, 128);
+
+    // Change several saved settings in quick succession. Deliberately reload
+    // without polling IndexedDB for completion first.
     await page.locator("#rows").selectOption("2");
     await page.locator("#generateBoard").click();
     await page.locator("#columns").selectOption("4");
@@ -467,6 +472,12 @@ test("storage reliability: latest rapid changes survive an immediate reload", as
     await expect(page.locator("#imageRatio")).toHaveValue("16:9");
     await expect(page.locator("#spacing")).toHaveValue("17");
     await expect(page.locator("#board .image")).toHaveCount(8);
+    await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
+    await expect.poll(
+        () => page.locator('#board .image[data-index="0"] img').evaluate(image =>
+            image.complete && image.naturalWidth === 128
+        )
+    ).toBe(true);
 });
 
 test("storage reliability: save warnings explain quota and unavailable-storage errors", async ({ page }) => {
