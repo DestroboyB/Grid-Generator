@@ -114,31 +114,13 @@ test("saved grid settings and image data survive switching away and reopening", 
     await expect(page.locator("#newGridModal")).not.toHaveClass(/open/);
     await expect(page.locator("#board .image")).toHaveCount(9);
 
-    // Creating a grid leaves the library open; select the original grid directly.
+    // Click the grid name rather than the row center, which can land on Delete.
     await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
     const originalGridLocator = page.locator(`.library-grid[data-grid-id="${gridId}"]`);
-    console.log("Persistence debug before reopen:", JSON.stringify({
-        gridId,
-        targetCount: await originalGridLocator.count(),
-        targetVisible: await originalGridLocator.isVisible(),
-        activeGridIds: await page.locator(".library-grid.active").evaluateAll(items => items.map(item => item.dataset.gridId)),
-        storedGrid: await readGrid(page, gridId)
-    }));
-    page.on("dialog", async dialog => {
-        console.log("Persistence debug dialog:", dialog.message());
-        await dialog.dismiss();
-    });
-    await originalGridLocator.click();
-    await page.waitForTimeout(250);
-    console.log("Persistence debug after reopen:", JSON.stringify({
-        gridId,
-        activeGridIds: await page.locator(".library-grid.active").evaluateAll(items => items.map(item => item.dataset.gridId)),
-        rows: await page.locator("#rows").inputValue(),
-        columns: await page.locator("#columns").inputValue(),
-        storedGrid: await readGrid(page, gridId)
-    }));
-
+    await originalGridLocator.locator(".library-grid-name").click();
     await expect(page.locator("#rows")).toHaveValue("2");
+
+
     await expect(page.locator("#columns")).toHaveValue("4");
     await expect(page.locator("#imageRatio")).toHaveValue("4:3");
     await expect(page.locator("#spacing")).toHaveValue("12");
