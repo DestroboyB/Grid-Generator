@@ -34,7 +34,7 @@ async function makeLargePng(page, size = 2048) {
     return Buffer.from(dataUrl.split(",")[1], "base64");
 }
 
-async function importImageIntoFirstTile(page, buffer) {
+async function importImageIntoFirstTile(page, buffer, expectedWidth = 2048) {
     await page.locator('#board .image[data-index="0"]').click();
     await page.locator("#openImageSourceMenuButton").click();
 
@@ -43,7 +43,7 @@ async function importImageIntoFirstTile(page, buffer) {
     const chooser = await chooserPromise;
 
     await chooser.setFiles({
-        name: "stress-image-2048.png",
+        name: `stress-image-${expectedWidth}.png`,
         mimeType: "image/png",
         buffer
     });
@@ -51,7 +51,7 @@ async function importImageIntoFirstTile(page, buffer) {
     await expect(page.locator("#cropModal")).toBeVisible();
     await expect.poll(
         () => page.locator("#cropImage").evaluate(image => image.naturalWidth)
-    ).toBe(2048);
+    ).toBe(expectedWidth);
 
     await page.locator("#cropButton").click();
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
@@ -175,7 +175,7 @@ test("stress: repeated high-resolution edits remain usable with bounded Undo/Red
     // tests cover 2048px images; ten full-resolution snapshots can exceed the
     // browser test environment's IndexedDB budget and mask Undo/Redo behavior.
     const largePng = await makeLargePng(page, 512);
-    await importImageIntoFirstTile(page, largePng);
+    await importImageIntoFirstTile(page, largePng, 512);
 
     // Each applied edit creates a history snapshot containing image data.
     // Ten edits exercise the history cap without making CI needlessly slow.
