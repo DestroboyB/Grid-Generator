@@ -88,10 +88,10 @@ export async function openPictureGallery({
         "grid";
 
 
+    // The gallery itself displays the loading message. Keep the status
+    // line clear here so "Loading pictures..." is not shown twice.
     if (statusElement) {
-
-        statusElement.textContent =
-            "Loading pictures...";
+        statusElement.textContent = "";
     }
 
 
