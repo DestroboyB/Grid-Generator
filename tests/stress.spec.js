@@ -242,13 +242,26 @@ test("history trimming: enforces count and size limits while retaining two state
         ];
         trimHistoryStack(oversizedTwoState, 10, 10);
 
+        // Setting-only edits should share identical image payloads and budget
+        // them once, rather than being reduced to only two undo states.
+        const sharedImages = [{ source: "data:image/png;base64," + "x".repeat(100) }];
+        const repeatedImageStates = [
+            { marker: "before", ratio: "1:1", images: structuredClone(sharedImages) },
+            { marker: "middle", ratio: "4:3", images: structuredClone(sharedImages) },
+            { marker: "current", ratio: "16:9", images: structuredClone(sharedImages) }
+        ];
+        trimHistoryStack(repeatedImageStates, 10, 300);
+
         return {
             count: countLimited.length,
             firstCountMarker: countLimited[0].marker,
             lastCountMarker: countLimited.at(-1).marker,
             sizeMarkers: sizeLimited.map(state => state.marker),
             retainedTwoStateCount: oversizedTwoState.length,
-            retainedTwoStateMarkers: oversizedTwoState.map(state => state.marker)
+            retainedTwoStateMarkers: oversizedTwoState.map(state => state.marker),
+            repeatedImageMarkers: repeatedImageStates.map(state => state.marker),
+            sharedImageReferences: repeatedImageStates[0].images === repeatedImageStates[1].images &&
+                repeatedImageStates[1].images === repeatedImageStates[2].images
         };
     });
 
@@ -258,5 +271,7 @@ test("history trimming: enforces count and size limits while retaining two state
     expect(result.sizeMarkers).toEqual(["middle", "recent"]);
     expect(result.retainedTwoStateCount).toBe(2);
     expect(result.retainedTwoStateMarkers).toEqual(["previous", "current"]);
+    expect(result.repeatedImageMarkers).toEqual(["before", "middle", "current"]);
+    expect(result.sharedImageReferences).toBe(true);
 });
 
