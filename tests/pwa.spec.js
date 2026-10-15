@@ -43,4 +43,11 @@ test("service worker registers and app shell can reload offline", async ({ page,
     await page.reload();
     await expect(page).toHaveTitle("Grid Generator");
     await expect(page.locator(".app-title")).toHaveText("Grid Generator");
+
+    const cachedStylesheet = await page.evaluate(async () => {
+        const response = await fetch("./style.css");
+        return { ok: response.ok, status: response.status, contentType: response.headers.get("content-type") };
+    });
+    expect(cachedStylesheet.ok).toBeTruthy();
+    expect(cachedStylesheet.contentType).toContain("text/css");
 });
