@@ -78,8 +78,10 @@ test("legacy version 1 board migrates into the version 2 grid library", async ({
         spacing: 7,
         backgroundColor: "#123456",
         images: [],
-        undoStack: [],
         redoStack: []
     });
+    // App startup initializes history after migration, so undoStack can gain
+    // an initial state before this assertion reads the record.
+    expect(Array.isArray(migrated.grids[0].undoStack)).toBe(true);
     expect(migrated.grids[0].id).toMatch(/^grid_/);
 });
