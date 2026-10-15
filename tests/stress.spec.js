@@ -564,3 +564,77 @@ test("storage reliability: quota failure warns and preserves the last saved grid
     expect(result.storedSpacing).not.toBe(result.unsavedSpacing);
 });
 
+
+test("storage reliability: failed grid deletion preserves the saved grid and library entry", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const { saveCurrentGrid, getGrid } = await import(
+            `/js/storage/grids.js?delete-failure-test=${Date.now()}`
+        );
+
+        const initialSaveSucceeded = await saveCurrentGrid();
+        const gridId = appState.currentGridId;
+        const beforeFailure = await getGrid(gridId);
+        const storePrototype = IDBObjectStore.prototype;
+        const originalDelete = storePrototype.delete;
+
+        Object.defineProperty(storePrototype, "delete", {
+            configurable: true,
+            writable: true,
+            value: function (...args) {
+                throw new DOMException(
+                    "Simulated browser storage failure",
+                    "UnknownError"
+                );
+            }
+        });
+
+        try {
+            let deletionError = null;
+
+            try {
+                const dbRequest = indexedDB.open("gridBoardDatabase", 2);
+                const db = await new Promise((resolve, reject) => {
+                    dbRequest.onsuccess = () => resolve(dbRequest.result);
+                    dbRequest.onerror = () => reject(dbRequest.error);
+                });
+
+                const transaction = db.transaction("grids", "readwrite");
+                transaction.objectStore("grids").delete(gridId);
+                await new Promise((resolve, reject) => {
+                    transaction.oncomplete = resolve;
+                    transaction.onerror = () => reject(transaction.error);
+                    transaction.onabort = () => reject(transaction.error);
+                });
+                db.close();
+            } catch (error) {
+                deletionError = error.name;
+            }
+
+            const afterFailure = await getGrid(gridId);
+
+            return {
+                initialSaveSucceeded,
+                gridId,
+                beforeFailureExists: Boolean(beforeFailure),
+                deletionError,
+                afterFailureExists: Boolean(afterFailure),
+                savedGridId: afterFailure?.id ?? null
+            };
+        } finally {
+            Object.defineProperty(storePrototype, "delete", {
+                configurable: true,
+                writable: true,
+                value: originalDelete
+            });
+        }
+    });
+
+    expect(result.initialSaveSucceeded).toBe(true);
+    expect(result.beforeFailureExists).toBe(true);
+    expect(result.deletionError).toBe("UnknownError");
+    expect(result.afterFailureExists).toBe(true);
+    expect(result.savedGridId).toBe(result.gridId);
+});
