@@ -362,3 +362,60 @@ test("deleting a grid prevents later saves from restoring it", async ({ page }) 
         };
     }), gridId)).toBeNull();
 });
+
+test("switching between grids restores each grid's layout and Undo/Redo history", async ({ page }) => {
+    await waitForApp(page);
+
+    await page.locator("#imageRatio").selectOption("4:3");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await page.locator("#newGridButton").click();
+    await page.locator("#newGridNameInput").fill("Second Grid");
+    await page.locator("#createNewGridButton").click();
+
+    await expect(page.locator("#imageRatio")).toHaveValue("1:1");
+    await expect(page.locator("#undoButton")).toBeDisabled();
+    await expect(page.locator("#redoButton")).toBeDisabled();
+
+    await page.locator("#imageRatio").selectOption("16:9");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+
+    // Switch back to the original grid and check its own history.
+    await page.locator("#libraryContent .library-grid").filter({ hasText: "Untitled Grid" }).click();
+    await expect(page.locator("#imageRatio")).toHaveValue("4:3");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+    await expect(page.locator("#redoButton")).toBeDisabled();
+
+    // Undo on the first grid must not alter the second grid's saved layout.
+    await page.locator("#undoButton").click();
+    await expect(page.locator("#imageRatio")).toHaveValue("1:1");
+
+    await page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" }).click();
+    await expect(page.locator("#imageRatio")).toHaveValue("16:9");
+    await expect(page.locator("#undoButton")).toBeEnabled();
+    await expect(page.locator("#redoButton")).toBeDisabled();
+});
+
+test("grid names are trimmed and duplicate names are rejected", async ({ page }) => {
+    await waitForApp(page);
+
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#libraryPanel")).toHaveClass(/open/);
+    await page.locator("#newGridButton").click();
+    await page.locator("#newGridNameInput").fill("  Second Grid  ");
+    await page.locator("#createNewGridButton").click();
+
+    await expect(page.locator("#libraryContent .library-grid")).toContainText("Second Grid");
+
+    page.on("dialog", dialog => dialog.accept());
+    const secondRow = page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" });
+    await secondRow.locator('button[title="Rename grid name"]').click();
+    await page.locator(".library-grid-rename-input").fill("Untitled Grid");
+    await page.locator(".library-grid-actions button[title="Save grid name"]');
+
+    await page.locator(".library-grid-rename-input").press("Enter");
+    await expect.poll(() => page.locator(".library-grid-rename-input").inputValue()).toBe("Untitled Grid");
+    await expect(page.locator("#libraryContent .library-grid").filter({ hasText: "Second Grid" })).toHaveCount(1);
+});
