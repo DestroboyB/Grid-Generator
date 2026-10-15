@@ -1424,6 +1424,28 @@
         src="./js/main.js"
     ></script>
 
+    <script>
+        (() => {
+            const updateOrientationNotice = () => {
+                const isTouchDevice =
+                    (navigator.maxTouchPoints > 0 || "ontouchstart" in window);
+                const isSmallScreen = window.matchMedia("(max-width: 1024px)").matches;
+                const isLandscape = window.innerWidth > window.innerHeight;
+
+                document.body.classList.toggle(
+                    "portrait-lock-active",
+                    isTouchDevice && isSmallScreen && isLandscape
+                );
+            };
+
+            window.addEventListener("resize", updateOrientationNotice);
+            window.addEventListener("orientationchange", updateOrientationNotice);
+            updateOrientationNotice();
+        })();
+    </script>
+
+
+
 
 </body>
 
