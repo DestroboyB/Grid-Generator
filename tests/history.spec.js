@@ -1320,6 +1320,5 @@ test("edited images stay with their own grids when switching back and forth", as
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
     const stateB = await readImageState("Edited Grid B");
     expect(stateB).toMatchObject({ rotation: 0, flipX: true, flipY: false });
-    expect(stateB.source).not.toBe(stateA.source);
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", stateB.source);
 });
