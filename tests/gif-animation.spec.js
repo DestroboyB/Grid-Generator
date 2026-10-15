@@ -30,7 +30,7 @@ async function uploadGifToFirstTile(page) {
 }
 
 async function sampleCropperPixel(page) {
-    return page.locator("#cropModal .cropper-canvas img").evaluate(img => {
+    return page.locator("#animatedGifPreview").evaluate(img => {
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
@@ -50,10 +50,10 @@ test("GIF animation defaults on, while the normal crop editor remains usable", a
     await expect(page.locator("#cropModal .cropper-crop-box")).toBeVisible();
 
     const firstFrame = await sampleCropperPixel(page);
-    await expect.poll(async () => sampleCropperPixel(page), { timeout: 3000 }).not.toEqual(firstFrame);
+    await expect.poll(async () => sampleCropperPixel(page), { timeout: 3000, intervals: [100, 150, 250] }).not.toEqual(firstFrame);
 
     await toggle.uncheck();
-    const frozenSource = await page.locator("#cropModal .cropper-canvas img").getAttribute("src");
+    const frozenSource = await page.locator("#cropModal .cropper-canvas img:not(#animatedGifPreview)").getAttribute("src");
     expect(frozenSource).toMatch(/^data:image\/png/);
     const frozenFrame = await sampleCropperPixel(page);
     await page.waitForTimeout(350);
