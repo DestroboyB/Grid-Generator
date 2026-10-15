@@ -3,42 +3,75 @@ import { importAnimatedGif } from "./animatedGif.js";
 let animatedGifSource = null;
 let animatedGifTarget = null;
 let toggle = null;
-let preview = null;
-let previewObjectURL = null;
 let previewObserver = null;
+let lastFrozenFrame = null;
 
-function sourceForPreview(source) {
-    if (previewObjectURL) {
-        URL.revokeObjectURL(previewObjectURL);
-        previewObjectURL = null;
+function getCropperImage() {
+    return document.querySelector("#cropModal .cropper-canvas img");
+}
+
+function setCropperImageSource(source) {
+    const cropperImage = getCropperImage();
+    if (!cropperImage || !source) return false;
+
+    if (cropperImage.dataset.gifSource !== source || cropperImage.src !== source) {
+        cropperImage.dataset.gifSource = source;
+        cropperImage.src = source;
+    }
+    return true;
+}
+
+function freezeCurrentFrame() {
+    const cropperImage = getCropperImage();
+    if (!cropperImage?.complete || !cropperImage.naturalWidth || !cropperImage.naturalHeight) {
+        return;
     }
 
-    if (source instanceof Blob) {
-        previewObjectURL = URL.createObjectURL(source);
-        return previewObjectURL;
-    }
+    try {
+        const canvas = document.createElement("canvas");
+        canvas.width = cropperImage.naturalWidth;
+        canvas.height = cropperImage.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) return;
 
-    return source || "";
+        // Drawing an animated HTMLImageElement captures the frame currently
+        // being displayed. Replacing Cropper's image with this snapshot keeps
+        // the crop box and transforms intact while ensuring Apply saves it.
+        context.drawImage(cropperImage, 0, 0, canvas.width, canvas.height);
+        lastFrozenFrame = canvas.toDataURL("image/png");
+        cropperImage.dataset.gifSource = "";
+        cropperImage.src = lastFrozenFrame;
+    } catch (error) {
+        console.error("Unable to freeze the current GIF frame:", error);
+    }
 }
 
 function applyPreviewMode() {
     const editorPreview = document.querySelector("#cropModal .editor-preview");
-    if (!editorPreview || !preview || !toggle) return;
+    if (!editorPreview || !toggle) return;
 
-    const animatedMode = toggle.checked;
-    const cropperContainer = editorPreview.querySelector(".cropper-container");
+    // Keep Cropper's actual image and controls visible in both modes.
+    // Its image element itself is switched between the animated source and
+    // a still-frame snapshot, so crop/rotate/adjust tools remain functional.
+    editorPreview.style.position = "";
 
-    if (cropperContainer) {
-        cropperContainer.style.visibility = animatedMode ? "hidden" : "";
-        cropperContainer.style.pointerEvents = animatedMode ? "none" : "";
+    if (toggle.checked && animatedGifSource) {
+        setCropperImageSource(animatedGifSource);
     }
+}
 
-    preview.hidden = !animatedMode;
-    editorPreview.style.position = "relative";
+function handleToggleChange() {
+    if (toggle?.checked) {
+        lastFrozenFrame = null;
+        setCropperImageSource(animatedGifSource);
+    } else {
+        freezeCurrentFrame();
+    }
+    applyPreviewMode();
 }
 
 function getControls() {
-    if (toggle && preview) return { toggle, preview };
+    if (toggle) return { toggle };
 
     const footer = document.querySelector("#cropModal .editor-footer");
     const editorPreview = document.querySelector("#cropModal .editor-preview");
@@ -46,17 +79,19 @@ function getControls() {
 
     const label = document.createElement("label");
     label.id = "animatedGifToggleLabel";
-    label.style.display = "inline-flex";
-    label.style.alignItems = "center";
-    label.style.gap = "8px";
-    label.style.cursor = "pointer";
-    label.style.marginRight = "12px";
-    label.title = "Switch between editing a still frame and keeping the original GIF animation.";
+    Object.assign(label.style, {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "8px",
+        cursor: "pointer",
+        marginRight: "12px"
+    });
+    label.title = "Keep the original GIF animation, or turn it off to edit and save a single frame.";
 
     toggle = document.createElement("input");
     toggle.type = "checkbox";
     toggle.id = "animatedGifToggle";
-    toggle.addEventListener("change", applyPreviewMode);
+    toggle.addEventListener("change", handleToggleChange);
 
     const text = document.createElement("span");
     text.textContent = "Keep animation";
@@ -65,62 +100,36 @@ function getControls() {
     const applyButton = footer.querySelector("#cropButton");
     footer.insertBefore(label, applyButton || null);
 
-    preview = document.createElement("img");
-    preview.id = "animatedGifPreview";
-    preview.alt = "Animated GIF preview";
-    preview.hidden = true;
-    Object.assign(preview.style, {
-        position: "absolute",
-        inset: "0",
-        width: "100%",
-        height: "100%",
-        objectFit: "contain",
-        zIndex: "10",
-        background: "var(--editor-preview-background, #111)"
-    });
-    editorPreview.appendChild(preview);
-
     if (!previewObserver) {
         previewObserver = new MutationObserver(applyPreviewMode);
         previewObserver.observe(editorPreview, { childList: true, subtree: true });
     }
 
-    return { toggle, preview };
+    return { toggle };
 }
 
-export function showAnimatedGifOption(source, target, enabled = false) {
+export function showAnimatedGifOption(source, target, enabled = true) {
     animatedGifSource = source;
     animatedGifTarget = target;
 
     const controls = getControls();
-    if (!controls.toggle || !controls.preview) return;
+    if (!controls.toggle) return;
 
     controls.toggle.closest("label").hidden = false;
     controls.toggle.checked = Boolean(enabled);
-    controls.preview.src = sourceForPreview(source);
+    lastFrozenFrame = null;
     applyPreviewMode();
 }
 
 export function hideAnimatedGifOption() {
     animatedGifSource = null;
     animatedGifTarget = null;
+    lastFrozenFrame = null;
 
     if (toggle) {
         toggle.checked = false;
         toggle.closest("label").hidden = true;
     }
-
-    if (preview) {
-        preview.hidden = true;
-        preview.removeAttribute("src");
-    }
-
-    if (previewObjectURL) {
-        URL.revokeObjectURL(previewObjectURL);
-        previewObjectURL = null;
-    }
-
-    applyPreviewMode();
 }
 
 export function isAnimatedGifMode() {
@@ -129,6 +138,10 @@ export function isAnimatedGifMode() {
 
 export function getAnimatedGifSource() {
     return animatedGifSource;
+}
+
+export function getFrozenGifFrame() {
+    return lastFrozenFrame;
 }
 
 export async function applyAnimatedGifMode() {
