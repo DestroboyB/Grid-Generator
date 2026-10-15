@@ -642,7 +642,7 @@ updateImageButton.addEventListener(
         const isGifSource =
             imageData.animatedGif === true ||
             (typeof originalSource === "string" &&
-                (/^data:image\\/gif/i.test(originalSource) || /\\.gif(?:[?#]|$)/i.test(originalSource)));
+                (/^data:image\/gif/i.test(originalSource) || /\.gif(?:[?#]|$)/i.test(originalSource)));
 
         if (isGifSource) {
             showAnimatedGifOption(
