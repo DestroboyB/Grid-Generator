@@ -28,6 +28,7 @@ import {
 
 import { appState } from "../state.js";
 import { generateBoard } from "../board.js";
+import { initializeHistory } from "../history.js";
 
 import {
     openCategoryNameModal,
@@ -84,6 +85,7 @@ const gridElementDependencies = {
     deleteGrid,
     getGridSummaries,
     loadGrid,
+    initializeHistory,
     appState,
     generateBoard,
     renderLibrary: () => renderLibrary(),
@@ -402,6 +404,7 @@ async function handleCreateNewGrid() {
 
         applyGridData(grid);
         generateBoard();
+        initializeHistory();
         updateCurrentGridName();
 
         closeNewGridModal();
