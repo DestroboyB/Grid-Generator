@@ -9,7 +9,7 @@ async function waitForApp(page, width = 375, height = 812) {
 // Generate a real, decoded high-resolution image in Chromium so this test
 // exercises image decoding and Cropper without committing a large fixture.
 async function makeLargePng(page, size = 2048) {
-    const dataUrl = await page.evaluate(() => {
+    const dataUrl = await page.evaluate((size) => {
         const canvas = document.createElement("canvas");
         canvas.width = size;
         canvas.height = size;
@@ -29,7 +29,7 @@ async function makeLargePng(page, size = 2048) {
         }
 
         return canvas.toDataURL("image/png");
-    });
+    }, size);
 
     return Buffer.from(dataUrl.split(",")[1], "base64");
 }
