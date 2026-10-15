@@ -96,6 +96,18 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
     // exported frames visibly differ.
     const renderedFrames = await page.evaluate(async base64 => {
         const image = new Image();
+        Object.assign(image.style, {
+            position: "fixed",
+            left: "0",
+            top: "0",
+            width: "32px",
+            height: "32px",
+            opacity: "0.01",
+            pointerEvents: "none"
+        });
+        // Keep the image in the document: Chromium may not advance animated
+        // GIFs whose Image object is detached from the DOM.
+        document.body.appendChild(image);
         image.src = `data:image/gif;base64,${base64}`;
         await image.decode();
 
@@ -105,12 +117,16 @@ test("GIF download option is hidden until an animated GIF is on the board and ex
         const context = canvas.getContext("2d");
         const sample = () => {
             context.drawImage(image, 0, 0);
-            return Array.from(context.getImageData(25, 25, 1, 1).data);
+            return Array.from(context.getImageData(8, 8, 1, 1).data);
         };
 
         const first = sample();
-        await new Promise(resolve => setTimeout(resolve, 650));
-        const second = sample();
+        let second = first;
+        for (let attempt = 0; attempt < 20 && second.every((value, index) => value === first[index]); attempt++) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            second = sample();
+        }
+        image.remove();
         return { first, second, width: image.naturalWidth, height: image.naturalHeight };
     }, exported.toString("base64"));
 
