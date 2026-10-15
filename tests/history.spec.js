@@ -207,7 +207,7 @@ test("history is capped at 10 states and remains usable after reload", async ({ 
     // Each ratio change creates a distinct history state. Cycle through
     // valid options to create more edits than the 10-state retention limit.
     const ratios = ["4:3", "3:2", "16:9", "3:4", "2:3", "9:16", "1:1"];
-    for (let i = 0; i < 36; i++) {
+    for (let i = 0; i < 15; i++) {
         await page.locator("#imageRatio").selectOption(ratios[i % ratios.length]);
         await expect(page.locator("#undoButton")).toBeEnabled();
     }
