@@ -115,9 +115,20 @@ const borderSizeValue =
 
 
 
- // ========================================
- // Board Settings Menu
- // ========================================
+// ========================================
+// Board Settings / History / Clear Controls
+// ========================================
+
+const boardSettingsButton = document.getElementById("boardSettingsButton");
+const boardSettingsPanel = document.getElementById("boardSettingsPanel");
+const undoButton = document.getElementById("undoButton");
+const redoButton = document.getElementById("redoButton");
+const clearBoardButton = document.getElementById("clearBoardButton");
+
+
+// ========================================
+// Board Settings Menu
+// ========================================
 
 function closeBoardSettings() {
     boardSettingsPanel.classList.remove("open");
