@@ -288,12 +288,15 @@ export async function renderLibrary() {
                 category => category.parentId == null
             );
 
+            // Use a lookup set instead of scanning every category for
+            // each parent reference when identifying orphaned categories.
+            const categoryIds = new Set(
+                categories.map(category => String(category.id))
+            );
+
             const orphanCategories = categories.filter(category =>
                 category.parentId != null &&
-                !categories.some(
-                    parent =>
-                        String(parent.id) === String(category.parentId)
-                )
+                !categoryIds.has(String(category.parentId))
             );
 
             const topLevelCategories = [...rootCategories, ...orphanCategories];
