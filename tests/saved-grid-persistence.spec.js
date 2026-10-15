@@ -108,7 +108,7 @@ test("saved grid settings and image data survive switching away and reopening", 
             borderEnabled: grid.borderEnabled,
             borderSize: grid.borderSize,
             borderColor: grid.borderColor,
-            hasImage: Boolean(grid.images?.[0]?.src || grid.images?.[0]?.data || grid.images?.[0]?.image)
+            hasImage: Boolean(grid.images?.[0]?.source || grid.images?.[0]?.src || grid.images?.[0]?.data || grid.images?.[0]?.image)
         };
     }).toMatchObject({
         rows: 2,
