@@ -287,11 +287,15 @@
     }
 
     .editor-tools {
-        overflow-x: auto;
+        overflow-x: hidden;
     }
 
     .editor-tool {
-        min-width: 100px;
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 8px 4px;
+        font-size: clamp(10px, 2.5vw, 13px);
+        white-space: nowrap;
     }
 
     .adjust-controls {
@@ -317,7 +321,12 @@
     }
 
     .restore-original-tab {
-        flex: 0 0 120px;
+        flex: 0 1 96px;
+        min-width: 0;
+        margin-left: 2px;
+        padding: 8px 3px;
+        font-size: clamp(9px, 2.3vw, 12px);
+        white-space: nowrap;
     }
 
     .filter-buttons {
@@ -368,10 +377,15 @@
         gap: 4px 8px;
     }
 
+    .editor-tool {
+        padding: 7px 2px;
+        font-size: clamp(9px, 2.8vw, 12px);
+    }
+
     .restore-original-tab {
-        flex: 0 0 120px;
-        font-size: 12px;
-        padding: 10px 8px;
+        flex-basis: 88px;
+        padding: 7px 2px;
+        font-size: clamp(9px, 2.5vw, 11px);
     }
 
     .editor-button-row {
