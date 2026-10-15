@@ -625,3 +625,64 @@ test("storage reliability: failed grid deletion preserves the saved grid and lib
     expect(result.afterFailureExists).toBe(true);
     expect(result.savedGridId).toBe(result.gridId);
 });
+
+test("storage reliability: failed category deletion rolls back category and grid updates", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { createCategory, getCategory, deleteCategory } = await import(
+            `/js/storage/categories.js?category-delete-failure=${Date.now()}`
+        );
+        const { createGrid, getGrid } = await import(
+            `/js/storage/grids.js?category-delete-grid=${Date.now()}`
+        );
+
+        const category = await createCategory("Deletion rollback test");
+        const grid = await createGrid({
+            name: "Deletion rollback grid",
+            categoryId: category.id
+        });
+        const originalDelete = IDBObjectStore.prototype.delete;
+
+        Object.defineProperty(IDBObjectStore.prototype, "delete", {
+            configurable: true,
+            writable: true,
+            value: function (...args) {
+                throw new DOMException(
+                    "Simulated storage write failure",
+                    "UnknownError"
+                );
+            }
+        });
+
+        let deletionError = null;
+
+        try {
+            await deleteCategory(category.id);
+        } catch (error) {
+            deletionError = error.name;
+        } finally {
+            Object.defineProperty(IDBObjectStore.prototype, "delete", {
+                configurable: true,
+                writable: true,
+                value: originalDelete
+            });
+        }
+
+        const categoryAfter = await getCategory(category.id);
+        const gridAfter = await getGrid(grid.id);
+
+        return {
+            deletionError,
+            categoryExists: Boolean(categoryAfter),
+            gridExists: Boolean(gridAfter),
+            gridCategoryId: gridAfter?.categoryId ?? null,
+            categoryId: category.id
+        };
+    });
+
+    expect(result.deletionError).toBeTruthy();
+    expect(result.categoryExists).toBe(true);
+    expect(result.gridExists).toBe(true);
+    expect(result.gridCategoryId).toBe(result.categoryId);
+});
