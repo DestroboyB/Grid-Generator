@@ -489,65 +489,84 @@ export async function loadGrid(gridId) {
 // Save Current Grid
 // ========================================
 
-// Serialize board saves so concurrent edits cannot finish writing out of order.
+// Capture each save request before queueing it. The active grid and app state
+// can change while an earlier IndexedDB operation is still in progress.
 let currentGridSaveQueue = Promise.resolve();
 
-export function saveCurrentGrid() {
-    currentGridSaveQueue = currentGridSaveQueue
-        .catch(error => {
-            console.error("A previous board save failed:", error);
-        })
-        .then(() => saveCurrentGridNow());
+function captureCurrentGridSnapshot() {
+    let gridId = appState.currentGridId;
+    let initialGrid = null;
 
-    return currentGridSaveQueue;
-}
-
-async function saveCurrentGridNow() {
-    let grid;
-
-    if (appState.currentGridId) {
-        grid = await getGrid(appState.currentGridId);
-    }
-
-    if (!grid) {
-        grid = createGridData();
-
-        appState.currentGridId = grid.id;
-        appState.currentGridName = grid.name;
+    // Reserve an ID synchronously so rapid saves made before the first write
+    // completes all target the same newly-created grid.
+    if (!gridId) {
+        initialGrid = createGridData();
+        gridId = initialGrid.id;
+        appState.currentGridId = gridId;
+        appState.currentGridName =
+            appState.currentGridName || initialGrid.name;
     }
 
     const rowsInput = document.getElementById("rows");
     const columnsInput = document.getElementById("columns");
     const ratioInput = document.getElementById("imageRatio");
 
-    if (rowsInput) {
-        grid.rows = Number(rowsInput.value);
+    return {
+        gridId,
+        initialGrid,
+        name: appState.currentGridName || "Untitled Grid",
+        rows: Number(rowsInput?.value ?? 3),
+        columns: Number(columnsInput?.value ?? 3),
+        ratio: ratioInput?.value ?? "1:1",
+        images: cloneData(appState.savedImages),
+        spacing: appState.spacing,
+        backgroundColor: appState.backgroundColor,
+        borderEnabled: appState.borderEnabled,
+        borderSize: appState.borderSize,
+        borderColor: appState.borderColor,
+        undoStack: cloneData(appState.undoStack),
+        redoStack: cloneData(appState.redoStack)
+    };
+}
+
+export function saveCurrentGrid() {
+    const snapshot = captureCurrentGridSnapshot();
+
+    currentGridSaveQueue = currentGridSaveQueue
+        .catch(error => {
+            console.error("A previous board save failed:", error);
+        })
+        .then(() => saveCurrentGridSnapshot(snapshot));
+
+    return currentGridSaveQueue;
+}
+
+async function saveCurrentGridSnapshot(snapshot) {
+    let grid = snapshot.initialGrid;
+
+    if (!grid) {
+        grid = await getGrid(snapshot.gridId);
     }
 
-    if (columnsInput) {
-        grid.columns = Number(columnsInput.value);
+    if (!grid) {
+        // The saved record may have been deleted before this queued save ran.
+        // Recreate it using the captured ID, not whichever grid is now active.
+        grid = createGridData();
+        grid.id = snapshot.gridId;
     }
 
-    if (ratioInput) {
-        grid.ratio = ratioInput.value;
-    }
-
-    grid.name =
-        appState.currentGridName ||
-        grid.name ||
-        "Untitled Grid";
-
-    grid.images = cloneData(appState.savedImages);
-
-    grid.spacing = appState.spacing;
-    grid.backgroundColor = appState.backgroundColor;
-    grid.borderEnabled = appState.borderEnabled;
-    grid.borderSize = appState.borderSize;
-    grid.borderColor = appState.borderColor;
-
-    grid.undoStack = cloneData(appState.undoStack);
-    grid.redoStack = cloneData(appState.redoStack);
-
+    grid.rows = snapshot.rows;
+    grid.columns = snapshot.columns;
+    grid.ratio = snapshot.ratio;
+    grid.name = snapshot.name || grid.name || "Untitled Grid";
+    grid.images = snapshot.images;
+    grid.spacing = snapshot.spacing;
+    grid.backgroundColor = snapshot.backgroundColor;
+    grid.borderEnabled = snapshot.borderEnabled;
+    grid.borderSize = snapshot.borderSize;
+    grid.borderColor = snapshot.borderColor;
+    grid.undoStack = snapshot.undoStack;
+    grid.redoStack = snapshot.redoStack;
     grid.updatedAt = Date.now();
 
     await saveGrid(grid);
