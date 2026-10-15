@@ -780,3 +780,53 @@ test("horizontal and vertical flips persist after reload and support Undo/Redo",
         flipY: false
     });
 });
+
+
+test("PNG, JPG, and WebP downloads produce correctly encoded image files", async ({ page }) => {
+    await waitForApp(page);
+    await addImageToFirstTile(page);
+
+    const formats = [
+        {
+            format: "png",
+            selector: "#downloadPngButton",
+            extension: ".png",
+            signature: buffer => buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+        },
+        {
+            format: "jpg",
+            selector: "#downloadJpgButton",
+            extension: ".jpg",
+            signature: buffer => buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
+        },
+        {
+            format: "webp",
+            selector: "#downloadWebpButton",
+            extension: ".webp",
+            signature: buffer => buffer.toString("ascii", 0, 4) === "RIFF" &&
+                buffer.toString("ascii", 8, 12) === "WEBP"
+        }
+    ];
+
+    for (const item of formats) {
+        await page.locator("#downloadButton").click();
+        await expect(page.locator("#downloadMenu")).toBeVisible();
+
+        const downloadPromise = page.waitForEvent("download");
+        await page.locator(item.selector).click();
+        const download = await downloadPromise;
+
+        expect(download.suggestedFilename()).toBe(`grid-board${item.extension}`);
+
+        const stream = await download.createReadStream();
+        const chunks = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+        }
+        const bytes = Buffer.concat(chunks);
+
+        expect(bytes.length).toBeGreaterThan(32);
+        expect(item.signature(bytes)).toBe(true);
+        await expect(page.locator("#downloadMenu")).toBeHidden();
+    }
+});
