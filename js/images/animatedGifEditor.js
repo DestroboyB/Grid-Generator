@@ -144,9 +144,9 @@ export function getFrozenGifFrame() {
     return lastFrozenFrame;
 }
 
-export async function applyAnimatedGifMode() {
+export async function applyAnimatedGifMode(editState = {}) {
     if (!isAnimatedGifMode()) return false;
 
-    await importAnimatedGif(animatedGifSource, animatedGifTarget);
+    await importAnimatedGif(animatedGifSource, animatedGifTarget, editState);
     return true;
 }
