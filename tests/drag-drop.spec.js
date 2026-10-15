@@ -1,0 +1,56 @@
+import { test, expect } from "@playwright/test";
+
+const firstPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=",
+    "base64"
+);
+
+const secondPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
+    "base64"
+);
+
+async function uploadToTile(page, index, name, buffer) {
+    const tile = page.locator(`#board .image[data-index="${index}"]`);
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({ name, mimeType: "image/png", buffer });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    await page.locator("#cropButton").click();
+    await expect(tile.locator("img")).toHaveCount(1);
+    return tile;
+}
+
+test("dragging an image to another tile swaps the images and supports undo/redo", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#board .image")).toHaveCount(9);
+
+    const firstTile = await uploadToTile(page, 0, "first.png", firstPng);
+    const secondTile = await uploadToTile(page, 1, "second.png", secondPng);
+
+    const firstSourceBefore = await firstTile.locator("img").getAttribute("src");
+    const secondSourceBefore = await secondTile.locator("img").getAttribute("src");
+    expect(firstSourceBefore).toBeTruthy();
+    expect(secondSourceBefore).toBeTruthy();
+    expect(firstSourceBefore).not.toBe(secondSourceBefore);
+
+    await firstTile.dragTo(secondTile);
+
+    await expect(firstTile.locator("img")).toHaveAttribute("src", secondSourceBefore);
+    await expect(secondTile.locator("img")).toHaveAttribute("src", firstSourceBefore);
+    await expect(page.locator("#undoButton")).toBeEnabled();
+
+    await page.locator("#undoButton").click();
+    await expect(firstTile.locator("img")).toHaveAttribute("src", firstSourceBefore);
+    await expect(secondTile.locator("img")).toHaveAttribute("src", secondSourceBefore);
+
+    await page.locator("#redoButton").click();
+    await expect(firstTile.locator("img")).toHaveAttribute("src", secondSourceBefore);
+    await expect(secondTile.locator("img")).toHaveAttribute("src", firstSourceBefore);
+});
