@@ -53,6 +53,10 @@ function validateProject(project) {
     if (grid.spacing !== undefined && (!Number.isFinite(grid.spacing) || grid.spacing < 0 || grid.spacing > 50)) {
         throw new Error("The project has invalid spacing.");
     }
+    if (grid.outerPadding !== undefined &&
+        (!Number.isFinite(grid.outerPadding) || grid.outerPadding < 0 || grid.outerPadding > 30)) {
+        throw new Error("The project has invalid outer padding.");
+    }
     if (grid.borderSize !== undefined && (!Number.isFinite(grid.borderSize) || grid.borderSize < 0 || grid.borderSize > 10)) {
         throw new Error("The project has an invalid border size.");
     }
@@ -95,6 +99,7 @@ async function exportCurrentProject() {
         columns,
         ratio: document.getElementById("imageRatio")?.value ?? stored?.ratio ?? "1:1",
         spacing: appState.spacing,
+        outerPadding: appState.outerPadding ?? 10,
         backgroundColor: appState.backgroundColor,
         borderEnabled: appState.borderEnabled,
         borderSize: appState.borderSize,
@@ -140,6 +145,7 @@ async function importProjectFile(file) {
         columns: Number(source.columns),
         ratio: source.ratio,
         spacing: source.spacing ?? 0,
+        outerPadding: source.outerPadding ?? 10,
         backgroundColor: source.backgroundColor ?? "#ffffff",
         borderEnabled: source.borderEnabled ?? true,
         borderSize: source.borderSize ?? 2,
