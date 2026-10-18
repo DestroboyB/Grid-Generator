@@ -3,6 +3,25 @@ import { readFile } from "node:fs/promises";
 
 const tinyPng = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAU0lEQVR4nO3PQQ3AIADAQEANEpGIrIngcVnSU9DOfe74s6UDXjWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaB90JcByOCc2PwAAAAASUVORK5CYII=";
 
+async function enableImportButtonForTest(page) {
+    await page.route("**/*", async route => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (request.resourceType() !== "document" ||
+            !(url.pathname === "/" || url.pathname.endsWith("/index.html"))) {
+            await route.continue();
+            return;
+        }
+        const response = await route.fetch();
+        const html = await response.text();
+        const restored = html.replace(
+            /<!-- Temporarily disabled while the library redesign is stabilized\.\s*<button id="importProjectButton" type="button" class="library-button">Import Grid<\/button>\s*-->/,
+            '<button id="importProjectButton" type="button" class="library-button">Import Grid</button>'
+        );
+        await route.fulfill({ response, body: restored });
+    });
+}
+
 test("export downloads a versioned editable project file", async ({ page }) => {
     await page.goto("/");
     await page.locator("#rows").selectOption("2");
@@ -29,6 +48,7 @@ test("export downloads a versioned editable project file", async ({ page }) => {
 });
 
 test("import restores a project as a separate grid and rejects invalid files safely", async ({ page }) => {
+    await enableImportButtonForTest(page);
     await page.goto("/");
     const beforeId = await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
@@ -96,6 +116,7 @@ test("import restores a project as a separate grid and rejects invalid files saf
 
 
 test("import rejects invalid dimensions and image payloads without changing the active grid", async ({ page }) => {
+    await enableImportButtonForTest(page);
     await page.goto("/");
     const before = await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");

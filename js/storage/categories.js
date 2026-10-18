@@ -6,6 +6,7 @@ import {
 } from "./database.js";
 
 import { generateId, cloneData } from "./helpers.js";
+import { getCategoryIds, withCategoryAssignments } from "./categoryAssignments.js";
 
 
 // ========================================
@@ -315,47 +316,40 @@ export async function moveCategory(categoryId, newParentId = null) {
 // Move Grid Into a Category
 // ========================================
 
-export async function moveGridToCategory(gridId, categoryId = null) {
-    const db = await openDatabase();
-
-    if (categoryId != null) {
-        const category = await getCategory(categoryId);
-
-        if (!category) {
-            throw new Error("The destination category could not be found.");
+export async function setGridCategories(gridId, categoryIds = []) {
+    const normalizedIds = [...new Set((categoryIds ?? []).map(String))];
+    if (normalizedIds.length) {
+        const categories = await getAllCategories();
+        const validIds = new Set(categories.map(category => String(category.id)));
+        if (normalizedIds.some(id => !validIds.has(id))) {
+            throw new Error("One of the selected categories could not be found.");
         }
     }
 
+    const db = await openDatabase();
     const transaction = db.transaction(GRID_STORE, "readwrite");
     const store = transaction.objectStore(GRID_STORE);
     const request = store.get(gridId);
-
     let updatedGrid = null;
-
     request.onsuccess = () => {
-        if (!request.result) {
-            return;
-        }
-
+        if (!request.result) return;
         updatedGrid = {
-            ...request.result,
-            categoryId: categoryId ?? null,
+            ...withCategoryAssignments(request.result, normalizedIds),
             updatedAt: Date.now()
         };
-
         store.put(updatedGrid);
     };
 
     return new Promise((resolve, reject) => {
-        transaction.oncomplete = () =>
-            resolve(updatedGrid ? cloneData(updatedGrid) : null);
-
-        transaction.onerror = () =>
-            reject(transaction.error || new Error("Failed to move grid."));
-
-        transaction.onabort = () =>
-            reject(transaction.error || new Error("Grid move aborted."));
+        transaction.oncomplete = () => resolve(updatedGrid ? cloneData(updatedGrid) : null);
+        transaction.onerror = () => reject(transaction.error || new Error("Failed to update grid categories."));
+        transaction.onabort = () => reject(transaction.error || new Error("Grid category update aborted."));
     });
+}
+
+// Legacy single-category API retained for existing callers.
+export async function moveGridToCategory(gridId, categoryId = null) {
+    return setGridCategories(gridId, categoryId == null ? [] : [categoryId]);
 }
 
 
@@ -364,7 +358,8 @@ export async function moveGridToCategory(gridId, categoryId = null) {
 // ========================================
 //
 // - Keeps all grids.
-// - Makes grids directly assigned to this category uncategorized.
+// - Removes only this category assignment from affected grids.
+// - A grid remains categorized if it has other assignments.
 // - Moves immediate subcategories to this category's parent.
 // - Preserves deeper nesting under those subcategories.
 // ========================================
@@ -432,10 +427,13 @@ export async function deleteCategory(categoryId) {
 
         const grid = cursor.value;
 
-        if (grid.categoryId === categoryId) {
+        const assignments = getCategoryIds(grid);
+        if (assignments.includes(String(categoryId))) {
             cursor.update({
-                ...grid,
-                categoryId: null,
+                ...withCategoryAssignments(
+                    grid,
+                    assignments.filter(id => id !== String(categoryId))
+                ),
                 updatedAt: Date.now()
             });
         }

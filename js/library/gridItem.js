@@ -5,13 +5,14 @@
 // Builds one grid row and its management actions.
 // Dependencies are injected from library.js so library state stays centralized.
 
-export function createGridElement(grid, categories, searchResult = false, dependencies) {
+export function createGridElement(grid, categories, searchResult = false, dependencies, showActions = true) {
     const {
         makeActionButton,
         stopClick,
         getAllCategories,
         openCategorySelectionModal,
-        moveGridToCategory,
+        setGridCategories,
+        recordGridSelection,
         renameGrid,
         deleteGrid,
         getGridSummaries,
@@ -26,7 +27,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
         setIsLibrarySearchMode,
         searchLibrary,
         librarySearchInput,
-        setPendingExpandedCategoryIds,
         getLibraryContent
     } = dependencies;
 
@@ -39,22 +39,17 @@ export function createGridElement(grid, categories, searchResult = false, depend
         element.classList.add("active");
     }
 
-    const icon = document.createElement("span");
-    icon.className = "library-grid-icon";
-    icon.textContent = "▣";
-
     const name = document.createElement("span");
     name.className = "library-grid-name";
     name.textContent = grid.name || "Untitled Grid";
 
-    // Search results intentionally have no management buttons.
-    if (!searchResult) {
+    if (showActions) {
         const actions = document.createElement("div");
         actions.className = "library-grid-actions";
 
         const moveButton = makeActionButton(
-            "Move",
-            "Move this grid to a category"
+            "Edit Categories",
+            "Add or remove category assignments"
         );
 
         const renameButton = makeActionButton(
@@ -75,18 +70,20 @@ export function createGridElement(grid, categories, searchResult = false, depend
                 const allCategories = await getAllCategories();
 
                 openCategorySelectionModal({
-                    title: `Move "${grid.name || "Untitled Grid"}"`,
+                    title: `Edit Categories for "${grid.name || "Untitled Grid"}"`,
                     categories: allCategories,
-                    selectedId: grid.categoryId ?? null,
-                    allowRoot: true,
-                    rootLabel: "Uncategorized",
-                    onSave: async destinationId => {
-                        await moveGridToCategory(grid.id, destinationId);
-                        await renderLibrary();
+                    multiSelect: true,
+                    selectedIds: Array.isArray(grid.categoryIds)
+                        ? grid.categoryIds
+                        : grid.categoryId == null ? [] : [grid.categoryId],
+                    onSave: async categoryIds => {
+                        await setGridCategories(grid.id, categoryIds);
+                        if (isLibrarySearchMode()) await searchLibrary();
+                        else await renderLibrary();
                     }
                 });
             } catch (error) {
-                showError("Failed to move the grid.", error);
+                showError("Failed to update grid categories.", error);
             }
         });
 
@@ -245,16 +242,17 @@ export function createGridElement(grid, categories, searchResult = false, depend
                     updateCurrentGridName();
                 }
 
-                await renderLibrary();
+                if (isLibrarySearchMode()) await searchLibrary();
+                else await renderLibrary();
             } catch (error) {
                 showError("Failed to delete the grid.", error);
             }
         });
 
         actions.append(moveButton, renameButton, deleteButton);
-        element.append(icon, name, actions);
+        element.append(name, actions);
     } else {
-        element.append(icon, name);
+        element.append(name);
     }
 
     element.addEventListener("click", async event => {
@@ -270,6 +268,13 @@ export function createGridElement(grid, categories, searchResult = false, depend
             const loaded = await loadGrid(grid.id);
             if (!loaded) return;
 
+            if (!searchResult) {
+                const assignments = Array.isArray(grid.categoryIds)
+                    ? grid.categoryIds
+                    : grid.categoryId == null ? [] : [grid.categoryId];
+                recordGridSelection(grid.id, assignments);
+            }
+
             initializeHistory();
             generateBoard();
             updateCurrentGridName();
@@ -281,30 +286,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
                 if (librarySearchInput) {
                     librarySearchInput.value = "";
                 }
-
-                // Expand the selected grid's category and all ancestors.
-                const expandedIds = new Set();
-                const visitedIds = new Set();
-
-                let parentId = grid.categoryId ?? null;
-
-                while (parentId != null) {
-                    const id = String(parentId);
-
-                    if (visitedIds.has(id)) break;
-                    visitedIds.add(id);
-
-                    const category = categories.find(
-                        item => String(item.id) === id
-                    );
-
-                    if (!category) break;
-
-                    expandedIds.add(id);
-                    parentId = category.parentId ?? null;
-                }
-
-                setPendingExpandedCategoryIds(expandedIds);
 
                 await renderLibrary();
                 return;

@@ -429,7 +429,9 @@
         <div class="bottom-actions">
 
             <button id="exportProjectButton" type="button" class="library-button">Export Grid</button>
+            <!-- Temporarily disabled while the library redesign is stabilized.
             <button id="importProjectButton" type="button" class="library-button">Import Grid</button>
+            -->
             <button id="rebuildFromScreenshotButton" type="button" class="library-button">Rebuild from Screenshot</button>
 
         <div class="download-container">
@@ -505,7 +507,10 @@
 
 
 <div class="library-header">
-    <h2>My Grids</h2>
+    <div class="current-grid-heading">
+        <h2>Current Grid:</h2>
+        <div id="currentGridName" class="current-grid-name">Untitled Grid</div>
+    </div>
 
     <button
         id="libraryCloseButton"

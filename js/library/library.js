@@ -13,16 +13,14 @@ import {
     createCategory,
     renameCategory,
     moveCategory,
-    moveGridToCategory,
+    setGridCategories,
     deleteCategory
 } from "../storage/categories.js";
 
-import { createCategoryElement } from "./categoryItem.js";
 import { createGridElement as buildGridElement } from "./gridItem.js";
 
 import {
     getDescendantIds,
-    getCategoryDepth,
     getSubtreeHeight
 } from "./categoryUtils.js";
 
@@ -57,30 +55,34 @@ const newGridNameInput = document.getElementById("newGridNameInput");
 const cancelNewGridButton = document.getElementById("cancelNewGridButton");
 const createNewGridButton = document.getElementById("createNewGridButton");
 
-const categoryElementDependencies = {
-    makeActionButton,
-    stopClick,
-    openCategoryNameModal,
-    openCategorySelectionModal,
-    createCategory,
-    renameCategory,
-    getAllCategories,
-    getDescendantIds,
-    getSubtreeHeight,
-    getCategoryDepth,
-    moveCategory,
-    deleteCategory,
-    renderLibrary: () => renderLibrary(),
-    showError,
-    createGridElement: (...args) => createGridElement(...args)
-};
-
 const gridElementDependencies = {
     makeActionButton,
     stopClick,
     getAllCategories,
     openCategorySelectionModal,
-    moveGridToCategory,
+    setGridCategories: async (gridId, categoryIds) => {
+        const updated = await setGridCategories(gridId, categoryIds);
+        if (String(gridId) === String(appState.currentGridId)) {
+            const ids = categoryIds.map(String);
+            if (ids.length) {
+                const next = ids.includes(String(selectedCategoryId))
+                    ? String(selectedCategoryId)
+                    : ids[0];
+                selectedCategoryId = next;
+                lastSelectedCategoryByGrid.set(String(gridId), next);
+            } else {
+                selectedCategoryId = UNCATEGORIZED_ID;
+            }
+        }
+        return updated;
+    },
+    recordGridSelection: (gridId, assignments) => {
+        const selectedId = selectedCategoryId;
+        if (selectedId != null && selectedId !== UNCATEGORIZED_ID &&
+            assignments.map(String).includes(String(selectedId))) {
+            lastSelectedCategoryByGrid.set(String(gridId), String(selectedId));
+        }
+    },
     renameGrid,
     deleteGrid,
     getGridSummaries,
@@ -97,9 +99,6 @@ const gridElementDependencies = {
     },
     searchLibrary: () => searchLibrary(),
     librarySearchInput,
-    setPendingExpandedCategoryIds: ids => {
-        pendingExpandedCategoryIds = ids;
-    },
     getLibraryContent: () => libraryContent
 };
 
@@ -109,17 +108,75 @@ const gridElementDependencies = {
 
 let hasRenderedLibrary = false;
 let isLibrarySearchMode = false;
-let pendingExpandedCategoryIds = null;
 
 // ========================================
 // General Helpers
 // ========================================
 
 function updateCurrentGridName() {
-    if (!currentGridName) return;
+    if (!currentGridName || currentGridName.querySelector("input")) return;
+    currentGridName.textContent = appState.currentGridName || "Untitled Grid";
+}
 
-    currentGridName.textContent =
-        appState.currentGridName || "Untitled Grid";
+function beginCurrentGridRename() {
+    if (!currentGridName || currentGridName.querySelector("input")) return;
+    const gridId = appState.currentGridId;
+    if (gridId == null) return;
+    const originalName = appState.currentGridName || "Untitled Grid";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "current-grid-name-input";
+    input.value = originalName;
+    input.setAttribute("aria-label", "Rename current grid");
+    currentGridName.replaceChildren(input);
+    currentGridName.classList.add("renaming");
+    input.focus();
+    input.select();
+    let finished = false;
+
+    function finish(cancel = false) {
+        if (finished) return;
+        if (cancel) {
+            finished = true;
+            currentGridName.classList.remove("renaming");
+            currentGridName.textContent = originalName;
+            return;
+        }
+        const nextName = input.value.trim();
+        if (!nextName) {
+            alert("Grid name cannot be empty.");
+            input.focus();
+            return;
+        }
+        finished = true;
+        input.disabled = true;
+        renameGrid(gridId, nextName).then(renamedGrid => {
+            if (!renamedGrid) throw new Error("This grid could not be found.");
+            appState.currentGridName = renamedGrid.name;
+            currentGridName.classList.remove("renaming");
+            currentGridName.textContent = renamedGrid.name;
+            return renderLibrary();
+        }).catch(error => {
+            finished = false;
+            input.disabled = false;
+            alert(error?.message || "Failed to rename the grid. Please try again.");
+            input.focus();
+            input.select();
+        });
+    }
+    input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            event.stopPropagation();
+            finish();
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            finish(true);
+        }
+    });
+    input.addEventListener("blur", () => finish());
+    input.addEventListener("click", event => event.stopPropagation());
 }
 
 function showError(message, error) {
@@ -177,73 +234,354 @@ function closeLibrary() {
 }
 
 // ========================================
-// Capture Expanded Categories
+// Category navigation state
 // ========================================
 
-function getExpandedCategoryIds() {
-    if (!libraryContent) return new Set();
+const UNCATEGORIZED_ID = "__uncategorized__";
+let selectedCategoryId = null;
+let selectedForGridId = undefined;
+const lastSelectedCategoryByGrid = new Map();
 
-    return new Set(
-        Array.from(
-            libraryContent.querySelectorAll(
-                ".library-category:not(.collapsed)"
-            )
-        ).map(category => String(category.dataset.categoryId))
-    );
+function categoryIdsForGrid(grid) {
+    if (Array.isArray(grid?.categoryIds)) return grid.categoryIds.map(String);
+    return grid?.categoryId == null ? [] : [String(grid.categoryId)];
 }
 
-// ========================================
-// Library Search
-// ========================================
+function categoryById(categories, id) {
+    return categories.find(category => String(category.id) === String(id));
+}
+
+function getCategoryDepthFor(categories, category) {
+    let depth = 1;
+    let current = category;
+    const visited = new Set();
+    while (current?.parentId != null) {
+        const id = String(current.id);
+        if (visited.has(id)) return Infinity;
+        visited.add(id);
+        current = categoryById(categories, current.parentId);
+        depth++;
+    }
+    return depth;
+}
+
+function getCategoryPath(categories, category) {
+    const names = [];
+    let current = category;
+    const visited = new Set();
+    while (current) {
+        const id = String(current.id);
+        if (visited.has(id)) break;
+        visited.add(id);
+        names.unshift(current.name);
+        current = current.parentId == null ? null : categoryById(categories, current.parentId);
+    }
+    return names.join(" / ");
+}
+
+function rememberCategoryForCurrentGrid(categoryId, grids) {
+    selectedCategoryId = categoryId;
+    const currentGrid = grids.find(grid => String(grid.id) === String(appState.currentGridId));
+    if (currentGrid && categoryId != null && categoryId !== UNCATEGORIZED_ID &&
+        categoryIdsForGrid(currentGrid).includes(String(categoryId))) {
+        lastSelectedCategoryByGrid.set(String(currentGrid.id), String(categoryId));
+    }
+}
+
+function initializeCategoryForCurrentGrid(grids, categories) {
+    const currentId = appState.currentGridId == null ? null : String(appState.currentGridId);
+    if (selectedForGridId === currentId) {
+        if (selectedCategoryId != null && selectedCategoryId !== UNCATEGORIZED_ID &&
+            !categoryById(categories, selectedCategoryId)) selectedCategoryId = null;
+        return;
+    }
+    selectedForGridId = currentId;
+    const grid = grids.find(item => String(item.id) === currentId);
+    const assignments = categoryIdsForGrid(grid);
+    const remembered = currentId == null ? null : lastSelectedCategoryByGrid.get(currentId);
+    if (remembered && assignments.includes(remembered) && categoryById(categories, remembered)) selectedCategoryId = remembered;
+    else if (assignments.length) selectedCategoryId = assignments.find(id => categoryById(categories, id)) ?? UNCATEGORIZED_ID;
+    else selectedCategoryId = UNCATEGORIZED_ID;
+}
+
+function makeLibraryButton(label, className = "") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.textContent = label;
+    return button;
+}
+
+function makeCategoryNavigationButton(category) {
+    const button = makeLibraryButton("", "library-category-navigation");
+    const name = document.createElement("span");
+    name.className = "library-category-navigation-name";
+    name.textContent = category.name;
+    const detail = document.createElement("span");
+    detail.className = "library-category-navigation-detail";
+    detail.textContent = "Open";
+    button.append(name, detail);
+    button.setAttribute("aria-label", `Open ${category.name}`);
+    return button;
+}
+
+function renderCategorySelector(categories, parent, grids) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "library-category-selector";
+    const label = document.createElement("span");
+    label.className = "library-category-selector-caption";
+    label.textContent = "Category";
+    const trigger = makeLibraryButton("", "library-category-selector-trigger");
+    trigger.setAttribute("aria-label", "Choose category");
+    trigger.setAttribute("aria-haspopup", "dialog");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const selectedCategory = selectedCategoryId == null || selectedCategoryId === UNCATEGORIZED_ID
+        ? null : categoryById(categories, selectedCategoryId);
+    const selectedLabel = selectedCategory ? getCategoryPath(categories, selectedCategory)
+        : selectedCategoryId === UNCATEGORIZED_ID ? "Uncategorized" : "Top-level categories";
+    const selectedText = document.createElement("span");
+    selectedText.className = "library-category-selector-value";
+    selectedText.textContent = selectedLabel;
+    const chevron = document.createElement("span");
+    chevron.className = "library-category-selector-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = "▾";
+    trigger.append(selectedText, chevron);
+
+    let popup = null;
+    let navigationParentId = selectedCategory
+        ? (selectedCategory.parentId == null ? null : String(selectedCategory.parentId)) : null;
+    let cleanupPopupListeners = () => {};
+
+    function childrenOf(parentId) {
+        return categories.filter(category =>
+            (category.parentId == null ? null : String(category.parentId)) === parentId
+        ).sort((x, y) => x.name.localeCompare(y.name));
+    }
+    function closePopup() {
+        popup?.remove();
+        popup = null;
+        trigger.setAttribute("aria-expanded", "false");
+        cleanupPopupListeners();
+        cleanupPopupListeners = () => {};
+    }
+    function selectCategory(categoryId) {
+        rememberCategoryForCurrentGrid(categoryId, grids);
+        closePopup();
+        renderLibrary();
+    }
+    function renderPopup() {
+        if (!popup) return;
+        popup.replaceChildren();
+        const header = document.createElement("div");
+        header.className = "library-category-popup-header";
+        if (navigationParentId != null) {
+            const back = makeLibraryButton("← Back", "library-category-popup-back");
+            back.addEventListener("click", () => {
+                const currentParent = categoryById(categories, navigationParentId);
+                navigationParentId = currentParent?.parentId == null
+                    ? null : String(currentParent.parentId);
+                renderPopup();
+            });
+            header.appendChild(back);
+        }
+        const context = document.createElement("div");
+        context.className = "library-category-popup-context";
+        context.textContent = navigationParentId == null ? "All categories"
+            : getCategoryPath(categories, categoryById(categories, navigationParentId));
+        header.appendChild(context);
+        popup.appendChild(header);
+
+        const list = document.createElement("div");
+        list.className = "library-category-popup-list";
+        if (navigationParentId == null) {
+            const uncategorized = makeLibraryButton("", "library-category-popup-item");
+            const uncategorizedName = document.createElement("span");
+            uncategorizedName.textContent = "Uncategorized";
+            uncategorized.appendChild(uncategorizedName);
+            if (selectedCategoryId === UNCATEGORIZED_ID) uncategorized.classList.add("selected");
+            uncategorized.addEventListener("click", () => selectCategory(UNCATEGORIZED_ID));
+            list.appendChild(uncategorized);
+        }
+        const children = childrenOf(navigationParentId);
+        for (const category of children) {
+            const id = String(category.id);
+            const row = document.createElement("div");
+            row.className = "library-category-popup-row";
+            const choose = makeLibraryButton("", "library-category-popup-item");
+            const name = document.createElement("span");
+            name.className = "library-category-popup-item-name";
+            name.textContent = category.name;
+            choose.appendChild(name);
+            if (String(selectedCategoryId) === id) choose.classList.add("selected");
+            choose.setAttribute("aria-label", `Show grids in ${category.name}`);
+            choose.addEventListener("click", () => selectCategory(id));
+            row.appendChild(choose);
+            if (childrenOf(id).length) {
+                const drill = makeLibraryButton("›", "library-category-popup-drill");
+                drill.setAttribute("aria-label", `Browse subcategories of ${category.name}`);
+                drill.addEventListener("click", () => {
+                    navigationParentId = id;
+                    renderPopup();
+                });
+                row.appendChild(drill);
+            }
+            list.appendChild(row);
+        }
+        if (!children.length && navigationParentId != null) {
+            const empty = document.createElement("div");
+            empty.className = "library-category-popup-empty";
+            empty.textContent = "No subcategories";
+            list.appendChild(empty);
+        }
+        popup.appendChild(list);
+        positionPopup();
+    }
+    function positionPopup() {
+        if (!popup) return;
+        const rect = trigger.getBoundingClientRect();
+        const margin = 12;
+        const width = Math.min(360, Math.max(220, window.innerWidth - margin * 2));
+        popup.style.width = `${width}px`;
+        popup.style.maxHeight = `${Math.max(160, Math.min(430, window.innerHeight - margin * 2))}px`;
+        const left = Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin));
+        popup.style.left = `${left}px`;
+        const popupHeight = popup.getBoundingClientRect().height;
+        let top = rect.bottom + 6;
+        if (top + popupHeight > window.innerHeight - margin && rect.top > popupHeight + margin) {
+            top = rect.top - popupHeight - 6;
+        }
+        popup.style.top = `${Math.max(margin, Math.min(top, window.innerHeight - popupHeight - margin))}px`;
+    }
+
+    trigger.addEventListener("click", event => {
+        event.stopPropagation();
+        if (popup) { closePopup(); return; }
+        navigationParentId = selectedCategory
+            ? (selectedCategory.parentId == null ? null : String(selectedCategory.parentId)) : null;
+        popup = document.createElement("div");
+        popup.className = "library-category-popup";
+        popup.setAttribute("role", "dialog");
+        popup.setAttribute("aria-label", "Category navigation");
+        popup.style.position = "fixed";
+        document.body.appendChild(popup);
+        trigger.setAttribute("aria-expanded", "true");
+        renderPopup();
+        positionPopup();
+        const dismiss = event => {
+            if (!popup?.contains(event.target) && !trigger.contains(event.target)) closePopup();
+        };
+        const onKeydown = event => {
+            if (event.key === "Escape" && popup) { closePopup(); trigger.focus(); }
+        };
+        const onResize = () => positionPopup();
+        document.addEventListener("pointerdown", dismiss, true);
+        document.addEventListener("keydown", onKeydown, true);
+        window.addEventListener("resize", onResize);
+        cleanupPopupListeners = () => {
+            document.removeEventListener("pointerdown", dismiss, true);
+            document.removeEventListener("keydown", onKeydown, true);
+            window.removeEventListener("resize", onResize);
+        };
+    });
+    wrapper.append(label, trigger);
+    parent.appendChild(wrapper);
+}
+function renderSelectedCategoryActions(category, categories, parent) {
+    const actions = document.createElement("div");
+    actions.className = "library-selected-category-actions";
+    const depth = getCategoryDepthFor(categories, category);
+    if (depth < 3) {
+        const addChild = makeLibraryButton("+ Subcategory");
+        addChild.addEventListener("click", () => openCategoryNameModal({
+            title: `Create subcategory in "${category.name}"`,
+            onSave: async name => {
+                const created = await createCategory(name, category.id);
+                selectedCategoryId = String(created.id);
+                await renderLibrary();
+            }
+        }));
+        actions.appendChild(addChild);
+    }
+    const rename = makeLibraryButton("Rename");
+    rename.addEventListener("click", () => openCategoryNameModal({
+        title: "Rename Category",
+        initialName: category.name,
+        onSave: async name => {
+            await renameCategory(category.id, name);
+            await renderLibrary();
+        }
+    }));
+    const move = makeLibraryButton("Move");
+    move.addEventListener("click", () => openCategorySelectionModal({
+        title: `Move "${category.name}"`,
+        categories,
+        selectedId: category.parentId ?? null,
+        allowRoot: true,
+        rootLabel: "Top-level category",
+        excludedIds: new Set([String(category.id), ...getDescendantIds(category.id, categories)]),
+        onSave: async parentId => {
+            const newParent = parentId == null ? null : categoryById(categories, parentId);
+            const parentDepth = newParent ? getCategoryDepthFor(categories, newParent) : 0;
+            const subtreeHeight = getSubtreeHeight(category.id, categories);
+            if (parentDepth + subtreeHeight > 3) {
+                throw new Error("Categories can be nested up to 3 levels.");
+            }
+            await moveCategory(category.id, parentId);
+            selectedCategoryId = String(category.id);
+            await renderLibrary();
+        }
+    }));
+    const remove = makeLibraryButton("Delete", "delete");
+    remove.addEventListener("click", async () => {
+        if (!confirm(`Delete category "${category.name}"? Grids keep their other category assignments, and child categories move up one level.`)) return;
+        try {
+            selectedCategoryId = category.parentId == null ? null : String(category.parentId);
+            await deleteCategory(category.id);
+            await renderLibrary();
+        } catch (error) {
+            showError("Failed to delete category.", error);
+        }
+    });
+    actions.append(rename, move, remove);
+    parent.appendChild(actions);
+}
 
 async function searchLibrary() {
     if (!libraryContent || !librarySearchInput) return;
-
     const query = librarySearchInput.value.trim().toLocaleLowerCase();
-
     if (!query) {
         isLibrarySearchMode = false;
         await renderLibrary();
         return;
     }
-
     try {
-        const [grids, categories] = await Promise.all([
-            getGridSummaries(),
-            getAllCategories()
-        ]);
-
-        const matchingGrids = grids.filter(grid =>
-            String(grid.name || "Untitled Grid")
-                .toLocaleLowerCase()
-                .includes(query)
+        const [grids, categories] = await Promise.all([getGridSummaries(), getAllCategories()]);
+        const matches = grids.filter(grid =>
+            String(grid.name || "Untitled Grid").toLocaleLowerCase().includes(query)
         );
-
         const fragment = document.createDocumentFragment();
-
-        if (matchingGrids.length === 0) {
+        const heading = document.createElement("div");
+        heading.className = "library-view-heading";
+        heading.textContent = "Search results";
+        fragment.appendChild(heading);
+        if (!matches.length) {
             const empty = document.createElement("div");
-            empty.className = "library-search-empty";
+            empty.className = "library-empty";
             empty.textContent = `No grids match "${librarySearchInput.value.trim()}".`;
             fragment.appendChild(empty);
         } else {
-            for (const grid of matchingGrids) {
-                fragment.appendChild(
-                    createGridElement(grid, categories, true)
-                );
-            }
+            for (const grid of matches) fragment.appendChild(createGridElement(grid, categories, true));
         }
-
         isLibrarySearchMode = true;
         libraryContent.replaceChildren(fragment);
     } catch (error) {
         console.error("Failed to search library:", error);
-
-        const message = document.createElement("div");
-        message.className = "library-search-empty";
-        message.textContent = "Search failed. Please try again.";
-
-        libraryContent.replaceChildren(message);
+        const empty = document.createElement("div");
+        empty.className = "library-empty";
+        empty.textContent = "Search failed. Please try again.";
+        libraryContent.replaceChildren(empty);
     }
 }
 
@@ -253,100 +591,58 @@ async function searchLibrary() {
 
 export async function renderLibrary() {
     if (!libraryContent) return;
-
-    const expandedCategories = pendingExpandedCategoryIds !== null
-        ? pendingExpandedCategoryIds
-        : hasRenderedLibrary
-            ? getExpandedCategoryIds()
-            : null;
-
-    pendingExpandedCategoryIds = null;
     isLibrarySearchMode = false;
-
-    if (!libraryContent.children.length) {
-        libraryContent.innerHTML =
-            '<div class="library-empty">Loading...</div>';
-    }
-
     try {
-        const [grids, categories] = await Promise.all([
-            getGridSummaries(),
-            getAllCategories()
-        ]);
-
+        const [grids, categories] = await Promise.all([getGridSummaries(), getAllCategories()]);
         updateCurrentGridName();
-
+        initializeCategoryForCurrentGrid(grids, categories);
         const fragment = document.createDocumentFragment();
 
-        if (!grids.length && !categories.length) {
-            const empty = document.createElement("div");
-            empty.className = "library-empty";
-            empty.textContent = "No grids or categories yet.";
-            fragment.appendChild(empty);
-        } else {
-            const rootCategories = categories.filter(
-                category => category.parentId == null
-            );
+        const viewHeader = document.createElement("div");
+        viewHeader.className = "library-view-header";
+        const heading = document.createElement("h3");
+        heading.className = "library-view-heading";
+        heading.textContent = "My Grids:";
+        viewHeader.appendChild(heading);
+        renderCategorySelector(categories, viewHeader, grids);
+        fragment.appendChild(viewHeader);
 
-            // Use a lookup set instead of scanning every category for
-            // each parent reference when identifying orphaned categories.
-            const categoryIds = new Set(
-                categories.map(category => String(category.id))
-            );
+        const currentCategory = selectedCategoryId != null && selectedCategoryId !== UNCATEGORIZED_ID
+            ? categoryById(categories, selectedCategoryId)
+            : null;
 
-            const orphanCategories = categories.filter(category =>
-                category.parentId != null &&
-                !categoryIds.has(String(category.parentId))
-            );
-
-            const topLevelCategories = [...rootCategories, ...orphanCategories];
-
-            for (const category of topLevelCategories) {
-                fragment.appendChild(
-                    createCategoryElement(
-                        category,
-                        categories,
-                        grids,
-                        new Set(),
-                        1,
-                        expandedCategories,
-                        categoryElementDependencies
-                    )
-                );
-            }
-
-            const uncategorized = grids.filter(
-                grid => grid.categoryId == null
-            );
-
-            if (topLevelCategories.length > 0 && uncategorized.length > 0) {
-                const divider = document.createElement("div");
-                divider.className = "library-section-divider";
-                divider.setAttribute("aria-hidden", "true");
-                fragment.appendChild(divider);
-            }
-
-            for (const grid of uncategorized) {
-                fragment.appendChild(createGridElement(grid, categories));
-            }
+        // All category browsing lives inside the hierarchical dropdown.
+        // Keep only category management actions in the content area.
+        if (currentCategory) {
+            renderSelectedCategoryActions(currentCategory, categories, fragment);
         }
 
+        const visibleGrids = selectedCategoryId === UNCATEGORIZED_ID
+            ? grids.filter(grid => categoryIdsForGrid(grid).length === 0)
+            : currentCategory
+                ? grids.filter(grid => categoryIdsForGrid(grid).includes(String(currentCategory.id)))
+                : [];
+        if (currentCategory || selectedCategoryId === UNCATEGORIZED_ID) {
+            if (visibleGrids.length) {
+                for (const grid of visibleGrids) fragment.appendChild(createGridElement(grid, categories));
+            } else {
+                const empty = document.createElement("div");
+                empty.className = "library-empty";
+                empty.textContent = currentCategory && categories.some(category => String(category.parentId) === String(currentCategory.id))
+                    ? "No grids assigned directly to this category yet."
+                    : "No grids in this category yet.";
+                fragment.appendChild(empty);
+            }
+        }
         libraryContent.replaceChildren(fragment);
-        hasRenderedLibrary = true;
     } catch (error) {
         console.error("Failed to render library:", error);
-
-        libraryContent.innerHTML = `
-            <div class="library-empty">
-                Failed to load library. Please try again.
-            </div>
-        `;
+        const empty = document.createElement("div");
+        empty.className = "library-empty";
+        empty.textContent = "Failed to load library. Please try again.";
+        libraryContent.replaceChildren(empty);
     }
 }
-
-// ========================================
-// Create Category Element
-// ========================================
 
 // ========================================
 // Create Grid Element
@@ -433,7 +729,8 @@ function handleCreateNewCategory() {
     openCategoryNameModal({
         title: "Create Category",
         onSave: async name => {
-            await createCategory(name, null);
+            const created = await createCategory(name, null);
+            selectedCategoryId = String(created.id);
             await renderLibrary();
         }
     });
@@ -442,6 +739,20 @@ function handleCreateNewCategory() {
 // ========================================
 // Event Listeners
 // ========================================
+
+if (currentGridName) {
+    currentGridName.setAttribute("role", "button");
+    currentGridName.setAttribute("tabindex", "0");
+    currentGridName.setAttribute("title", "Click to rename current grid");
+    currentGridName.setAttribute("aria-label", "Rename current grid");
+    currentGridName.addEventListener("click", beginCurrentGridRename);
+    currentGridName.addEventListener("keydown", event => {
+        if ((event.key === "Enter" || event.key === " ") && !currentGridName.querySelector("input")) {
+            event.preventDefault();
+            beginCurrentGridRename();
+        }
+    });
+}
 
 libraryButton?.addEventListener("click", openLibrary);
 libraryCloseButton?.addEventListener("click", closeLibrary);

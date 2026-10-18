@@ -133,6 +133,9 @@ export function migrateV1ToV2(
                 categoryId:
                     null,
 
+                categoryIds:
+                    [],
+
                 createdAt:
                     now,
 
