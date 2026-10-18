@@ -43,3 +43,27 @@ test("image can be added, replaced, and deleted", async ({ page }) => {
     await page.locator("#deleteImageButton").click();
     await expect(tile.locator("img")).toHaveCount(0);
 });
+
+test("reopening an image uses the current board ratio", async ({ page }) => {
+    await page.goto("/");
+    const tile = page.locator('#board .image[data-index="0"]');
+
+    // Add an image while the board is square, then change the board shape.
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await uploadFile(page, "#uploadImageButton", "ratio-test.png", tinyPng);
+
+    await page.locator("#imageRatio").selectOption("16:9");
+    await expect(tile.locator("img")).toHaveCount(1);
+
+    // Reopen the image's editor after the ratio change.
+    await tile.click();
+    await page.locator("#updateImageButton").click();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(async () => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const crop = appState.cropper.getData();
+        return crop.width / crop.height;
+    })).toBeCloseTo(16 / 9, 1);
+});
+
