@@ -76,6 +76,13 @@ const gridElementDependencies = {
         }
         return updated;
     },
+    recordGridSelection: (gridId, assignments) => {
+        const selectedId = selectedCategoryId;
+        if (selectedId != null && selectedId !== UNCATEGORIZED_ID &&
+            assignments.map(String).includes(String(selectedId))) {
+            lastSelectedCategoryByGrid.set(String(gridId), String(selectedId));
+        }
+    },
     renameGrid,
     deleteGrid,
     getGridSummaries,

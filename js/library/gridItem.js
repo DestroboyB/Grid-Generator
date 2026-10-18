@@ -12,6 +12,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
         getAllCategories,
         openCategorySelectionModal,
         setGridCategories,
+        recordGridSelection,
         renameGrid,
         deleteGrid,
         getGridSummaries,
@@ -279,6 +280,13 @@ export function createGridElement(grid, categories, searchResult = false, depend
         try {
             const loaded = await loadGrid(grid.id);
             if (!loaded) return;
+
+            if (!searchResult) {
+                const assignments = Array.isArray(grid.categoryIds)
+                    ? grid.categoryIds
+                    : grid.categoryId == null ? [] : [grid.categoryId];
+                recordGridSelection(grid.id, assignments);
+            }
 
             initializeHistory();
             generateBoard();
