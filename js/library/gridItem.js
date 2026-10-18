@@ -97,7 +97,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
                     }
                 });
             } catch (error) {
-                showError("Failed to move the grid.", error);
+                showError("Failed to update grid categories.", error);
             }
         });
 

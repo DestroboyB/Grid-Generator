@@ -217,9 +217,8 @@ export function openCategorySelectionModal({
 
     if (multiSelect && available.length === 0) {
         const empty = document.createElement("p");
-        empty.textContent = "No categories available. Create a category first.";
+        empty.textContent = "No categories available. Saving will leave this grid uncategorized.";
         select.appendChild(empty);
-        dialog.saveButton.disabled = true;
     } else if (!multiSelect && select.options.length === 0) {
         const emptyOption = document.createElement("option");
         emptyOption.value = "";
@@ -232,7 +231,7 @@ export function openCategorySelectionModal({
     dialog.content.insertBefore(label, dialog.actions);
     dialog.content.insertBefore(select, dialog.actions);
 
-    dialog.saveButton.textContent = "Move";
+    dialog.saveButton.textContent = multiSelect ? "Save" : "Move";
 
     async function save() {
         if (dialog.closed || dialog.saveButton.disabled) return;

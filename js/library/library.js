@@ -285,7 +285,7 @@ function makeCategoryNavigationButton(category) {
     return button;
 }
 
-function renderCategorySelector(categories, parent) {
+function renderCategorySelector(categories, parent, grids) {
     const label = document.createElement("label");
     label.className = "library-category-selector-label";
     label.htmlFor = "libraryCategorySelect";
@@ -320,7 +320,8 @@ function renderCategorySelector(categories, parent) {
     append();
     select.value = selectedCategoryId == null ? "" : String(selectedCategoryId);
     select.addEventListener("change", () => {
-        selectedCategoryId = select.value || null;
+        const nextCategoryId = select.value || null;
+        rememberCategoryForCurrentGrid(nextCategoryId, grids);
         renderLibrary();
     });
     label.appendChild(select);
@@ -360,6 +361,12 @@ function renderSelectedCategoryActions(category, categories, parent) {
         rootLabel: "Top-level category",
         excludedIds: new Set([String(category.id), ...getDescendantIds(category.id, categories)]),
         onSave: async parentId => {
+            const newParent = parentId == null ? null : categoryById(categories, parentId);
+            const parentDepth = newParent ? getCategoryDepthFor(categories, newParent) : 0;
+            const subtreeHeight = getSubtreeHeight(category.id, categories);
+            if (parentDepth + subtreeHeight > 3) {
+                throw new Error("Categories can be nested up to 3 levels.");
+            }
             await moveCategory(category.id, parentId);
             selectedCategoryId = String(category.id);
             await renderLibrary();
@@ -436,7 +443,7 @@ export async function renderLibrary() {
         heading.className = "library-view-heading";
         heading.textContent = "My Grids:";
         viewHeader.appendChild(heading);
-        renderCategorySelector(categories, viewHeader);
+        renderCategorySelector(categories, viewHeader, grids);
         fragment.appendChild(viewHeader);
 
         const currentCategory = selectedCategoryId != null && selectedCategoryId !== UNCATEGORIZED_ID
