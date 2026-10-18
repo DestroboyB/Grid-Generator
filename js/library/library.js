@@ -429,7 +429,8 @@ export async function renderLibrary() {
             navBar.className = "library-breadcrumb-row";
             const back = makeLibraryButton("← Back", "library-back-button");
             back.addEventListener("click", () => {
-                selectedCategoryId = currentCategory.parentId == null ? null : String(currentCategory.parentId);
+                const parentId = currentCategory.parentId == null ? null : String(currentCategory.parentId);
+                rememberCategoryForCurrentGrid(parentId, grids);
                 renderLibrary();
             });
             const path = document.createElement("div");
