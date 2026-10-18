@@ -300,6 +300,34 @@ test("hierarchical category dropdown contains every level, has no duplicate navi
     expect(storedAssignments.map(String)).toEqual([String(ids.parentId), String(ids.childId), String(ids.grandchildId)]);
 });
 
+test("category management dialogs use readable slash paths and newly created categories stay selected", async ({ page }) => {
+    await page.goto("/");
+    const ids = await page.evaluate(async () => {
+        const { createCategory } = await import(`/js/storage/categories.js?category-modal-paths=${Date.now()}`);
+        const { createGrid, loadGrid } = await import(`/js/storage/grids.js?category-modal-paths-grids=${Date.now()}`);
+        const parent = await createCategory("Modal Parent");
+        const child = await createCategory("Modal Child", parent.id);
+        const grandchild = await createCategory("Modal Grandchild", child.id);
+        const grid = await createGrid({ name: "Modal Path Grid", categoryIds: [parent.id, child.id] });
+        await loadGrid(grid.id);
+        return { parentId: parent.id, childId: child.id, grandchildId: grandchild.id, gridId: grid.id };
+    });
+    await page.locator("#libraryButton").click();
+    await page.locator(`[data-grid-id="${ids.gridId}"]`).getByRole("button", { name: "Edit Categories" }).click();
+    const editDialog = page.locator(".library-modal-content.category-selection-modal");
+    await expect(editDialog).toBeVisible();
+    await expect(editDialog.getByText("Modal Parent / Modal Child", { exact: true })).toBeVisible();
+    await expect(editDialog.getByText("Modal Parent / Modal Child / Modal Grandchild", { exact: true })).toBeVisible();
+    await expect(editDialog.locator(".library-category-selection-list")).toBeVisible();
+    await editDialog.getByRole("button", { name: "Cancel" }).click();
+    await page.locator("#newCategoryButton").click();
+    const createDialog = page.locator(".library-modal-content");
+    await createDialog.getByRole("textbox", { name: "Category name" }).fill("Fresh Category");
+    await createDialog.getByRole("button", { name: "Save" }).click();
+    const trigger = page.getByRole("button", { name: "Choose category" });
+    await expect(trigger).toContainText("Fresh Category");
+    await expect(trigger).not.toContainText("Top-level categories");
+});
 test("Import Grid is temporarily absent while Bulk Import remains available", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("#importProjectButton")).toHaveCount(0);
