@@ -869,3 +869,102 @@ body.library-open {
     border-color: #60a5fa;
     color: #ffffff;
 }
+
+
+/* Category-management dialogs: clear hierarchy paths and a bounded, scrollable checklist. */
+.library-modal-content.category-selection-modal {
+    width: min(520px, 100%);
+    max-height: min(82vh, 720px);
+    padding: 24px;
+}
+.library-modal-content.category-selection-modal h2 {
+    margin-bottom: 8px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.library-modal-content .library-category-selection-label {
+    margin: 8px 0 10px;
+    color: var(--color-text, #222);
+}
+.library-modal-content .library-category-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: min(48vh, 420px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 7px;
+    border: 1px solid var(--color-border, #d1d5db);
+    border-radius: 9px;
+    background: var(--color-surface-subtle, #f8fafc);
+}
+.library-modal-content .library-category-checkbox {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.library-modal-content .library-category-checkbox:hover {
+    background: var(--color-surface-hover, #eef2f7);
+}
+.library-modal-content .library-category-checkbox:has(input:checked) {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+.library-modal-content .library-category-checkbox input {
+    flex: 0 0 17px;
+    margin-top: 2px;
+}
+.library-modal-content .library-category-checkbox-path {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.library-modal-content.category-selection-modal select {
+    min-height: 44px;
+    padding: 10px 12px;
+}
+.library-modal-content.category-selection-modal .library-modal-actions {
+    position: sticky;
+    bottom: -24px;
+    margin: 18px -24px -24px;
+    padding: 14px 24px 24px;
+    background: inherit;
+}
+:root[data-theme="dark"] .library-modal-content.category-selection-modal {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+:root[data-theme="dark"] .library-modal-content .library-category-selection-label {
+    color: #e5e7eb;
+}
+:root[data-theme="dark"] .library-modal-content .library-category-selection-list {
+    border-color: #4b5563;
+    background: #111827;
+}
+:root[data-theme="dark"] .library-modal-content .library-category-checkbox {
+    color: #e5e7eb;
+}
+:root[data-theme="dark"] .library-modal-content .library-category-checkbox:hover {
+    background: #273449;
+}
+:root[data-theme="dark"] .library-modal-content .library-category-checkbox:has(input:checked) {
+    border-color: #60a5fa;
+    background: #1e3a5f;
+}
+:root[data-theme="dark"] .library-modal-content.category-selection-modal select {
+    border-color: #4b5563;
+    background: #111827;
+    color: #f3f4f6;
+}
+:root[data-theme="dark"] .library-modal-content.category-selection-modal .library-modal-actions {
+    background: #1f2937;
+}
+:root[data-theme="dark"] .library-modal-content.category-selection-modal .library-modal-actions button {
+    border-color: #4b5563;
+    background: #273449;
+    color: #f3f4f6;
+}
