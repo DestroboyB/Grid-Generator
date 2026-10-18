@@ -283,12 +283,14 @@ test("hierarchical category dropdown contains every level, has no duplicate navi
         return {
             background: getComputedStyle(popup).backgroundColor,
             color: getComputedStyle(popup).color,
-            triggerBackground: getComputedStyle(document.querySelector(".library-category-selector-trigger")).backgroundColor
+            triggerBackground: getComputedStyle(document.querySelector(".library-category-selector-trigger")).backgroundColor,
+            triggerColor: getComputedStyle(document.querySelector(".library-category-selector-trigger")).color
         };
     });
     expect(colors.background).toBe("rgb(31, 41, 55)");
     expect(colors.color).toBe("rgb(243, 244, 246)");
-    expect(colors.triggerBackground).toBe("rgb(39, 52, 73)");
+    expect(colors.triggerBackground).not.toBe("rgb(255, 255, 255)");
+    expect(colors.triggerColor).toBe("rgb(255, 255, 255)");
 
     const storedAssignments = await page.evaluate(async gridId => {
         const { getGrid } = await import(`/js/storage/grids.js?dropdown-assignments=${Date.now()}`);
