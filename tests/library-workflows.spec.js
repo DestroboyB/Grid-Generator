@@ -278,6 +278,7 @@ test("hierarchical category dropdown contains every level, has no duplicate navi
     // Explicitly verify the popup palette is readable in dark mode.
     await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
     await trigger.click();
+    await page.waitForTimeout(300); // Allow the theme's color transition to finish.
     const colors = await page.evaluate(() => {
         const popup = document.querySelector(".library-category-popup");
         return {
@@ -289,7 +290,7 @@ test("hierarchical category dropdown contains every level, has no duplicate navi
     });
     expect(colors.background).toBe("rgb(31, 41, 55)");
     expect(colors.color).toBe("rgb(243, 244, 246)");
-    expect(colors.triggerBackground).not.toBe("rgb(255, 255, 255)");
+    expect(colors.triggerBackground).toBe("rgb(39, 52, 73)");
     expect(colors.triggerColor).toBe("rgb(255, 255, 255)");
 
     const storedAssignments = await page.evaluate(async gridId => {
