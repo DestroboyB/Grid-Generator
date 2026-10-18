@@ -17,6 +17,10 @@ import {
     renderImage
 } from "../board.js";
 
+import {
+    getAnimatedGifSource
+} from "../images/animatedGifEditor.js";
+
 
 // ========================================
 // Apply Crop
@@ -197,7 +201,11 @@ if (
 
     } else {
 
+        // Turning animation off replaces the live GIF with a PNG snapshot.
+        // Keep the original GIF as a separate source so animation can be
+        // re-enabled when this still-frame edit is reopened.
         originalSource =
+            getAnimatedGifSource() ||
             cropImage.src;
 
     }
@@ -222,6 +230,11 @@ if (
         source,
 
         originalSource,
+
+        // Applying normal edits intentionally flattens a GIF to a still
+        // frame, but retains originalSource so animation can be re-enabled
+        // the next time this image is opened.
+        animatedGif: false,
 
         crop: {
 

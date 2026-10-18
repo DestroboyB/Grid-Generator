@@ -23,6 +23,8 @@ import {
     openUrlImage
 } from "./urlImage.js";
 
+import { showAnimatedGifOption, hideAnimatedGifOption } from "./animatedGifEditor.js";
+
 // ========================================
 // Elements
 // ========================================
@@ -175,6 +177,7 @@ export function openFileSelector(
     appState.selectedDiv =
         element;
 
+    hideAnimatedGifOption();
 
     const fileInput =
         document.createElement(
@@ -187,7 +190,7 @@ export function openFileSelector(
 
 
     fileInput.accept =
-        "image/jpeg, image/png, image/webp";
+        "image/jpeg, image/png, image/webp, image/gif,.gif";
 
 
     fileInput.addEventListener(
@@ -205,6 +208,12 @@ export function openFileSelector(
             }
 
 
+            if (file.type === "image/gif" || /\.gif$/i.test(file.name)) {
+                openCropForFile(file, element);
+                return;
+            }
+
+            hideAnimatedGifOption();
             openCropForFile(
                 file,
                 element
@@ -628,6 +637,22 @@ updateImageButton.addEventListener(
             imageData,
             div
         );
+
+        const originalSource = imageData.originalSource || imageData.source;
+        const isGifSource =
+            imageData.animatedGif === true ||
+            (typeof originalSource === "string" &&
+                (/^data:image\/gif/i.test(originalSource) || /\.gif(?:[?#]|$)/i.test(originalSource)));
+
+        if (isGifSource) {
+            showAnimatedGifOption(
+                originalSource,
+                div,
+                true
+            );
+        } else {
+            hideAnimatedGifOption();
+        }
 
     }
 );

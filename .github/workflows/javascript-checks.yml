@@ -52,6 +52,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Record Playwright and browser versions
+        run: |
+          npx playwright --version
+          npm ls @playwright/test
+          node -p "JSON.stringify(require('./node_modules/playwright-core/browsers.json').browsers.filter(browser => browser.name === 'chromium'), null, 2)"
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

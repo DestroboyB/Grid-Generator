@@ -2,6 +2,11 @@ import {
     appState
 } from "./state.js";
 
+import {
+    downloadAnimatedGifBoard,
+    installGifDownloadOption
+} from "./gifExport.js";
+
 
 // ========================================
 // Elements
@@ -10,12 +15,24 @@ import {
 const board =
     document.getElementById("board");
 
+installGifDownloadOption(board, appState);
+
 
 // ========================================
 // Download Board
 // ========================================
 
 export async function downloadBoard(format) {
+
+    if (format === "gif") {
+        try {
+            await downloadAnimatedGifBoard(board, appState);
+        } catch (error) {
+            console.error("Animated GIF export failed:", error);
+            alert(error.message || "Unable to create the animated GIF.");
+        }
+        return;
+    }
 
     const boxes =
         Array.from(
