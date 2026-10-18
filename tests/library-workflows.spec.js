@@ -328,8 +328,8 @@ test("category management dialogs use readable slash paths and newly created cat
     await expect(trigger).toContainText("Fresh Category");
     await expect(trigger).not.toContainText("Top-level categories");
 });
-test("Import Grid is temporarily absent while Bulk Import remains available", async ({ page }) => {
+test("Import Grid is available while Bulk Import remains available", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("#importProjectButton")).toHaveCount(0);
+    await expect(page.locator("#importProjectButton")).toBeVisible();
     await expect(page.locator("#bulkImportButton")).toBeVisible();
 });
