@@ -135,6 +135,7 @@ async function importProjectFile(file) {
     Object.assign(grid, {
         name,
         categoryId: null,
+        categoryIds: [],
         rows: Number(source.rows),
         columns: Number(source.columns),
         ratio: source.ratio,

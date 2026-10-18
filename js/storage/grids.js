@@ -9,6 +9,8 @@ import {
     cloneData
 } from "./helpers.js";
 
+import { getCategoryIds, withCategoryAssignments } from "./categoryAssignments.js";
+
 import {
     appState
 } from "../state.js";
@@ -27,6 +29,7 @@ export function createGridData() {
         id: generateId("grid"),
         name: "Untitled Grid",
         categoryId: null,
+        categoryIds: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
 
@@ -57,6 +60,7 @@ export function createEmptyGridData() {
         id: generateId("grid"),
         name: "Untitled Grid",
         categoryId: null,
+        categoryIds: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
 
@@ -88,6 +92,7 @@ export function createEmptyGridData() {
 export async function saveGrid(grid) {
     const db = await openDatabase();
 
+    Object.assign(grid, withCategoryAssignments(grid, getCategoryIds(grid)));
     grid.updatedAt = Date.now();
 
     const transaction = db.transaction(
@@ -260,7 +265,8 @@ export async function getGridSummaries() {
             grids.push({
                 id: grid.id,
                 name: grid.name,
-                categoryId: grid.categoryId ?? null,
+                categoryId: getCategoryIds(grid)[0] ?? null,
+                categoryIds: getCategoryIds(grid),
                 createdAt: grid.createdAt ?? 0,
                 updatedAt: grid.updatedAt ?? 0
             });
@@ -347,9 +353,12 @@ export async function createGrid(options = {}) {
     const grid = createEmptyGridData();
     grid.name = name;
 
-    if (options.categoryId !== undefined) {
-        grid.categoryId = options.categoryId;
-    }
+    const requestedCategoryIds = Array.isArray(options.categoryIds)
+        ? options.categoryIds
+        : options.categoryId !== undefined && options.categoryId != null
+            ? [options.categoryId]
+            : [];
+    Object.assign(grid, withCategoryAssignments(grid, requestedCategoryIds));
 
     const db = await openDatabase();
     const transaction = db.transaction(GRID_STORE, "readwrite");
@@ -624,6 +633,7 @@ async function saveCurrentGridSnapshot(snapshot) {
             id: snapshot.gridId,
             name: snapshot.name || "Untitled Grid",
             categoryId: null,
+            categoryIds: [],
             createdAt: Date.now()
         };
     }
