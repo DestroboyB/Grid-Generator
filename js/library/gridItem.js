@@ -5,7 +5,7 @@
 // Builds one grid row and its management actions.
 // Dependencies are injected from library.js so library state stays centralized.
 
-export function createGridElement(grid, categories, searchResult = false, dependencies) {
+export function createGridElement(grid, categories, searchResult = false, dependencies, showActions = true) {
     const {
         makeActionButton,
         stopClick,
@@ -48,8 +48,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
     name.className = "library-grid-name";
     name.textContent = grid.name || "Untitled Grid";
 
-    // Search results intentionally have no management buttons.
-    if (!searchResult) {
+    if (showActions) {
         const actions = document.createElement("div");
         actions.className = "library-grid-actions";
 

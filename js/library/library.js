@@ -411,7 +411,7 @@ async function searchLibrary() {
             empty.textContent = `No grids match "${librarySearchInput.value.trim()}".`;
             fragment.appendChild(empty);
         } else {
-            for (const grid of matches) fragment.appendChild(createGridElement(grid, categories));
+            for (const grid of matches) fragment.appendChild(createGridElement(grid, categories, true));
         }
         isLibrarySearchMode = true;
         libraryContent.replaceChildren(fragment);

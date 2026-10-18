@@ -161,6 +161,8 @@ test("library drill-down shows only directly assigned grids and keeps parent gri
     await page.locator("#libraryButton").click();
     await expect(page.locator("#currentGridName")).toHaveText("Direct Parent Grid");
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toBeVisible();
+    await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Open / Select" })).toBeVisible();
+    await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Edit Categories" })).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toHaveCount(0);
     await page.getByRole("button", { name: "Open Drilldown Child" }).click();
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toBeVisible();
