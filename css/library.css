@@ -708,3 +708,16 @@ body.library-open {
     font-size: 14px;
     text-align: center;
 }
+
+.library-modal-content .library-category-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    padding: 7px 0;
+}
+.library-modal-content .library-category-checkbox input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+}

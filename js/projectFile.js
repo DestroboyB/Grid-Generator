@@ -158,16 +158,19 @@ async function importProjectFile(file) {
 export function initializeProjectFileControls() {
     const exportButton = document.getElementById("exportProjectButton");
     const importButton = document.getElementById("importProjectButton");
-    if (!exportButton || !importButton) return;
+    if (!exportButton && !importButton) return;
 
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = ".gridproject,.json,application/json";
-    fileInput.hidden = true;
-    fileInput.id = "projectFileInput";
-    document.body.appendChild(fileInput);
+    let fileInput = null;
+    if (importButton) {
+        fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".gridproject,.json,application/json";
+        fileInput.hidden = true;
+        fileInput.id = "projectFileInput";
+        document.body.appendChild(fileInput);
+    }
 
-    exportButton.addEventListener("click", async () => {
+    exportButton?.addEventListener("click", async () => {
         try {
             await exportCurrentProject();
         } catch (error) {
@@ -176,12 +179,13 @@ export function initializeProjectFileControls() {
         }
     });
 
-    importButton.addEventListener("click", () => {
+    importButton?.addEventListener("click", () => {
+        if (!fileInput) return;
         fileInput.value = "";
         fileInput.click();
     });
 
-    fileInput.addEventListener("change", async () => {
+    fileInput?.addEventListener("change", async () => {
         const file = fileInput.files?.[0];
         if (!file) return;
         try {

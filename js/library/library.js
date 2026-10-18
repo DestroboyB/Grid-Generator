@@ -609,6 +609,7 @@ function handleCreateNewCategory() {
         title: "Create Category",
         onSave: async name => {
             await createCategory(name, null);
+            selectedCategoryId = null;
             await renderLibrary();
         }
     });
