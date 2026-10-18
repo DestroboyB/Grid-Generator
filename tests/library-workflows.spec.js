@@ -168,6 +168,8 @@ test("library drill-down shows only directly assigned grids and keeps parent gri
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "← Back" })).toBeVisible();
+    await page.locator(`[data-grid-id="${ids.childGridId}"]`).click();
+    await expect(page.locator("#currentGridName")).toHaveText("Direct Child Grid");
 });
 
 test("current grid header supports inline rename, Enter save, Escape cancel, and blur save", async ({ page }) => {
@@ -235,7 +237,16 @@ test("hierarchical category dropdown navigates children without changing grid as
     await expect(popup.getByRole("button", { name: "Show grids in Dropdown Parent" })).toBeVisible();
     await expect(popup.getByRole("button", { name: "Show grids in Dropdown Child" })).toHaveCount(0);
     await expect(popup.getByRole("button", { name: "Uncategorized" })).toBeVisible();
+    await expect(page.locator("#newGridButton")).toBeVisible();
+    await expect(page.locator("#newCategoryButton")).toBeVisible();
+    const popupBox = await popup.boundingBox();
+    expect(popupBox.width).toBeGreaterThan(200);
 
+    // A parent category with children is selectable in its own right.
+    await popup.getByRole("button", { name: "Show grids in Dropdown Parent" }).click();
+    await expect(trigger).toContainText("Dropdown Parent");
+    await expect(page.locator(`[data-grid-id="${ids.gridId}"]`)).toBeVisible();
+    await trigger.click();
     await popup.getByRole("button", { name: "Browse subcategories of Dropdown Parent" }).click();
     await expect(popup.getByRole("button", { name: "← Back" })).toBeVisible();
     await popup.getByRole("button", { name: "Show grids in Dropdown Child" }).click();
