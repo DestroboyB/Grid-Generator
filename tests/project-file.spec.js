@@ -42,6 +42,7 @@ test("export downloads a versioned editable project file", async ({ page }) => {
         columns: 3,
         ratio: "4:3",
         spacing: 0,
+        outerPadding: 10,
         backgroundColor: "#ffffff"
     });
     expect(parsed.grid.images).toHaveLength(6);
@@ -64,6 +65,7 @@ test("import restores a project as a separate grid and rejects invalid files saf
             columns: 2,
             ratio: "16:9",
             spacing: 7,
+            outerPadding: 18,
             backgroundColor: "#123456",
             borderEnabled: false,
             borderSize: 4,
@@ -86,6 +88,7 @@ test("import restores a project as a separate grid and rejects invalid files saf
     await expect(page.locator("#columns")).toHaveValue("2");
     await expect(page.locator("#imageRatio")).toHaveValue("16:9");
     await expect(page.locator("#spacing")).toHaveValue("7");
+    await expect(page.locator("#outerPadding")).toHaveValue("18");
     await expect(page.locator("#backgroundColor")).toHaveValue("#123456");
     await expect(page.locator("#borderEnabled")).not.toBeChecked();
     await expect(page.locator("#borderSize")).toHaveValue("4");
