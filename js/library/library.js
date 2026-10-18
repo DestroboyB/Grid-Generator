@@ -114,10 +114,67 @@ let isLibrarySearchMode = false;
 // ========================================
 
 function updateCurrentGridName() {
-    if (!currentGridName) return;
+    if (!currentGridName || currentGridName.querySelector("input")) return;
+    currentGridName.textContent = appState.currentGridName || "Untitled Grid";
+}
 
-    currentGridName.textContent =
-        appState.currentGridName || "Untitled Grid";
+function beginCurrentGridRename() {
+    if (!currentGridName || currentGridName.querySelector("input")) return;
+    const gridId = appState.currentGridId;
+    if (gridId == null) return;
+    const originalName = appState.currentGridName || "Untitled Grid";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "current-grid-name-input";
+    input.value = originalName;
+    input.setAttribute("aria-label", "Rename current grid");
+    currentGridName.replaceChildren(input);
+    currentGridName.classList.add("renaming");
+    input.focus();
+    input.select();
+    let finished = false;
+
+    function finish(cancel = false) {
+        if (finished) return;
+        if (cancel) {
+            finished = true;
+            currentGridName.classList.remove("renaming");
+            currentGridName.textContent = originalName;
+            return;
+        }
+        const nextName = input.value.trim();
+        if (!nextName) {
+            alert("Grid name cannot be empty.");
+            input.focus();
+            return;
+        }
+        finished = true;
+        input.disabled = true;
+        renameGrid(gridId, nextName).then(renamedGrid => {
+            if (!renamedGrid) throw new Error("This grid could not be found.");
+            appState.currentGridName = renamedGrid.name;
+            currentGridName.classList.remove("renaming");
+            currentGridName.textContent = renamedGrid.name;
+            return renderLibrary();
+        }).catch(error => {
+            finished = false;
+            input.disabled = false;
+            alert(error?.message || "Failed to rename the grid. Please try again.");
+            input.focus();
+            input.select();
+        });
+    }
+    input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            finish();
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            finish(true);
+        }
+    });
+    input.addEventListener("blur", () => finish());
+    input.addEventListener("click", event => event.stopPropagation());
 }
 
 function showError(message, error) {
@@ -267,48 +324,143 @@ function makeCategoryNavigationButton(category) {
 }
 
 function renderCategorySelector(categories, parent, grids) {
-    const label = document.createElement("label");
-    label.className = "library-category-selector-label";
-    label.htmlFor = "libraryCategorySelect";
-    label.append(document.createTextNode("Category "));
-    const select = document.createElement("select");
-    select.id = "libraryCategorySelect";
-    select.setAttribute("aria-label", "Choose category");
-    const root = document.createElement("option");
-    root.value = "";
-    root.textContent = "Top-level categories";
-    select.appendChild(root);
-    const uncategorized = document.createElement("option");
-    uncategorized.value = UNCATEGORIZED_ID;
-    uncategorized.textContent = "Uncategorized";
-    select.appendChild(uncategorized);
-    const byParent = parentId => categories
-        .filter(category => (category.parentId == null ? null : String(category.parentId)) === parentId)
-        .sort((a, b) => a.name.localeCompare(b.name));
-    const append = (parentId = null, depth = 0, visited = new Set()) => {
-        for (const category of byParent(parentId)) {
-            const id = String(category.id);
-            if (visited.has(id)) continue;
-            const option = document.createElement("option");
-            option.value = id;
-            option.textContent = `${"— ".repeat(depth)}${category.name}`;
-            select.appendChild(option);
-            const next = new Set(visited);
-            next.add(id);
-            append(id, depth + 1, next);
-        }
-    };
-    append();
-    select.value = selectedCategoryId == null ? "" : String(selectedCategoryId);
-    select.addEventListener("change", () => {
-        const nextCategoryId = select.value || null;
-        rememberCategoryForCurrentGrid(nextCategoryId, grids);
-        renderLibrary();
-    });
-    label.appendChild(select);
-    parent.appendChild(label);
-}
+    const wrapper = document.createElement("div");
+    wrapper.className = "library-category-selector";
+    const label = document.createElement("span");
+    label.className = "library-category-selector-caption";
+    label.textContent = "Category";
+    const trigger = makeLibraryButton("", "library-category-selector-trigger");
+    trigger.setAttribute("aria-label", "Choose category");
+    trigger.setAttribute("aria-haspopup", "dialog");
+    trigger.setAttribute("aria-expanded", "false");
 
+    const selectedCategory = selectedCategoryId == null || selectedCategoryId === UNCATEGORIZED_ID
+        ? null : categoryById(categories, selectedCategoryId);
+    const selectedLabel = selectedCategory ? getCategoryPath(categories, selectedCategory)
+        : selectedCategoryId === UNCATEGORIZED_ID ? "Uncategorized" : "Top-level categories";
+    const selectedText = document.createElement("span");
+    selectedText.className = "library-category-selector-value";
+    selectedText.textContent = selectedLabel;
+    const chevron = document.createElement("span");
+    chevron.className = "library-category-selector-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = "▾";
+    trigger.append(selectedText, chevron);
+
+    let popup = null;
+    let navigationParentId = selectedCategory
+        ? (selectedCategory.parentId == null ? null : String(selectedCategory.parentId)) : null;
+    let cleanupPopupListeners = () => {};
+
+    function childrenOf(parentId) {
+        return categories.filter(category =>
+            (category.parentId == null ? null : String(category.parentId)) === parentId
+        ).sort((x, y) => x.name.localeCompare(y.name));
+    }
+    function closePopup() {
+        popup?.remove();
+        popup = null;
+        trigger.setAttribute("aria-expanded", "false");
+        cleanupPopupListeners();
+        cleanupPopupListeners = () => {};
+    }
+    function selectCategory(categoryId) {
+        rememberCategoryForCurrentGrid(categoryId, grids);
+        closePopup();
+        renderLibrary();
+    }
+    function renderPopup() {
+        if (!popup) return;
+        popup.replaceChildren();
+        const header = document.createElement("div");
+        header.className = "library-category-popup-header";
+        if (navigationParentId != null) {
+            const back = makeLibraryButton("← Back", "library-category-popup-back");
+            back.addEventListener("click", () => {
+                const currentParent = categoryById(categories, navigationParentId);
+                navigationParentId = currentParent?.parentId == null
+                    ? null : String(currentParent.parentId);
+                renderPopup();
+            });
+            header.appendChild(back);
+        }
+        const context = document.createElement("div");
+        context.className = "library-category-popup-context";
+        context.textContent = navigationParentId == null ? "All categories"
+            : getCategoryPath(categories, categoryById(categories, navigationParentId));
+        header.appendChild(context);
+        popup.appendChild(header);
+
+        const list = document.createElement("div");
+        list.className = "library-category-popup-list";
+        if (navigationParentId == null) {
+            const uncategorized = makeLibraryButton("", "library-category-popup-item");
+            const uncategorizedName = document.createElement("span");
+            uncategorizedName.textContent = "Uncategorized";
+            uncategorized.appendChild(uncategorizedName);
+            if (selectedCategoryId === UNCATEGORIZED_ID) uncategorized.classList.add("selected");
+            uncategorized.addEventListener("click", () => selectCategory(UNCATEGORIZED_ID));
+            list.appendChild(uncategorized);
+        }
+        const children = childrenOf(navigationParentId);
+        for (const category of children) {
+            const id = String(category.id);
+            const row = document.createElement("div");
+            row.className = "library-category-popup-row";
+            const choose = makeLibraryButton("", "library-category-popup-item");
+            const name = document.createElement("span");
+            name.className = "library-category-popup-item-name";
+            name.textContent = category.name;
+            choose.appendChild(name);
+            if (String(selectedCategoryId) === id) choose.classList.add("selected");
+            choose.setAttribute("aria-label", `Show grids in ${category.name}`);
+            choose.addEventListener("click", () => selectCategory(id));
+            row.appendChild(choose);
+            if (childrenOf(id).length) {
+                const drill = makeLibraryButton("›", "library-category-popup-drill");
+                drill.setAttribute("aria-label", `Browse subcategories of ${category.name}`);
+                drill.addEventListener("click", () => {
+                    navigationParentId = id;
+                    renderPopup();
+                });
+                row.appendChild(drill);
+            }
+            list.appendChild(row);
+        }
+        if (!children.length && navigationParentId != null) {
+            const empty = document.createElement("div");
+            empty.className = "library-category-popup-empty";
+            empty.textContent = "No subcategories";
+            list.appendChild(empty);
+        }
+        popup.appendChild(list);
+    }
+    trigger.addEventListener("click", event => {
+        event.stopPropagation();
+        if (popup) { closePopup(); return; }
+        navigationParentId = selectedCategory
+            ? (selectedCategory.parentId == null ? null : String(selectedCategory.parentId)) : null;
+        popup = document.createElement("div");
+        popup.className = "library-category-popup";
+        popup.setAttribute("role", "dialog");
+        popup.setAttribute("aria-label", "Category navigation");
+        wrapper.appendChild(popup);
+        trigger.setAttribute("aria-expanded", "true");
+        renderPopup();
+        const dismiss = event => { if (!wrapper.contains(event.target)) closePopup(); };
+        const onKeydown = event => {
+            if (event.key === "Escape" && popup) { closePopup(); trigger.focus(); }
+        };
+        document.addEventListener("pointerdown", dismiss, true);
+        document.addEventListener("keydown", onKeydown, true);
+        cleanupPopupListeners = () => {
+            document.removeEventListener("pointerdown", dismiss, true);
+            document.removeEventListener("keydown", onKeydown, true);
+        };
+    });
+    wrapper.append(label, trigger);
+    parent.appendChild(wrapper);
+}
 function renderSelectedCategoryActions(category, categories, parent) {
     const actions = document.createElement("div");
     actions.className = "library-selected-category-actions";
@@ -622,6 +774,20 @@ function handleCreateNewCategory() {
 // ========================================
 // Event Listeners
 // ========================================
+
+if (currentGridName) {
+    currentGridName.setAttribute("role", "button");
+    currentGridName.setAttribute("tabindex", "0");
+    currentGridName.setAttribute("title", "Click to rename current grid");
+    currentGridName.setAttribute("aria-label", "Rename current grid");
+    currentGridName.addEventListener("click", beginCurrentGridRename);
+    currentGridName.addEventListener("keydown", event => {
+        if ((event.key === "Enter" || event.key === " ") && !currentGridName.querySelector("input")) {
+            event.preventDefault();
+            beginCurrentGridRename();
+        }
+    });
+}
 
 libraryButton?.addEventListener("click", openLibrary);
 libraryCloseButton?.addEventListener("click", closeLibrary);
