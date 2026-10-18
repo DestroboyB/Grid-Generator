@@ -161,13 +161,92 @@ test("library drill-down shows only directly assigned grids and keeps parent gri
     await page.locator("#libraryButton").click();
     await expect(page.locator("#currentGridName")).toHaveText("Direct Parent Grid");
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toBeVisible();
-    await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Open / Select" })).toBeVisible();
+    await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Open / Select" })).toHaveCount(0);
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Edit Categories" })).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toHaveCount(0);
     await page.getByRole("button", { name: "Open Drilldown Child" }).click();
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "← Back" })).toBeVisible();
+});
+
+test("current grid header supports inline rename, Enter save, Escape cancel, and blur save", async ({ page }) => {
+    await page.goto("/");
+    const ids = await page.evaluate(async () => {
+        const { createGrid, loadGrid } = await import(
+            `/js/storage/grids.js?header-inline-rename=${Date.now()}`
+        );
+        const first = await createGrid({ name: "Header Rename Original" });
+        const second = await createGrid({ name: "Header Rename Blur Target" });
+        await loadGrid(first.id);
+        return { firstId: first.id, secondId: second.id };
+    });
+
+    const header = page.locator("#currentGridName");
+    await expect(header).toHaveText("Header Rename Original");
+    await header.click();
+    await header.locator("input").fill("Header Rename Saved");
+    await header.locator("input").press("Enter");
+    await expect(header).toHaveText("Header Rename Saved");
+
+    await header.click();
+    await header.locator("input").fill("This Should Be Cancelled");
+    await header.locator("input").press("Escape");
+    await expect(header).toHaveText("Header Rename Saved");
+
+    await header.click();
+    await header.locator("input").fill("Header Rename On Blur");
+    await page.locator("#libraryButton").click();
+    await expect(header).toHaveText("Header Rename On Blur");
+
+    const stored = await page.evaluate(async ids => {
+        const { getGrid } = await import(`/js/storage/grids.js?header-rename-check=${Date.now()}`);
+        return { first: (await getGrid(ids.firstId))?.name, second: (await getGrid(ids.secondId))?.name };
+    }, ids);
+    expect(stored.first).toBe("Header Rename On Blur");
+    expect(stored.second).toBe("Header Rename Blur Target");
+});
+
+test("hierarchical category dropdown navigates children without changing grid assignments", async ({ page }) => {
+    await page.goto("/");
+    const ids = await page.evaluate(async () => {
+        const { createCategory } = await import(`/js/storage/categories.js?hierarchical-dropdown=${Date.now()}`);
+        const { createGrid, loadGrid } = await import(`/js/storage/grids.js?hierarchical-dropdown-grids=${Date.now()}`);
+        const parent = await createCategory("Dropdown Parent");
+        const child = await createCategory("Dropdown Child", parent.id);
+        await createCategory("Dropdown Sibling");
+        const grid = await createGrid({
+            name: "Dropdown Multi Assigned Grid",
+            categoryIds: [parent.id, child.id]
+        });
+        await loadGrid(grid.id);
+        return { parentId: parent.id, childId: child.id, gridId: grid.id };
+    });
+
+    await page.locator("#libraryButton").click();
+    const trigger = page.getByRole("button", { name: "Choose category" });
+    await expect(page.locator("#libraryCategorySelect")).toHaveCount(0);
+    await expect(trigger).toBeVisible();
+    await expect(trigger).toHaveCSS("min-height", "44px");
+    await trigger.click();
+    const popup = page.locator(".library-category-popup");
+    await expect(popup).toBeVisible();
+    await expect(popup.getByRole("button", { name: "Show grids in Dropdown Parent" })).toBeVisible();
+    await expect(popup.getByRole("button", { name: "Show grids in Dropdown Child" })).toHaveCount(0);
+    await expect(popup.getByRole("button", { name: "Uncategorized" })).toBeVisible();
+
+    await popup.getByRole("button", { name: "Browse subcategories of Dropdown Parent" }).click();
+    await expect(popup.getByRole("button", { name: "← Back" })).toBeVisible();
+    await popup.getByRole("button", { name: "Show grids in Dropdown Child" }).click();
+    await expect(popup).toHaveCount(0);
+    await expect(trigger).toContainText("Dropdown Parent / Dropdown Child");
+    await expect(page.locator(`[data-grid-id="${ids.gridId}"]`)).toBeVisible();
+
+    const storedAssignments = await page.evaluate(async gridId => {
+        const { getGrid } = await import(`/js/storage/grids.js?dropdown-assignments=${Date.now()}`);
+        return (await getGrid(gridId))?.categoryIds;
+    }, ids.gridId);
+    expect(storedAssignments.map(String)).toEqual([String(ids.parentId), String(ids.childId)]);
 });
 
 test("Import Grid is temporarily absent while Bulk Import remains available", async ({ page }) => {
