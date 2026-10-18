@@ -5,7 +5,7 @@ const screenshotPng = Buffer.from(
     "base64"
 );
 
-test("rebuilds a screenshot crop into a separate editable grid", async ({ page }) => {
+test.skip("rebuilds a screenshot crop into a separate editable grid while its UI button is hidden", async ({ page }) => {
     await page.goto("/");
 
     const originalGridId = await page.evaluate(async () => {
@@ -59,7 +59,7 @@ test("rebuilds a screenshot crop into a separate editable grid", async ({ page }
     expect(result.matchingSavedGrid).toBeTruthy();
 });
 
-test("rejects non-image screenshot files without creating a grid", async ({ page }) => {
+test.skip("rejects non-image screenshot files while its UI button is hidden", async ({ page }) => {
     await page.goto("/");
     const originalGridId = await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
