@@ -146,7 +146,7 @@ test("multiple category assignments preserve legacy primary ID and survive indiv
     expect(result.remainingCategoryExists).toBe(true);
 });
 
-test("library drill-down shows only directly assigned grids and keeps parent grids visible with children", async ({ page }) => {
+test("library category drill-down is contained in the dropdown and grid rows still select grids", async ({ page }) => {
     await page.goto("/");
     const ids = await page.evaluate(async () => {
         const { createCategory } = await import(`/js/storage/categories.js?library-drilldown=${Date.now()}`);
@@ -164,10 +164,18 @@ test("library drill-down shows only directly assigned grids and keeps parent gri
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Open / Select" })).toHaveCount(0);
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`).getByRole("button", { name: "Edit Categories" })).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toHaveCount(0);
-    await page.getByRole("button", { name: "Open Drilldown Child" }).click();
+    await expect(page.locator(".library-category-navigation")).toHaveCount(0);
+    await expect(page.locator(".library-breadcrumb-row")).toHaveCount(0);
+
+    const trigger = page.getByRole("button", { name: "Choose category" });
+    await trigger.click();
+    const popup = page.locator(".library-category-popup");
+    await popup.getByRole("button", { name: "Browse subcategories of Drilldown Parent" }).click();
+    await popup.getByRole("button", { name: "Show grids in Drilldown Child" }).click();
+    await expect(popup).toHaveCount(0);
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "← Back" })).toBeVisible();
+    await expect(page.locator(".library-category-navigation")).toHaveCount(0);
     await page.locator(`[data-grid-id="${ids.childGridId}"] .library-grid-name`).click();
     await expect(page.locator("#currentGridName")).toHaveText("Direct Child Grid");
 });
