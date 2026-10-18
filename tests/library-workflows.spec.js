@@ -81,3 +81,45 @@ test("deleting a category preserves its grids and reparents its immediate subcat
     expect(result.childParentId).toBe(result.expectedParentId);
     expect(result.gridCategoryId).toBeNull();
 });
+
+
+test("multiple category assignments preserve legacy primary ID and survive individual category deletion", async ({ page }) => {
+    await page.goto("/");
+    const result = await page.evaluate(async () => {
+        const { createCategory, deleteCategory, getAllCategories } = await import(
+            `/js/storage/categories.js?multi-category-storage=${Date.now()}`
+        );
+        const { createGrid, getGrid, getGridSummaries } = await import(
+            `/js/storage/grids.js?multi-category-grids=${Date.now()}`
+        );
+        const first = await createCategory("Multi Assignment First");
+        const second = await createCategory("Multi Assignment Second");
+        const legacy = await createGrid({ name: "Legacy Single Assignment", categoryId: first.id });
+        const multi = await createGrid({ name: "Multi Assignment Grid", categoryIds: [first.id, second.id] });
+        const before = await getGrid(multi.id);
+        const summaries = await getGridSummaries();
+        await deleteCategory(first.id);
+        const after = await getGrid(multi.id);
+        const legacyAfter = await getGrid(legacy.id);
+        return {
+            legacyAssignments: legacy.categoryIds,
+            legacyPrimary: legacy.categoryId,
+            beforeAssignments: before.categoryIds,
+            beforePrimary: before.categoryId,
+            summaryAssignments: summaries.find(grid => grid.id === multi.id)?.categoryIds,
+            afterAssignments: after.categoryIds,
+            afterPrimary: after.categoryId,
+            legacyAfterAssignments: legacyAfter.categoryIds,
+            remainingCategoryExists: (await getAllCategories()).some(category => category.id === second.id)
+        };
+    });
+    expect(result.legacyAssignments).toHaveLength(1);
+    expect(result.legacyPrimary).toBeTruthy();
+    expect(result.beforeAssignments).toHaveLength(2);
+    expect(result.beforePrimary).toBe(result.beforeAssignments[0]);
+    expect(result.summaryAssignments).toHaveLength(2);
+    expect(result.afterAssignments).toEqual([result.beforeAssignments[1]]);
+    expect(result.afterPrimary).toBe(result.beforeAssignments[1]);
+    expect(result.legacyAfterAssignments).toEqual([]);
+    expect(result.remainingCategoryExists).toBe(true);
+});

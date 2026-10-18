@@ -12,6 +12,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
         getAllCategories,
         openCategorySelectionModal,
         moveGridToCategory,
+        setGridCategories,
         renameGrid,
         deleteGrid,
         getGridSummaries,
@@ -53,8 +54,8 @@ export function createGridElement(grid, categories, searchResult = false, depend
         actions.className = "library-grid-actions";
 
         const moveButton = makeActionButton(
-            "Move",
-            "Move this grid to a category"
+            "Edit Categories",
+            "Add or remove category assignments"
         );
 
         const renameButton = makeActionButton(
@@ -75,13 +76,14 @@ export function createGridElement(grid, categories, searchResult = false, depend
                 const allCategories = await getAllCategories();
 
                 openCategorySelectionModal({
-                    title: `Move "${grid.name || "Untitled Grid"}"`,
+                    title: `Edit Categories for "${grid.name || "Untitled Grid"}"`,
                     categories: allCategories,
-                    selectedId: grid.categoryId ?? null,
-                    allowRoot: true,
-                    rootLabel: "Uncategorized",
-                    onSave: async destinationId => {
-                        await moveGridToCategory(grid.id, destinationId);
+                    multiSelect: true,
+                    selectedIds: Array.isArray(grid.categoryIds)
+                        ? grid.categoryIds
+                        : grid.categoryId == null ? [] : [grid.categoryId],
+                    onSave: async categoryIds => {
+                        await setGridCategories(grid.id, categoryIds);
                         await renderLibrary();
                     }
                 });

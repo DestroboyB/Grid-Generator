@@ -14,6 +14,7 @@ import {
     renameCategory,
     moveCategory,
     moveGridToCategory,
+    setGridCategories,
     deleteCategory
 } from "../storage/categories.js";
 
@@ -81,6 +82,7 @@ const gridElementDependencies = {
     getAllCategories,
     openCategorySelectionModal,
     moveGridToCategory,
+    setGridCategories,
     renameGrid,
     deleteGrid,
     getGridSummaries,
@@ -177,73 +179,226 @@ function closeLibrary() {
 }
 
 // ========================================
-// Capture Expanded Categories
+// Category navigation state
 // ========================================
 
-function getExpandedCategoryIds() {
-    if (!libraryContent) return new Set();
+const UNCATEGORIZED_ID = "__uncategorized__";
+let selectedCategoryId = null;
+let selectedForGridId = undefined;
+const lastSelectedCategoryByGrid = new Map();
 
-    return new Set(
-        Array.from(
-            libraryContent.querySelectorAll(
-                ".library-category:not(.collapsed)"
-            )
-        ).map(category => String(category.dataset.categoryId))
-    );
+function categoryIdsForGrid(grid) {
+    if (Array.isArray(grid?.categoryIds)) return grid.categoryIds.map(String);
+    return grid?.categoryId == null ? [] : [String(grid.categoryId)];
 }
 
-// ========================================
-// Library Search
-// ========================================
+function categoryById(categories, id) {
+    return categories.find(category => String(category.id) === String(id));
+}
+
+function getCategoryDepthFor(categories, category) {
+    let depth = 1;
+    let current = category;
+    const visited = new Set();
+    while (current?.parentId != null) {
+        const id = String(current.id);
+        if (visited.has(id)) return Infinity;
+        visited.add(id);
+        current = categoryById(categories, current.parentId);
+        depth++;
+    }
+    return depth;
+}
+
+function getCategoryPath(categories, category) {
+    const names = [];
+    let current = category;
+    const visited = new Set();
+    while (current) {
+        const id = String(current.id);
+        if (visited.has(id)) break;
+        visited.add(id);
+        names.unshift(current.name);
+        current = current.parentId == null ? null : categoryById(categories, current.parentId);
+    }
+    return names.join(" / ");
+}
+
+function rememberCategoryForCurrentGrid(categoryId, grids) {
+    selectedCategoryId = categoryId;
+    const currentGrid = grids.find(grid => String(grid.id) === String(appState.currentGridId));
+    if (currentGrid && categoryId != null && categoryId !== UNCATEGORIZED_ID &&
+        categoryIdsForGrid(currentGrid).includes(String(categoryId))) {
+        lastSelectedCategoryByGrid.set(String(currentGrid.id), String(categoryId));
+    }
+}
+
+function initializeCategoryForCurrentGrid(grids, categories) {
+    const currentId = appState.currentGridId == null ? null : String(appState.currentGridId);
+    if (selectedForGridId === currentId) {
+        if (selectedCategoryId != null && selectedCategoryId !== UNCATEGORIZED_ID &&
+            !categoryById(categories, selectedCategoryId)) selectedCategoryId = null;
+        return;
+    }
+    selectedForGridId = currentId;
+    const grid = grids.find(item => String(item.id) === currentId);
+    const assignments = categoryIdsForGrid(grid);
+    const remembered = currentId == null ? null : lastSelectedCategoryByGrid.get(currentId);
+    if (remembered && assignments.includes(remembered) && categoryById(categories, remembered)) selectedCategoryId = remembered;
+    else if (assignments.length) selectedCategoryId = assignments.find(id => categoryById(categories, id)) ?? UNCATEGORIZED_ID;
+    else selectedCategoryId = UNCATEGORIZED_ID;
+}
+
+function makeLibraryButton(label, className = "") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.textContent = label;
+    return button;
+}
+
+function makeCategoryNavigationButton(category) {
+    const button = makeLibraryButton("", "library-category-navigation");
+    const name = document.createElement("span");
+    name.className = "library-category-navigation-name";
+    name.textContent = category.name;
+    const detail = document.createElement("span");
+    detail.className = "library-category-navigation-detail";
+    detail.textContent = "Open";
+    button.append(name, detail);
+    button.setAttribute("aria-label", `Open ${category.name}`);
+    return button;
+}
+
+function renderCategorySelector(categories, parent) {
+    const label = document.createElement("label");
+    label.className = "library-category-selector-label";
+    label.htmlFor = "libraryCategorySelect";
+    label.append(document.createTextNode("Category "));
+    const select = document.createElement("select");
+    select.id = "libraryCategorySelect";
+    select.setAttribute("aria-label", "Choose category");
+    const root = document.createElement("option");
+    root.value = "";
+    root.textContent = "Top-level categories";
+    select.appendChild(root);
+    const uncategorized = document.createElement("option");
+    uncategorized.value = UNCATEGORIZED_ID;
+    uncategorized.textContent = "Uncategorized";
+    select.appendChild(uncategorized);
+    const byParent = parentId => categories
+        .filter(category => (category.parentId == null ? null : String(category.parentId)) === parentId)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    const append = (parentId = null, depth = 0, visited = new Set()) => {
+        for (const category of byParent(parentId)) {
+            const id = String(category.id);
+            if (visited.has(id)) continue;
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = `${"— ".repeat(depth)}${category.name}`;
+            select.appendChild(option);
+            const next = new Set(visited);
+            next.add(id);
+            append(id, depth + 1, next);
+        }
+    };
+    append();
+    select.value = selectedCategoryId == null ? "" : String(selectedCategoryId);
+    select.addEventListener("change", () => {
+        selectedCategoryId = select.value || null;
+        renderLibrary();
+    });
+    label.appendChild(select);
+    parent.appendChild(label);
+}
+
+function renderSelectedCategoryActions(category, categories, parent) {
+    const actions = document.createElement("div");
+    actions.className = "library-selected-category-actions";
+    const depth = getCategoryDepthFor(categories, category);
+    if (depth < 3) {
+        const addChild = makeLibraryButton("+ Subcategory");
+        addChild.addEventListener("click", () => openCategoryNameModal({
+            title: `Create subcategory in "${category.name}"`,
+            onSave: async name => {
+                await createCategory(name, category.id);
+                await renderLibrary();
+            }
+        }));
+        actions.appendChild(addChild);
+    }
+    const rename = makeLibraryButton("Rename");
+    rename.addEventListener("click", () => openCategoryNameModal({
+        title: "Rename Category",
+        initialName: category.name,
+        onSave: async name => {
+            await renameCategory(category.id, name);
+            await renderLibrary();
+        }
+    }));
+    const move = makeLibraryButton("Move");
+    move.addEventListener("click", () => openCategorySelectionModal({
+        title: `Move "${category.name}"`,
+        categories,
+        selectedId: category.parentId ?? null,
+        allowRoot: true,
+        rootLabel: "Top-level category",
+        excludedIds: new Set([String(category.id), ...getDescendantIds(category.id, categories)]),
+        onSave: async parentId => {
+            await moveCategory(category.id, parentId);
+            selectedCategoryId = String(category.id);
+            await renderLibrary();
+        }
+    }));
+    const remove = makeLibraryButton("Delete", "delete");
+    remove.addEventListener("click", async () => {
+        if (!confirm(`Delete category "${category.name}"? Grids keep their other category assignments, and child categories move up one level.`)) return;
+        try {
+            selectedCategoryId = category.parentId == null ? null : String(category.parentId);
+            await deleteCategory(category.id);
+            await renderLibrary();
+        } catch (error) {
+            showError("Failed to delete category.", error);
+        }
+    });
+    actions.append(rename, move, remove);
+    parent.appendChild(actions);
+}
 
 async function searchLibrary() {
     if (!libraryContent || !librarySearchInput) return;
-
     const query = librarySearchInput.value.trim().toLocaleLowerCase();
-
     if (!query) {
         isLibrarySearchMode = false;
         await renderLibrary();
         return;
     }
-
     try {
-        const [grids, categories] = await Promise.all([
-            getGridSummaries(),
-            getAllCategories()
-        ]);
-
-        const matchingGrids = grids.filter(grid =>
-            String(grid.name || "Untitled Grid")
-                .toLocaleLowerCase()
-                .includes(query)
+        const [grids, categories] = await Promise.all([getGridSummaries(), getAllCategories()]);
+        const matches = grids.filter(grid =>
+            String(grid.name || "Untitled Grid").toLocaleLowerCase().includes(query)
         );
-
         const fragment = document.createDocumentFragment();
-
-        if (matchingGrids.length === 0) {
+        const heading = document.createElement("div");
+        heading.className = "library-view-heading";
+        heading.textContent = "Search results";
+        fragment.appendChild(heading);
+        if (!matches.length) {
             const empty = document.createElement("div");
-            empty.className = "library-search-empty";
+            empty.className = "library-empty";
             empty.textContent = `No grids match "${librarySearchInput.value.trim()}".`;
             fragment.appendChild(empty);
         } else {
-            for (const grid of matchingGrids) {
-                fragment.appendChild(
-                    createGridElement(grid, categories, true)
-                );
-            }
+            for (const grid of matches) fragment.appendChild(createGridElement(grid, categories));
         }
-
         isLibrarySearchMode = true;
         libraryContent.replaceChildren(fragment);
     } catch (error) {
         console.error("Failed to search library:", error);
-
-        const message = document.createElement("div");
-        message.className = "library-search-empty";
-        message.textContent = "Search failed. Please try again.";
-
-        libraryContent.replaceChildren(message);
+        const empty = document.createElement("div");
+        empty.className = "library-empty";
+        empty.textContent = "Search failed. Please try again.";
+        libraryContent.replaceChildren(empty);
     }
 }
 
@@ -253,100 +408,120 @@ async function searchLibrary() {
 
 export async function renderLibrary() {
     if (!libraryContent) return;
-
-    const expandedCategories = pendingExpandedCategoryIds !== null
-        ? pendingExpandedCategoryIds
-        : hasRenderedLibrary
-            ? getExpandedCategoryIds()
-            : null;
-
-    pendingExpandedCategoryIds = null;
     isLibrarySearchMode = false;
-
-    if (!libraryContent.children.length) {
-        libraryContent.innerHTML =
-            '<div class="library-empty">Loading...</div>';
-    }
-
     try {
-        const [grids, categories] = await Promise.all([
-            getGridSummaries(),
-            getAllCategories()
-        ]);
-
+        const [grids, categories] = await Promise.all([getGridSummaries(), getAllCategories()]);
         updateCurrentGridName();
-
+        initializeCategoryForCurrentGrid(grids, categories);
         const fragment = document.createDocumentFragment();
 
-        if (!grids.length && !categories.length) {
-            const empty = document.createElement("div");
-            empty.className = "library-empty";
-            empty.textContent = "No grids or categories yet.";
-            fragment.appendChild(empty);
+        const viewHeader = document.createElement("div");
+        viewHeader.className = "library-view-header";
+        const heading = document.createElement("h3");
+        heading.className = "library-view-heading";
+        heading.textContent = "My Grids:";
+        viewHeader.appendChild(heading);
+        renderCategorySelector(categories, viewHeader);
+        fragment.appendChild(viewHeader);
+
+        const currentCategory = selectedCategoryId != null && selectedCategoryId !== UNCATEGORIZED_ID
+            ? categoryById(categories, selectedCategoryId)
+            : null;
+
+        if (currentCategory) {
+            const navBar = document.createElement("div");
+            navBar.className = "library-breadcrumb-row";
+            const back = makeLibraryButton("← Back", "library-back-button");
+            back.addEventListener("click", () => {
+                selectedCategoryId = currentCategory.parentId == null ? null : String(currentCategory.parentId);
+                renderLibrary();
+            });
+            const path = document.createElement("div");
+            path.className = "library-breadcrumb";
+            path.textContent = getCategoryPath(categories, currentCategory);
+            navBar.append(back, path);
+            fragment.appendChild(navBar);
+
+            const childCategories = categories
+                .filter(category => String(category.parentId) === String(currentCategory.id))
+                .sort((a, b) => a.name.localeCompare(b.name));
+            for (const child of childCategories) {
+                const button = makeCategoryNavigationButton(child);
+                button.addEventListener("click", () => {
+                    const activeGrid = grids.find(grid => String(grid.id) === String(appState.currentGridId));
+                    if (activeGrid && categoryIdsForGrid(activeGrid).includes(String(child.id))) {
+                        lastSelectedCategoryByGrid.set(String(activeGrid.id), String(child.id));
+                    }
+                    selectedCategoryId = String(child.id);
+                    renderLibrary();
+                });
+                fragment.appendChild(button);
+            }
+            renderSelectedCategoryActions(currentCategory, categories, fragment);
+        } else if (selectedCategoryId === UNCATEGORIZED_ID) {
+            const navBar = document.createElement("div");
+            navBar.className = "library-breadcrumb-row";
+            const back = makeLibraryButton("← Back", "library-back-button");
+            back.addEventListener("click", () => { selectedCategoryId = null; renderLibrary(); });
+            const path = document.createElement("div");
+            path.className = "library-breadcrumb";
+            path.textContent = "Uncategorized";
+            navBar.append(back, path);
+            fragment.appendChild(navBar);
         } else {
-            const rootCategories = categories.filter(
-                category => category.parentId == null
-            );
-
-            // Use a lookup set instead of scanning every category for
-            // each parent reference when identifying orphaned categories.
-            const categoryIds = new Set(
-                categories.map(category => String(category.id))
-            );
-
-            const orphanCategories = categories.filter(category =>
-                category.parentId != null &&
-                !categoryIds.has(String(category.parentId))
-            );
-
-            const topLevelCategories = [...rootCategories, ...orphanCategories];
-
-            for (const category of topLevelCategories) {
-                fragment.appendChild(
-                    createCategoryElement(
-                        category,
-                        categories,
-                        grids,
-                        new Set(),
-                        1,
-                        expandedCategories,
-                        categoryElementDependencies
-                    )
-                );
+            const rootCategories = categories
+                .filter(category => category.parentId == null ||
+                    !categories.some(parent => String(parent.id) === String(category.parentId)))
+                .sort((a, b) => a.name.localeCompare(b.name));
+            for (const category of rootCategories) {
+                const button = makeCategoryNavigationButton(category);
+                button.addEventListener("click", () => {
+                    const activeGrid = grids.find(grid => String(grid.id) === String(appState.currentGridId));
+                    if (activeGrid && categoryIdsForGrid(activeGrid).includes(String(category.id))) {
+                        lastSelectedCategoryByGrid.set(String(activeGrid.id), String(category.id));
+                    }
+                    selectedCategoryId = String(category.id);
+                    renderLibrary();
+                });
+                fragment.appendChild(button);
             }
-
-            const uncategorized = grids.filter(
-                grid => grid.categoryId == null
-            );
-
-            if (topLevelCategories.length > 0 && uncategorized.length > 0) {
-                const divider = document.createElement("div");
-                divider.className = "library-section-divider";
-                divider.setAttribute("aria-hidden", "true");
-                fragment.appendChild(divider);
-            }
-
-            for (const grid of uncategorized) {
-                fragment.appendChild(createGridElement(grid, categories));
+            const uncategorizedButton = makeLibraryButton("Uncategorized", "library-category-navigation");
+            uncategorizedButton.addEventListener("click", () => { selectedCategoryId = UNCATEGORIZED_ID; renderLibrary(); });
+            fragment.appendChild(uncategorizedButton);
+            if (!rootCategories.length && !grids.length) {
+                const empty = document.createElement("div");
+                empty.className = "library-empty";
+                empty.textContent = "No grids or categories yet. Create a grid or category to get started.";
+                fragment.appendChild(empty);
             }
         }
 
+        const visibleGrids = selectedCategoryId === UNCATEGORIZED_ID
+            ? grids.filter(grid => categoryIdsForGrid(grid).length === 0)
+            : currentCategory
+                ? grids.filter(grid => categoryIdsForGrid(grid).includes(String(currentCategory.id)))
+                : [];
+        if (currentCategory || selectedCategoryId === UNCATEGORIZED_ID) {
+            if (visibleGrids.length) {
+                for (const grid of visibleGrids) fragment.appendChild(createGridElement(grid, categories));
+            } else {
+                const empty = document.createElement("div");
+                empty.className = "library-empty";
+                empty.textContent = currentCategory && categories.some(category => String(category.parentId) === String(currentCategory.id))
+                    ? "No grids assigned directly to this category yet."
+                    : "No grids in this category yet.";
+                fragment.appendChild(empty);
+            }
+        }
         libraryContent.replaceChildren(fragment);
-        hasRenderedLibrary = true;
     } catch (error) {
         console.error("Failed to render library:", error);
-
-        libraryContent.innerHTML = `
-            <div class="library-empty">
-                Failed to load library. Please try again.
-            </div>
-        `;
+        const empty = document.createElement("div");
+        empty.className = "library-empty";
+        empty.textContent = "Failed to load library. Please try again.";
+        libraryContent.replaceChildren(empty);
     }
 }
-
-// ========================================
-// Create Category Element
-// ========================================
 
 // ========================================
 // Create Grid Element

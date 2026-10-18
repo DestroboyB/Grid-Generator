@@ -150,23 +150,24 @@ export function openCategorySelectionModal({
     excludedIds = new Set(),
     allowRoot = true,
     rootLabel = "Root / Uncategorized",
+    multiSelect = false,
+    selectedIds = [],
     onSave
 }) {
     const dialog = createModal(title);
 
     const label = document.createElement("label");
-    label.textContent = "Destination category";
+    label.textContent = multiSelect ? "Assign to categories" : "Destination category";
 
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", "Destination category");
+    const select = document.createElement(multiSelect ? "div" : "select");
+    select.setAttribute("aria-label", label.textContent);
     select.style.width = "100%";
 
-    if (allowRoot) {
+    if (allowRoot && !multiSelect) {
         const rootOption = document.createElement("option");
         rootOption.value = "";
         rootOption.textContent = rootLabel;
         rootOption.selected = selectedId == null;
-
         select.appendChild(rootOption);
     }
 
@@ -189,27 +190,40 @@ export function openCategorySelectionModal({
             const nextVisited = new Set(visited);
             nextVisited.add(categoryId);
 
-            const option = document.createElement("option");
-            option.value = categoryId;
-            option.textContent = `${"— ".repeat(depth)}${category.name}`;
-
-            option.selected =
-                selectedId != null &&
-                categoryId === String(selectedId);
-
-            select.appendChild(option);
-
+            if (multiSelect) {
+                const item = document.createElement("label");
+                item.className = "library-category-checkbox";
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = categoryId;
+                checkbox.checked = selectedIds.map(String).includes(categoryId);
+                checkbox.setAttribute("aria-label", category.name);
+                const text = document.createElement("span");
+                text.textContent = `${"— ".repeat(depth)}${category.name}`;
+                item.append(checkbox, text);
+                select.appendChild(item);
+            } else {
+                const option = document.createElement("option");
+                option.value = categoryId;
+                option.textContent = `${"— ".repeat(depth)}${category.name}`;
+                option.selected = selectedId != null && categoryId === String(selectedId);
+                select.appendChild(option);
+            }
             appendOptions(category.id, depth + 1, nextVisited);
         }
     }
 
     appendOptions();
 
-    if (select.options.length === 0) {
+    if (multiSelect && available.length === 0) {
+        const empty = document.createElement("p");
+        empty.textContent = "No categories available. Create a category first.";
+        select.appendChild(empty);
+        dialog.saveButton.disabled = true;
+    } else if (!multiSelect && select.options.length === 0) {
         const emptyOption = document.createElement("option");
         emptyOption.value = "";
         emptyOption.textContent = "No categories available";
-
         select.appendChild(emptyOption);
         select.disabled = true;
         dialog.saveButton.disabled = true;
@@ -223,17 +237,19 @@ export function openCategorySelectionModal({
     async function save() {
         if (dialog.closed || dialog.saveButton.disabled) return;
 
-        const destinationId = select.value || null;
+        const destination = multiSelect
+            ? Array.from(select.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value)
+            : (select.value || null);
 
         dialog.saveButton.disabled = true;
         dialog.cancelButton.disabled = true;
 
         try {
-            await onSave(destinationId);
+            await onSave(destination);
             dialog.close();
         } catch (error) {
-            console.error("Move operation failed:", error);
-            alert(error.message || "The move failed. Please try again.");
+            console.error("Category assignment operation failed:", error);
+            alert(error.message || "The category operation failed. Please try again.");
 
             dialog.saveButton.disabled = false;
             dialog.cancelButton.disabled = false;
@@ -243,11 +259,12 @@ export function openCategorySelectionModal({
     dialog.saveButton.addEventListener("click", save);
 
     select.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
+        if (event.key === "Enter" && !multiSelect) {
             event.preventDefault();
             save();
         }
     });
 
-    select.focus();
+    if (multiSelect) select.querySelector("input")?.focus();
+    else select.focus();
 }
