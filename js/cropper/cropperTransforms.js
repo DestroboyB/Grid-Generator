@@ -13,29 +13,9 @@ export function getCropRatio(
     imageRatioInput
 ) {
 
-    // ========================================
-    // Existing Image
-    // ========================================
-
-    if (
-        cropperState.editingImageData &&
-        cropperState.editingImageData.crop
-    ) {
-
-        const crop =
-            cropperState.editingImageData.crop;
-
-
-        return (
-            crop.width /
-            crop.height
-        );
-    }
-
-
-    // ========================================
-    // New Image
-    // ========================================
+    // Always use the current board ratio.
+    // Saved crop dimensions describe the previous edit and must not
+    // override a ratio the user has selected since then.
 
     const [
         ratioWidth,
