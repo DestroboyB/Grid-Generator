@@ -96,14 +96,33 @@ test("multiple category assignments preserve legacy primary ID and survive indiv
         const second = await createCategory("Multi Assignment Second");
         const legacy = await createGrid({ name: "Legacy Single Assignment", categoryId: first.id });
         const multi = await createGrid({ name: "Multi Assignment Grid", categoryIds: [first.id, second.id] });
+        const { openDatabase, GRID_STORE } = await import("/js/storage/database.js");
+        const db = await openDatabase();
+        await new Promise((resolve, reject) => {
+            const transaction = db.transaction(GRID_STORE, "readwrite");
+            transaction.objectStore(GRID_STORE).put({
+                id: "legacy-category-only-record",
+                name: "Raw Legacy Schema Grid",
+                categoryId: first.id,
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            });
+            transaction.oncomplete = resolve;
+            transaction.onerror = () => reject(transaction.error);
+        });
+        const rawLegacy = await getGrid("legacy-category-only-record");
         const before = await getGrid(multi.id);
         const summaries = await getGridSummaries();
         await deleteCategory(first.id);
         const after = await getGrid(multi.id);
         const legacyAfter = await getGrid(legacy.id);
+        const rawLegacyAfter = await getGrid("legacy-category-only-record");
         return {
             legacyAssignments: legacy.categoryIds,
             legacyPrimary: legacy.categoryId,
+            rawLegacyAssignments: rawLegacy.categoryIds,
+            rawLegacyAfterAssignments: rawLegacyAfter.categoryIds,
+            rawLegacyAfterPrimary: rawLegacyAfter.categoryId,
             beforeAssignments: before.categoryIds,
             beforePrimary: before.categoryId,
             summaryAssignments: summaries.find(grid => grid.id === multi.id)?.categoryIds,
@@ -115,6 +134,9 @@ test("multiple category assignments preserve legacy primary ID and survive indiv
     });
     expect(result.legacyAssignments).toHaveLength(1);
     expect(result.legacyPrimary).toBeTruthy();
+    expect(result.rawLegacyAssignments).toEqual([result.legacyPrimary]);
+    expect(result.rawLegacyAfterAssignments).toEqual([]);
+    expect(result.rawLegacyAfterPrimary).toBeNull();
     expect(result.beforeAssignments).toHaveLength(2);
     expect(result.beforePrimary).toBe(result.beforeAssignments[0]);
     expect(result.summaryAssignments).toHaveLength(2);
