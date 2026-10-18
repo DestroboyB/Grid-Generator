@@ -860,3 +860,12 @@ body.library-open {
     border-color: #60a5fa;
     color: #dbeafe;
 }
+
+
+/* Beat the global dark-mode button:hover rule for the category trigger. */
+:root[data-theme="dark"] button.library-category-selector-trigger:hover:not(:disabled),
+:root[data-theme="dark"] button.library-category-selector-trigger[aria-expanded="true"]:not(:disabled) {
+    background-color: #273449;
+    border-color: #60a5fa;
+    color: #ffffff;
+}
