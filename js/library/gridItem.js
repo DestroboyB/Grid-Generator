@@ -39,10 +39,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
         element.classList.add("active");
     }
 
-    const icon = document.createElement("span");
-    icon.className = "library-grid-icon";
-    icon.textContent = "▣";
-
     const name = document.createElement("span");
     name.className = "library-grid-name";
     name.textContent = grid.name || "Untitled Grid";
@@ -50,15 +46,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
     if (showActions) {
         const actions = document.createElement("div");
         actions.className = "library-grid-actions";
-
-        const openButton = makeActionButton(
-            "Open / Select",
-            "Open this grid"
-        );
-        openButton.addEventListener("click", event => {
-            stopClick(event);
-            element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-        });
 
         const moveButton = makeActionButton(
             "Edit Categories",
@@ -262,10 +249,10 @@ export function createGridElement(grid, categories, searchResult = false, depend
             }
         });
 
-        actions.append(openButton, renameButton, deleteButton, moveButton);
-        element.append(icon, name, actions);
+        actions.append(moveButton, renameButton, deleteButton);
+        element.append(name, actions);
     } else {
-        element.append(icon, name);
+        element.append(name);
     }
 
     element.addEventListener("click", async event => {
