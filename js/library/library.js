@@ -497,7 +497,8 @@ function renderSelectedCategoryActions(category, categories, parent) {
         addChild.addEventListener("click", () => openCategoryNameModal({
             title: `Create subcategory in "${category.name}"`,
             onSave: async name => {
-                await createCategory(name, category.id);
+                const created = await createCategory(name, category.id);
+                selectedCategoryId = String(created.id);
                 await renderLibrary();
             }
         }));
