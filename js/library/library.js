@@ -436,7 +436,25 @@ function renderCategorySelector(categories, parent, grids) {
             list.appendChild(empty);
         }
         popup.appendChild(list);
+        positionPopup();
     }
+    function positionPopup() {
+        if (!popup) return;
+        const rect = trigger.getBoundingClientRect();
+        const margin = 12;
+        const width = Math.min(360, Math.max(220, window.innerWidth - margin * 2));
+        popup.style.width = `${width}px`;
+        popup.style.maxHeight = `${Math.max(160, Math.min(430, window.innerHeight - margin * 2))}px`;
+        const left = Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin));
+        popup.style.left = `${left}px`;
+        const popupHeight = popup.getBoundingClientRect().height;
+        let top = rect.bottom + 6;
+        if (top + popupHeight > window.innerHeight - margin && rect.top > popupHeight + margin) {
+            top = rect.top - popupHeight - 6;
+        }
+        popup.style.top = `${Math.max(margin, Math.min(top, window.innerHeight - popupHeight - margin))}px`;
+    }
+
     trigger.addEventListener("click", event => {
         event.stopPropagation();
         if (popup) { closePopup(); return; }
@@ -446,18 +464,25 @@ function renderCategorySelector(categories, parent, grids) {
         popup.className = "library-category-popup";
         popup.setAttribute("role", "dialog");
         popup.setAttribute("aria-label", "Category navigation");
-        wrapper.appendChild(popup);
+        popup.style.position = "fixed";
+        document.body.appendChild(popup);
         trigger.setAttribute("aria-expanded", "true");
         renderPopup();
-        const dismiss = event => { if (!wrapper.contains(event.target)) closePopup(); };
+        positionPopup();
+        const dismiss = event => {
+            if (!popup?.contains(event.target) && !trigger.contains(event.target)) closePopup();
+        };
         const onKeydown = event => {
             if (event.key === "Escape" && popup) { closePopup(); trigger.focus(); }
         };
+        const onResize = () => positionPopup();
         document.addEventListener("pointerdown", dismiss, true);
         document.addEventListener("keydown", onKeydown, true);
+        window.addEventListener("resize", onResize);
         cleanupPopupListeners = () => {
             document.removeEventListener("pointerdown", dismiss, true);
             document.removeEventListener("keydown", onKeydown, true);
+            window.removeEventListener("resize", onResize);
         };
     });
     wrapper.append(label, trigger);
@@ -585,73 +610,10 @@ export async function renderLibrary() {
             ? categoryById(categories, selectedCategoryId)
             : null;
 
+        // All category browsing lives inside the hierarchical dropdown.
+        // Keep only category management actions in the content area.
         if (currentCategory) {
-            const navBar = document.createElement("div");
-            navBar.className = "library-breadcrumb-row";
-            const back = makeLibraryButton("← Back", "library-back-button");
-            back.addEventListener("click", () => {
-                const parentId = currentCategory.parentId == null ? null : String(currentCategory.parentId);
-                rememberCategoryForCurrentGrid(parentId, grids);
-                renderLibrary();
-            });
-            const path = document.createElement("div");
-            path.className = "library-breadcrumb";
-            path.textContent = getCategoryPath(categories, currentCategory);
-            navBar.append(back, path);
-            fragment.appendChild(navBar);
-
-            const childCategories = categories
-                .filter(category => String(category.parentId) === String(currentCategory.id))
-                .sort((a, b) => a.name.localeCompare(b.name));
-            for (const child of childCategories) {
-                const button = makeCategoryNavigationButton(child);
-                button.addEventListener("click", () => {
-                    const activeGrid = grids.find(grid => String(grid.id) === String(appState.currentGridId));
-                    if (activeGrid && categoryIdsForGrid(activeGrid).includes(String(child.id))) {
-                        lastSelectedCategoryByGrid.set(String(activeGrid.id), String(child.id));
-                    }
-                    selectedCategoryId = String(child.id);
-                    renderLibrary();
-                });
-                fragment.appendChild(button);
-            }
             renderSelectedCategoryActions(currentCategory, categories, fragment);
-        } else if (selectedCategoryId === UNCATEGORIZED_ID) {
-            const navBar = document.createElement("div");
-            navBar.className = "library-breadcrumb-row";
-            const back = makeLibraryButton("← Back", "library-back-button");
-            back.addEventListener("click", () => { selectedCategoryId = null; renderLibrary(); });
-            const path = document.createElement("div");
-            path.className = "library-breadcrumb";
-            path.textContent = "Uncategorized";
-            navBar.append(back, path);
-            fragment.appendChild(navBar);
-        } else {
-            const rootCategories = categories
-                .filter(category => category.parentId == null ||
-                    !categories.some(parent => String(parent.id) === String(category.parentId)))
-                .sort((a, b) => a.name.localeCompare(b.name));
-            for (const category of rootCategories) {
-                const button = makeCategoryNavigationButton(category);
-                button.addEventListener("click", () => {
-                    const activeGrid = grids.find(grid => String(grid.id) === String(appState.currentGridId));
-                    if (activeGrid && categoryIdsForGrid(activeGrid).includes(String(category.id))) {
-                        lastSelectedCategoryByGrid.set(String(activeGrid.id), String(category.id));
-                    }
-                    selectedCategoryId = String(category.id);
-                    renderLibrary();
-                });
-                fragment.appendChild(button);
-            }
-            const uncategorizedButton = makeLibraryButton("Uncategorized", "library-category-navigation");
-            uncategorizedButton.addEventListener("click", () => { selectedCategoryId = UNCATEGORIZED_ID; renderLibrary(); });
-            fragment.appendChild(uncategorizedButton);
-            if (!rootCategories.length && !grids.length) {
-                const empty = document.createElement("div");
-                empty.className = "library-empty";
-                empty.textContent = "No grids or categories yet. Create a grid or category to get started.";
-                fragment.appendChild(empty);
-            }
         }
 
         const visibleGrids = selectedCategoryId === UNCATEGORIZED_ID
