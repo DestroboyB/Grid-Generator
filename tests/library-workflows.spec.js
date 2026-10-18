@@ -168,7 +168,7 @@ test("library drill-down shows only directly assigned grids and keeps parent gri
     await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toBeVisible();
     await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "← Back" })).toBeVisible();
-    await page.locator(`[data-grid-id="${ids.childGridId}"]`).click();
+    await page.locator(`[data-grid-id="${ids.childGridId}"] .library-grid-name`).click();
     await expect(page.locator("#currentGridName")).toHaveText("Direct Child Grid");
 });
 
