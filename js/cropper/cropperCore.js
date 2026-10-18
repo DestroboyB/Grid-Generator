@@ -197,8 +197,17 @@ export function createCropper(
                         // Restore Crop Box
                         // ========================================
 
+                        // A saved crop box can have the previous board ratio.
+                        // Restore its geometry only when it matches the current ratio;
+                        // otherwise keep the crop box created for the current ratio.
                         if (
-                            imageData.cropBox
+                            imageData.cropBox &&
+                            imageData.cropBox.height > 0 &&
+                            Math.abs(
+                                imageData.cropBox.width /
+                                imageData.cropBox.height -
+                                cropRatio
+                            ) < 0.01
                         ) {
 
                             this.cropper.setCropBoxData(
