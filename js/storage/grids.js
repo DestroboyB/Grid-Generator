@@ -38,6 +38,7 @@ export function createGridData() {
         ratio: ratioInput?.value ?? "1:1",
 
         spacing: appState.spacing,
+        outerPadding: appState.outerPadding ?? 10,
         backgroundColor: appState.backgroundColor,
         borderEnabled: appState.borderEnabled,
         borderSize: appState.borderSize,
@@ -71,6 +72,7 @@ export function createEmptyGridData() {
 
         // Default appearance
         spacing: 0,
+        outerPadding: 10,
         backgroundColor: "#ffffff",
         borderEnabled: true,
         borderSize: 2,
@@ -432,6 +434,7 @@ export function applyGridData(grid) {
     appState.savedImages = cloneData(grid.images ?? []);
 
     appState.spacing = grid.spacing ?? 0;
+    appState.outerPadding = grid.outerPadding ?? 10;
     appState.backgroundColor = grid.backgroundColor ?? "#ffffff";
     appState.borderEnabled = grid.borderEnabled ?? true;
     appState.borderSize = grid.borderSize ?? 2;
@@ -444,6 +447,8 @@ export function applyGridData(grid) {
     const columnsInput = document.getElementById("columns");
     const ratioInput = document.getElementById("imageRatio");
     const spacingInput = document.getElementById("spacing");
+    const outerPaddingInput = document.getElementById("outerPadding");
+    const outerPaddingValue = document.getElementById("outerPaddingValue");
     const backgroundInput = document.getElementById("backgroundColor");
     const borderEnabledInput = document.getElementById("borderEnabled");
     const borderColorInput = document.getElementById("borderColor");
@@ -463,6 +468,13 @@ export function applyGridData(grid) {
 
     if (spacingInput) {
         spacingInput.value = appState.spacing;
+    }
+
+    if (outerPaddingInput) {
+        outerPaddingInput.value = appState.outerPadding;
+    }
+    if (outerPaddingValue) {
+        outerPaddingValue.textContent = `${appState.outerPadding} px`;
     }
 
     if (backgroundInput) {
@@ -539,6 +551,7 @@ function captureCurrentGridSnapshot() {
         ratio: ratioInput?.value ?? "1:1",
         images: cloneData(appState.savedImages),
         spacing: appState.spacing,
+        outerPadding: appState.outerPadding ?? 10,
         backgroundColor: appState.backgroundColor,
         borderEnabled: appState.borderEnabled,
         borderSize: appState.borderSize,
@@ -653,6 +666,7 @@ async function saveCurrentGridSnapshot(snapshot) {
     grid.name = snapshot.name || grid.name || "Untitled Grid";
     grid.images = snapshot.images;
     grid.spacing = snapshot.spacing;
+    grid.outerPadding = snapshot.outerPadding ?? 10;
     grid.backgroundColor = snapshot.backgroundColor;
     grid.borderEnabled = snapshot.borderEnabled;
     grid.borderSize = snapshot.borderSize;
