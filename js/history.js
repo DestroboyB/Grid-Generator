@@ -126,6 +126,9 @@ export function getCurrentState() {
         spacing:
             appState.spacing,
 
+        outerPadding:
+            appState.outerPadding ?? 10,
+
         backgroundColor:
             appState.backgroundColor,
 
@@ -270,6 +273,9 @@ function restoreState(
     appState.spacing =
         state.spacing;
 
+    appState.outerPadding =
+        state.outerPadding ?? 10;
+
     appState.backgroundColor =
         state.backgroundColor;
 
@@ -295,6 +301,9 @@ function restoreState(
         document.getElementById(
             "spacingValue"
         );
+
+    const outerPaddingInput = document.getElementById("outerPadding");
+    const outerPaddingValue = document.getElementById("outerPaddingValue");
 
     const backgroundColorInput =
         document.getElementById(
@@ -332,6 +341,14 @@ function restoreState(
 
         spacingValue.textContent =
             `${appState.spacing} px`;
+    }
+
+    if (outerPaddingInput) {
+        outerPaddingInput.value = appState.outerPadding;
+    }
+
+    if (outerPaddingValue) {
+        outerPaddingValue.textContent = `${appState.outerPadding} px`;
     }
 
     if (backgroundColorInput) {
