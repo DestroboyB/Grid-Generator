@@ -13,17 +13,14 @@ import {
     createCategory,
     renameCategory,
     moveCategory,
-    moveGridToCategory,
     setGridCategories,
     deleteCategory
 } from "../storage/categories.js";
 
-import { createCategoryElement } from "./categoryItem.js";
 import { createGridElement as buildGridElement } from "./gridItem.js";
 
 import {
     getDescendantIds,
-    getCategoryDepth,
     getSubtreeHeight
 } from "./categoryUtils.js";
 
@@ -57,24 +54,6 @@ const newGridModal = document.getElementById("newGridModal");
 const newGridNameInput = document.getElementById("newGridNameInput");
 const cancelNewGridButton = document.getElementById("cancelNewGridButton");
 const createNewGridButton = document.getElementById("createNewGridButton");
-
-const categoryElementDependencies = {
-    makeActionButton,
-    stopClick,
-    openCategoryNameModal,
-    openCategorySelectionModal,
-    createCategory,
-    renameCategory,
-    getAllCategories,
-    getDescendantIds,
-    getSubtreeHeight,
-    getCategoryDepth,
-    moveCategory,
-    deleteCategory,
-    renderLibrary: () => renderLibrary(),
-    showError,
-    createGridElement: (...args) => createGridElement(...args)
-};
 
 const gridElementDependencies = {
     makeActionButton,
@@ -114,9 +93,6 @@ const gridElementDependencies = {
     },
     searchLibrary: () => searchLibrary(),
     librarySearchInput,
-    setPendingExpandedCategoryIds: ids => {
-        pendingExpandedCategoryIds = ids;
-    },
     getLibraryContent: () => libraryContent
 };
 
@@ -126,7 +102,6 @@ const gridElementDependencies = {
 
 let hasRenderedLibrary = false;
 let isLibrarySearchMode = false;
-let pendingExpandedCategoryIds = null;
 
 // ========================================
 // General Helpers

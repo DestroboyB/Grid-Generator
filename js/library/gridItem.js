@@ -11,7 +11,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
         stopClick,
         getAllCategories,
         openCategorySelectionModal,
-        moveGridToCategory,
         setGridCategories,
         renameGrid,
         deleteGrid,
@@ -27,7 +26,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
         setIsLibrarySearchMode,
         searchLibrary,
         librarySearchInput,
-        setPendingExpandedCategoryIds,
         getLibraryContent
     } = dependencies;
 
@@ -293,30 +291,6 @@ export function createGridElement(grid, categories, searchResult = false, depend
                 if (librarySearchInput) {
                     librarySearchInput.value = "";
                 }
-
-                // Expand the selected grid's category and all ancestors.
-                const expandedIds = new Set();
-                const visitedIds = new Set();
-
-                let parentId = grid.categoryId ?? null;
-
-                while (parentId != null) {
-                    const id = String(parentId);
-
-                    if (visitedIds.has(id)) break;
-                    visitedIds.add(id);
-
-                    const category = categories.find(
-                        item => String(item.id) === id
-                    );
-
-                    if (!category) break;
-
-                    expandedIds.add(id);
-                    parentId = category.parentId ?? null;
-                }
-
-                setPendingExpandedCategoryIds(expandedIds);
 
                 await renderLibrary();
                 return;
