@@ -150,7 +150,10 @@ export async function getGrid(gridId) {
         request.onsuccess = () => {
             resolve(
                 request.result
-                    ? cloneData(request.result)
+                    ? cloneData(withCategoryAssignments(
+                        request.result,
+                        getCategoryIds(request.result)
+                    ))
                     : null
             );
         };
@@ -190,7 +193,7 @@ export async function getAllGrids() {
     return new Promise((resolve, reject) => {
         request.onsuccess = () => {
             const grids = request.result.map(
-                grid => cloneData(grid)
+                grid => cloneData(withCategoryAssignments(grid, getCategoryIds(grid)))
             );
 
             grids.sort(
