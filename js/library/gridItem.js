@@ -92,7 +92,8 @@ export function createGridElement(grid, categories, searchResult = false, depend
                         : grid.categoryId == null ? [] : [grid.categoryId],
                     onSave: async categoryIds => {
                         await setGridCategories(grid.id, categoryIds);
-                        await renderLibrary();
+                        if (isLibrarySearchMode()) await searchLibrary();
+                        else await renderLibrary();
                     }
                 });
             } catch (error) {
@@ -255,7 +256,8 @@ export function createGridElement(grid, categories, searchResult = false, depend
                     updateCurrentGridName();
                 }
 
-                await renderLibrary();
+                if (isLibrarySearchMode()) await searchLibrary();
+                else await renderLibrary();
             } catch (error) {
                 showError("Failed to delete the grid.", error);
             }
