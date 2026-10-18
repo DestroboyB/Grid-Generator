@@ -11,7 +11,6 @@ Grid Generator is a lightweight, browser-based tool for arranging images into a 
 - **Flexible layouts** — Configure 1–10 rows and columns, choose from common image aspect ratios, and adjust spacing and background color.
 - **Bring in images** — Import files individually or in bulk, drag and drop images, use image URLs, or search supported image sources.
 - **Edit images** — Crop, rotate, flip, and adjust brightness, contrast, saturation, blur, and filters.
-- **Reconstruct a grid** — Use screenshot-based grid detection to help identify rows and columns from an existing board.
 - **Organize your work** — Save grids in your browser, search your library, and organize boards with nested categories.
 - **Undo and redo** — Reverse supported editing actions.
 - **Export** — Save your finished board as PNG, JPG, or WebP.
