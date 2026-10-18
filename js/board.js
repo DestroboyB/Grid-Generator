@@ -98,17 +98,21 @@ function calculateBoardDimensions() {
 
 
     const boardPadding =
-        20;
+        Math.max(0, Number(appState.outerPadding ?? 10));
 
+    const boardBorder =
+        2;
 
     const availableWidth =
         maxBoardWidth -
-        (boardPadding * 2);
+        (boardPadding * 2) -
+        (boardBorder * 2);
 
 
     const availableHeight =
         maxBoardHeight -
-        (boardPadding * 2);
+        (boardPadding * 2) -
+        (boardBorder * 2);
 
 
     let boxWidth =
@@ -204,11 +208,13 @@ function calculateBoardDimensions() {
 
         boardWidth:
             finalWidth +
-            (boardPadding * 2),
+            (boardPadding * 2) +
+            (boardBorder * 2),
 
         boardHeight:
             finalHeight +
-            (boardPadding * 2),
+            (boardPadding * 2) +
+            (boardBorder * 2),
 
         boxWidth:
             boxWidth,
@@ -254,6 +260,9 @@ export function updateBoardStyle() {
 
     board.style.gap =
         `${appState.spacing}px`;
+
+    board.style.padding =
+        `${Math.max(0, Number(appState.outerPadding ?? 10))}px`;
 
 
     board.style.backgroundColor =
