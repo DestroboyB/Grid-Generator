@@ -164,6 +164,10 @@ input[type="range"] {
     white-space: nowrap;
 }
 
+#clearBoardButton {
+    color: #dc2626;
+}
+
 
 /* ========================================
    My Grids
