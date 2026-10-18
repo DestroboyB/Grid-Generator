@@ -82,7 +82,22 @@ const gridElementDependencies = {
     getAllCategories,
     openCategorySelectionModal,
     moveGridToCategory,
-    setGridCategories,
+    setGridCategories: async (gridId, categoryIds) => {
+        const updated = await setGridCategories(gridId, categoryIds);
+        if (String(gridId) === String(appState.currentGridId)) {
+            const ids = categoryIds.map(String);
+            if (ids.length) {
+                const next = ids.includes(String(selectedCategoryId))
+                    ? String(selectedCategoryId)
+                    : ids[0];
+                selectedCategoryId = next;
+                lastSelectedCategoryByGrid.set(String(gridId), next);
+            } else {
+                selectedCategoryId = UNCATEGORIZED_ID;
+            }
+        }
+        return updated;
+    },
     renameGrid,
     deleteGrid,
     getGridSummaries,

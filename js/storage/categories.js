@@ -358,7 +358,8 @@ export async function moveGridToCategory(gridId, categoryId = null) {
 // ========================================
 //
 // - Keeps all grids.
-// - Makes grids directly assigned to this category uncategorized.
+// - Removes only this category assignment from affected grids.
+// - A grid remains categorized if it has other assignments.
 // - Moves immediate subcategories to this category's parent.
 // - Preserves deeper nesting under those subcategories.
 // ========================================

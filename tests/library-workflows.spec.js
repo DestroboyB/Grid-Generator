@@ -123,3 +123,31 @@ test("multiple category assignments preserve legacy primary ID and survive indiv
     expect(result.legacyAfterAssignments).toEqual([]);
     expect(result.remainingCategoryExists).toBe(true);
 });
+
+test("library drill-down shows only directly assigned grids and keeps parent grids visible with children", async ({ page }) => {
+    await page.goto("/");
+    const ids = await page.evaluate(async () => {
+        const { createCategory } = await import(`/js/storage/categories.js?library-drilldown=${Date.now()}`);
+        const { createGrid, loadGrid } = await import(`/js/storage/grids.js?library-drilldown-grids=${Date.now()}`);
+        const parent = await createCategory("Drilldown Parent");
+        const child = await createCategory("Drilldown Child", parent.id);
+        const parentGrid = await createGrid({ name: "Direct Parent Grid", categoryId: parent.id });
+        const childGrid = await createGrid({ name: "Direct Child Grid", categoryId: child.id });
+        await loadGrid(parentGrid.id);
+        return { parentId: parent.id, childId: child.id, parentGridId: parentGrid.id, childGridId: childGrid.id };
+    });
+    await page.locator("#libraryButton").click();
+    await expect(page.locator("#currentGridName")).toHaveText("Direct Parent Grid");
+    await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toBeVisible();
+    await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toHaveCount(0);
+    await page.getByRole("button", { name: "Open Drilldown Child" }).click();
+    await expect(page.locator(`[data-grid-id="${ids.childGridId}"]`)).toBeVisible();
+    await expect(page.locator(`[data-grid-id="${ids.parentGridId}"]`)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "← Back" })).toBeVisible();
+});
+
+test("Import Grid is temporarily absent while Bulk Import remains available", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#importProjectButton")).toHaveCount(0);
+    await expect(page.locator("#bulkImportButton")).toBeVisible();
+});

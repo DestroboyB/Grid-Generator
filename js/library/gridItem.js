@@ -53,6 +53,15 @@ export function createGridElement(grid, categories, searchResult = false, depend
         const actions = document.createElement("div");
         actions.className = "library-grid-actions";
 
+        const openButton = makeActionButton(
+            "Open / Select",
+            "Open this grid"
+        );
+        openButton.addEventListener("click", event => {
+            stopClick(event);
+            element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        });
+
         const moveButton = makeActionButton(
             "Edit Categories",
             "Add or remove category assignments"
@@ -253,7 +262,7 @@ export function createGridElement(grid, categories, searchResult = false, depend
             }
         });
 
-        actions.append(moveButton, renameButton, deleteButton);
+        actions.append(openButton, renameButton, deleteButton, moveButton);
         element.append(icon, name, actions);
     } else {
         element.append(icon, name);
