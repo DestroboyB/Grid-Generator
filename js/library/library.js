@@ -60,7 +60,6 @@ const gridElementDependencies = {
     stopClick,
     getAllCategories,
     openCategorySelectionModal,
-    moveGridToCategory,
     setGridCategories: async (gridId, categoryIds) => {
         const updated = await setGridCategories(gridId, categoryIds);
         if (String(gridId) === String(appState.currentGridId)) {
