@@ -784,3 +784,79 @@ body.library-open {
     background: var(--color-surface); color: var(--color-text); font: inherit;
 }
 .current-grid-name-input:focus { outline: 2px solid #60a5fa; outline-offset: 1px; }
+
+
+/* Final category-picker layout overrides: fixed to the viewport so the popup
+   cannot be clipped by the library's scrolling panel or extend off-screen. */
+.library-category-popup {
+    position: fixed;
+    z-index: 5000;
+    box-sizing: border-box;
+    width: min(360px, calc(100vw - 24px));
+    max-height: min(430px, calc(100dvh - 24px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+}
+@media (max-width: 600px) {
+    .library-category-popup {
+        width: min(360px, calc(100vw - 24px));
+        max-height: min(390px, calc(100dvh - 24px));
+    }
+}
+
+/* Use explicit dark colors because the global dark-mode button rule has
+   intentionally broad defaults for controls. */
+:root[data-theme="dark"] .library-category-selector-caption,
+:root[data-theme="dark"] .library-category-popup-context,
+:root[data-theme="dark"] .library-category-popup-empty {
+    color: #cbd5e1;
+}
+:root[data-theme="dark"] .library-category-selector-trigger {
+    background-color: #111827;
+    color: #f3f4f6;
+    border-color: #4b5563;
+}
+:root[data-theme="dark"] .library-category-selector-trigger:hover,
+:root[data-theme="dark"] .library-category-selector-trigger[aria-expanded="true"] {
+    background-color: #273449;
+    border-color: #60a5fa;
+    color: #ffffff;
+}
+:root[data-theme="dark"] .library-category-popup {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    border-color: #4b5563;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+}
+:root[data-theme="dark"] .library-category-popup-header {
+    border-bottom-color: #374151;
+}
+:root[data-theme="dark"] .library-category-popup-back,
+:root[data-theme="dark"] .library-category-popup-item,
+:root[data-theme="dark"] .library-category-popup-drill {
+    background-color: #1f2937;
+    color: #e5e7eb;
+    border-color: transparent;
+}
+:root[data-theme="dark"] .library-category-popup-back {
+    background-color: #111827;
+    border-color: #4b5563;
+}
+:root[data-theme="dark"] .library-category-popup-item:hover,
+:root[data-theme="dark"] .library-category-popup-drill:hover,
+:root[data-theme="dark"] .library-category-popup-back:hover {
+    background-color: #374151;
+    border-color: #6b7280;
+    color: #ffffff;
+}
+:root[data-theme="dark"] .library-category-popup-item.selected {
+    background-color: #1e3a5f;
+    border-color: #60a5fa;
+    color: #dbeafe;
+}
