@@ -167,9 +167,11 @@ function beginCurrentGridRename() {
     input.addEventListener("keydown", event => {
         if (event.key === "Enter") {
             event.preventDefault();
+            event.stopPropagation();
             finish();
         } else if (event.key === "Escape") {
             event.preventDefault();
+            event.stopPropagation();
             finish(true);
         }
     });
