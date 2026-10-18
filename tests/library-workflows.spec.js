@@ -210,20 +210,21 @@ test("current grid header supports inline rename, Enter save, Escape cancel, and
     expect(stored.second).toBe("Header Rename Blur Target");
 });
 
-test("hierarchical category dropdown navigates children without changing grid assignments", async ({ page }) => {
+test("hierarchical category dropdown contains every level, has no duplicate navigation buttons, and preserves assignments", async ({ page }) => {
     await page.goto("/");
     const ids = await page.evaluate(async () => {
         const { createCategory } = await import(`/js/storage/categories.js?hierarchical-dropdown=${Date.now()}`);
         const { createGrid, loadGrid } = await import(`/js/storage/grids.js?hierarchical-dropdown-grids=${Date.now()}`);
         const parent = await createCategory("Dropdown Parent");
         const child = await createCategory("Dropdown Child", parent.id);
+        const grandchild = await createCategory("Dropdown Grandchild", child.id);
         await createCategory("Dropdown Sibling");
         const grid = await createGrid({
             name: "Dropdown Multi Assigned Grid",
-            categoryIds: [parent.id, child.id]
+            categoryIds: [parent.id, child.id, grandchild.id]
         });
         await loadGrid(grid.id);
-        return { parentId: parent.id, childId: child.id, gridId: grid.id };
+        return { parentId: parent.id, childId: child.id, grandchildId: grandchild.id, gridId: grid.id };
     });
 
     await page.locator("#libraryButton").click();
@@ -231,34 +232,61 @@ test("hierarchical category dropdown navigates children without changing grid as
     await expect(page.locator("#libraryCategorySelect")).toHaveCount(0);
     await expect(trigger).toBeVisible();
     await expect(trigger).toHaveCSS("min-height", "44px");
+    await expect(page.locator(".library-category-navigation")).toHaveCount(0);
+    await expect(page.locator(".library-breadcrumb-row")).toHaveCount(0);
+    await expect(page.locator("#newGridButton")).toBeVisible();
+    await expect(page.locator("#newCategoryButton")).toBeVisible();
+
+    // A parent category remains directly selectable even though it has children.
     await trigger.click();
     const popup = page.locator(".library-category-popup");
     await expect(popup).toBeVisible();
     await expect(popup.getByRole("button", { name: "Show grids in Dropdown Parent" })).toBeVisible();
     await expect(popup.getByRole("button", { name: "Show grids in Dropdown Child" })).toHaveCount(0);
     await expect(popup.getByRole("button", { name: "Uncategorized" })).toBeVisible();
-    await expect(page.locator("#newGridButton")).toBeVisible();
-    await expect(page.locator("#newCategoryButton")).toBeVisible();
-    const popupBox = await popup.boundingBox();
+    let popupBox = await popup.boundingBox();
     expect(popupBox.width).toBeGreaterThan(200);
+    expect(popupBox.x).toBeGreaterThanOrEqual(0);
+    expect(popupBox.x + popupBox.width).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth));
 
-    // A parent category with children is selectable in its own right.
     await popup.getByRole("button", { name: "Show grids in Dropdown Parent" }).click();
     await expect(trigger).toContainText("Dropdown Parent");
+    await expect(page.locator(".library-category-navigation")).toHaveCount(0);
     await expect(page.locator(`[data-grid-id="${ids.gridId}"]`)).toBeVisible();
+
+    // Drill down one level at a time, with Back navigation inside the popup.
     await trigger.click();
     await popup.getByRole("button", { name: "Browse subcategories of Dropdown Parent" }).click();
-    await expect(popup.getByRole("button", { name: "← Back" })).toBeVisible();
+    await expect(popup.getByRole("button", { name: "Show grids in Dropdown Child" })).toBeVisible();
+    await popup.getByRole("button", { name: "Browse subcategories of Dropdown Child" }).click();
+    await expect(popup.getByRole("button", { name: "Show grids in Dropdown Grandchild" })).toBeVisible();
+    await popup.getByRole("button", { name: "← Back" }).click();
+    await expect(popup.getByRole("button", { name: "Show grids in Dropdown Child" })).toBeVisible();
     await popup.getByRole("button", { name: "Show grids in Dropdown Child" }).click();
     await expect(popup).toHaveCount(0);
     await expect(trigger).toContainText("Dropdown Parent / Dropdown Child");
     await expect(page.locator(`[data-grid-id="${ids.gridId}"]`)).toBeVisible();
 
+    // Explicitly verify the popup palette is readable in dark mode.
+    await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+    await trigger.click();
+    const colors = await page.evaluate(() => {
+        const popup = document.querySelector(".library-category-popup");
+        return {
+            background: getComputedStyle(popup).backgroundColor,
+            color: getComputedStyle(popup).color,
+            triggerBackground: getComputedStyle(document.querySelector(".library-category-selector-trigger")).backgroundColor
+        };
+    });
+    expect(colors.background).toBe("rgb(31, 41, 55)");
+    expect(colors.color).toBe("rgb(243, 244, 246)");
+    expect(colors.triggerBackground).toBe("rgb(17, 24, 39)");
+
     const storedAssignments = await page.evaluate(async gridId => {
         const { getGrid } = await import(`/js/storage/grids.js?dropdown-assignments=${Date.now()}`);
         return (await getGrid(gridId))?.categoryIds;
     }, ids.gridId);
-    expect(storedAssignments.map(String)).toEqual([String(ids.parentId), String(ids.childId)]);
+    expect(storedAssignments.map(String)).toEqual([String(ids.parentId), String(ids.childId), String(ids.grandchildId)]);
 });
 
 test("Import Grid is temporarily absent while Bulk Import remains available", async ({ page }) => {
