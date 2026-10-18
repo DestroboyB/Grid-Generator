@@ -69,6 +69,8 @@ export const appState = {
 
     spacing: 0,
 
+    outerPadding: 10,
+
     backgroundColor: "#ffffff",
 
     borderEnabled: true,
