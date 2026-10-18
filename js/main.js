@@ -115,6 +115,12 @@ const borderSizeInput =
         "borderSize"
     );
 
+const outerPaddingInput =
+    document.getElementById("outerPadding");
+
+const outerPaddingValue =
+    document.getElementById("outerPaddingValue");
+
 const borderSizeValue =
     document.getElementById(
         "borderSizeValue"
@@ -253,6 +259,13 @@ if (
         2;
 }
 
+if (
+    appState.outerPadding === undefined ||
+    appState.outerPadding === null
+) {
+    appState.outerPadding = 10;
+}
+
 
 if (
     !appState.backgroundColor
@@ -317,6 +330,9 @@ borderSizeInput.value =
 
 borderSizeValue.textContent =
     `${appState.borderSize} px`;
+
+outerPaddingInput.value = appState.outerPadding;
+outerPaddingValue.textContent = `${appState.outerPadding} px`;
 
 
 // ========================================
@@ -482,6 +498,17 @@ borderSizeInput.addEventListener(
         saveHistoryState();
     }
 );
+
+
+outerPaddingInput.addEventListener("input", () => {
+    appState.outerPadding = Number(outerPaddingInput.value);
+    outerPaddingValue.textContent = `${appState.outerPadding} px`;
+    updateBoardStyle();
+});
+
+outerPaddingInput.addEventListener("change", () => {
+    saveHistoryState();
+});
 
 
 // ========================================
