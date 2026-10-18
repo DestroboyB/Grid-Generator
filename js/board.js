@@ -632,6 +632,10 @@ export function generateBoard() {
         `${appState.spacing}px`;
 
 
+    board.style.padding =
+        `${Math.max(0, Number(appState.outerPadding ?? 10))}px`;
+
+
     board.style.backgroundColor =
         appState.backgroundColor;
 
