@@ -923,6 +923,8 @@ body.library-open {
     min-width: 0;
     overflow-wrap: anywhere;
 }
+.library-modal-content .library-category-checkbox[data-category-depth="1"] { margin-left: 10px; }
+.library-modal-content .library-category-checkbox[data-category-depth="2"] { margin-left: 20px; }
 .library-modal-content.category-selection-modal select {
     min-height: 44px;
     padding: 10px 12px;
