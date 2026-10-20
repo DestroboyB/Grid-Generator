@@ -8,6 +8,9 @@ import { appState } from "./state.js";
 const board =
     document.getElementById("board");
 
+const boardContainer =
+    document.querySelector(".board-container");
+
 const rowsInput =
     document.getElementById("rows");
 
@@ -86,11 +89,25 @@ function calculateBoardDimensions() {
         );
 
 
+    const containerStyle = boardContainer
+        ? window.getComputedStyle(boardContainer)
+        : null;
+
+    // Size the board to the workspace's actual inner width, not just the
+    // viewport. The workspace has its own padding, which otherwise leaves a
+    // few pixels of horizontal overflow on narrow screens.
+    const containerAvailableWidth = boardContainer && containerStyle
+        ? boardContainer.clientWidth
+            - parseFloat(containerStyle.paddingLeft)
+            - parseFloat(containerStyle.paddingRight)
+        : window.innerWidth * 0.90;
+
     const maxBoardWidth =
-        Math.min(
+        Math.max(0, Math.min(
             window.innerWidth * 0.90,
-            1200
-        );
+            1200,
+            containerAvailableWidth
+        ));
 
 
     const maxBoardHeight =
