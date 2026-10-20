@@ -600,10 +600,6 @@ export async function renderLibrary() {
 
         const viewHeader = document.createElement("div");
         viewHeader.className = "library-view-header";
-        const heading = document.createElement("h3");
-        heading.className = "library-view-heading";
-        heading.textContent = "My Grids:";
-        viewHeader.appendChild(heading);
         renderCategorySelector(categories, viewHeader, grids);
         fragment.appendChild(viewHeader);
 
