@@ -64,3 +64,39 @@ test("outer padding can be changed, undone, and saved", async ({ page }) => {
     await expect(page.locator("#outerPadding")).toHaveValue("18");
     await expect(page.locator("#board")).toHaveCSS("padding", "18px");
 });
+
+
+test("board workspace has no horizontal overflow on narrow screens", async ({ page }) => {
+    await page.goto("/");
+
+    for (const width of [390, 320]) {
+        await page.setViewportSize({ width, height: 900 });
+        // Board sizing is recalculated after a debounced resize.
+        await page.waitForTimeout(150);
+
+        const geometry = await page.locator(".board-container").evaluate(container => {
+            const board = container.querySelector("#board");
+            const containerRect = container.getBoundingClientRect();
+            const boardRect = board.getBoundingClientRect();
+            const style = getComputedStyle(container);
+            const leftLimit = containerRect.left
+                + parseFloat(style.borderLeftWidth)
+                + parseFloat(style.paddingLeft);
+            const rightLimit = containerRect.right
+                - parseFloat(style.borderRightWidth)
+                - parseFloat(style.paddingRight);
+            return {
+                boardLeft: boardRect.left,
+                boardRight: boardRect.right,
+                leftLimit,
+                rightLimit,
+                scrollWidth: container.scrollWidth,
+                clientWidth: container.clientWidth
+            };
+        });
+
+        expect(geometry.boardLeft).toBeGreaterThanOrEqual(geometry.leftLimit - 1);
+        expect(geometry.boardRight).toBeLessThanOrEqual(geometry.rightLimit + 1);
+        expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
+    }
+});
