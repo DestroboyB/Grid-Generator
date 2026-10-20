@@ -207,7 +207,7 @@ test("current grid header supports inline rename, Enter save, Escape cancel, and
 
     await header.click();
     await header.locator("input").fill("Header Rename On Blur");
-    await page.locator("#libraryContent .library-view-heading").first().click();
+    await page.locator("#libraryContent .library-category-selector-trigger").click();
     await expect(header).toHaveText("Header Rename On Blur");
 
     const stored = await page.evaluate(async ids => {
