@@ -45,6 +45,9 @@
 
     box-sizing: border-box;
 
+    /* Keep flex layout from shrinking the board below its grid tracks. */
+    flex-shrink: 0;
+
     overflow: hidden;
 
     justify-content: center;
