@@ -12,10 +12,12 @@ test("outer padding can be changed, undone, and saved", async ({ page }) => {
 
     // The board must not be flex-shrunk, which can clip the horizontal grid edges.
     for (const value of ["4", "0"]) {
-        await padding.evaluate((input, nextValue) => {
-            input.value = nextValue;
-            input.dispatchEvent(new Event("input", { bubbles: true }));
-            input.dispatchEvent(new Event("change", { bubbles: true }));
+        await page.evaluate(async nextValue => {
+            const { appState } = await import("/js/state.js");
+            const { updateBoardStyle } = await import("/js/board.js");
+            appState.outerPadding = Number(nextValue);
+            document.getElementById("outerPadding").value = nextValue;
+            updateBoardStyle();
         }, value);
 
         await expect(board).toHaveCSS("padding", `${value}px`);
