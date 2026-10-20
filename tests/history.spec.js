@@ -1403,6 +1403,13 @@ test("MyAnimeList search tabs stay within the viewport at responsive widths", as
     for (const width of [1280, 850, 600, 390, 320]) {
         await page.setViewportSize({ width, height: 900 });
 
+        // Board sizing is debounced by 100ms after a resize. Wait for the
+        // recalculated board to fit before checking the rest of the layout.
+        await expect.poll(async () => page.evaluate(() => {
+            const rect = document.getElementById("board").getBoundingClientRect();
+            return rect.left >= -1 && rect.right <= window.innerWidth + 1;
+        })).toBe(true);
+
         const layout = await page.evaluate(() => {
             const modal = document.getElementById("malSearchModal");
             const container = modal.querySelector(".mal-search-container");
