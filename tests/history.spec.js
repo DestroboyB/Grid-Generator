@@ -1454,6 +1454,8 @@ test("main workspace and controls do not overflow narrow viewports", async ({ pa
 
     for (const width of [1280, 1024, 850, 768, 600, 390, 320]) {
         await page.setViewportSize({ width, height: 900 });
+        // The app debounces board recalculation by 100ms after resize.
+        await page.waitForTimeout(150);
 
         const layout = await page.evaluate(() => {
             const board = document.getElementById("board").getBoundingClientRect();
