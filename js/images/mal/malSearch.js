@@ -116,8 +116,20 @@ const pageIndicator =
 
 let targetElement = null;
 
-let currentMode =
-    "character";
+const SEARCH_MODE_STORAGE_KEY = "gridGenerator.malSearchMode";
+
+function getSavedSearchMode() {
+    try {
+        const savedMode = localStorage.getItem(SEARCH_MODE_STORAGE_KEY);
+        return ["character", "anime", "byAnime"].includes(savedMode)
+            ? savedMode
+            : "character";
+    } catch {
+        return "character";
+    }
+}
+
+let currentMode = getSavedSearchMode();
 
 // Search mode and displayed result type can differ when browsing anime characters.
 let displayMode = "character";
@@ -217,9 +229,9 @@ export function openMalSearch(element) {
      * while navigating through MAL.
      */
 
-    currentMode =
-        "character";
-    displayMode = "character";
+    // Restore the last search type instead of forcing users to reselect it.
+    currentMode = getSavedSearchMode();
+    displayMode = currentMode === "character" ? "character" : "anime";
     viewingAnimeCharacters = false;
     selectedAnime = null;
     animeSearchSnapshot = null;
@@ -384,6 +396,11 @@ function switchMode(mode) {
 
 
     currentMode = mode;
+    try {
+        localStorage.setItem(SEARCH_MODE_STORAGE_KEY, currentMode);
+    } catch {
+        // Search remains usable if browser storage is unavailable.
+    }
     displayMode = mode === "character" ? "character" : "anime";
     viewingAnimeCharacters = false;
     selectedAnime = null;
