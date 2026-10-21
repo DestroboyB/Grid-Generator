@@ -333,3 +333,36 @@ test("Import Grid is available while Bulk Import remains available", async ({ pa
     await expect(page.locator("#importProjectButton")).toBeVisible();
     await expect(page.locator("#bulkImportButton")).toBeVisible();
 });
+
+test("clearing My Grids search restores the default list without pressing Enter", async ({ page }) => {
+    await page.goto("/");
+    const gridIds = await page.evaluate(async () => {
+        const { createGrid, loadGrid } = await import(
+            `/js/storage/grids.js?clear-library-search=${Date.now()}`
+        );
+        const first = await createGrid({ name: "Clear Search Target" });
+        const second = await createGrid({ name: "Clear Search Other One" });
+        const third = await createGrid({ name: "Clear Search Other Two" });
+        await loadGrid(first.id);
+        return [first.id, second.id, third.id];
+    });
+
+    await page.locator("#libraryButton").click();
+    const search = page.locator("#librarySearchInput");
+    await search.fill("Clear Search Target");
+    await search.press("Enter");
+
+    await expect(page.locator("#libraryContent .library-view-heading")).toHaveText("Search results");
+    await expect(page.locator("#libraryContent [data-grid-id]")).toHaveCount(1);
+    await expect(page.locator(`[data-grid-id="${gridIds[0]}"]`)).toBeVisible();
+
+    // Filling the search field with an empty value fires the same input event
+    // as clearing it with the native X button or deleting the text manually.
+    await search.fill("");
+
+    await expect(page.locator("#libraryContent .library-view-heading")).toHaveCount(0);
+    for (const gridId of gridIds) {
+        await expect(page.locator(`#libraryContent [data-grid-id="${gridId}"]`)).toBeVisible();
+    }
+    await expect(page.locator("#libraryContent [data-grid-id]")).toHaveCount(3);
+});
