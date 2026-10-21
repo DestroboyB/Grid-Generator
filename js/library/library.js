@@ -760,7 +760,15 @@ newCategoryButton?.addEventListener("click", handleCreateNewCategory);
 cancelNewGridButton?.addEventListener("click", closeNewGridModal);
 createNewGridButton?.addEventListener("click", handleCreateNewGrid);
 
-// Search only when Enter is pressed.
+// Search only when Enter is pressed, but restore the default view as soon
+// as a submitted search is cleared (including the native search-field X).
+librarySearchInput?.addEventListener("input", () => {
+    if (!librarySearchInput.value.trim() && isLibrarySearchMode) {
+        isLibrarySearchMode = false;
+        renderLibrary();
+    }
+});
+
 librarySearchInput?.addEventListener("keydown", event => {
     if (event.key === "Enter") {
         event.preventDefault();
