@@ -1458,30 +1458,50 @@ test("main workspace and controls do not overflow narrow viewports", async ({ pa
         await page.waitForTimeout(150);
 
         const layout = await page.evaluate(() => {
-            const board = document.getElementById("board").getBoundingClientRect();
+            const boardElement = document.getElementById("board");
+            const board = boardElement.getBoundingClientRect();
+            const containerElement = document.querySelector(".board-container");
+            const container = containerElement.getBoundingClientRect();
             const controls = document.querySelector(".controls").getBoundingClientRect();
             const header = document.querySelector(".app-header").getBoundingClientRect();
+            const boardStyle = getComputedStyle(boardElement);
+            const containerStyle = getComputedStyle(containerElement);
             return {
                 viewportWidth: window.innerWidth,
                 documentWidth: document.documentElement.scrollWidth,
                 bodyWidth: document.body.scrollWidth,
                 boardLeft: board.left,
                 boardRight: board.right,
+                boardWidth: board.width,
+                boardInlineWidth: boardElement.style.width,
+                boardComputedWidth: boardStyle.width,
+                boardPadding: boardStyle.padding,
+                boardGridColumns: boardStyle.gridTemplateColumns,
+                boardGap: boardStyle.gap,
+                boardFlexShrink: boardStyle.flexShrink,
+                firstCellWidth: boardElement.firstElementChild?.getBoundingClientRect().width,
+                containerLeft: container.left,
+                containerRight: container.right,
+                containerWidth: container.width,
+                containerClientWidth: containerElement.clientWidth,
+                containerPadding: containerStyle.padding,
+                containerOverflowX: containerStyle.overflowX,
                 controlsLeft: controls.left,
                 controlsRight: controls.right,
                 headerLeft: header.left,
                 headerRight: header.right
             };
         });
+        const details = JSON.stringify(layout);
 
-        expect(layout.documentWidth, `document overflow at ${width}px`).toBeLessThanOrEqual(width);
-        expect(layout.bodyWidth, `body overflow at ${width}px`).toBeLessThanOrEqual(width);
-        expect(layout.boardLeft, `board starts off-screen at ${width}px`).toBeGreaterThanOrEqual(-1);
-        expect(layout.boardRight, `board ends off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
-        expect(layout.controlsLeft, `controls start off-screen at ${width}px`).toBeGreaterThanOrEqual(-1);
-        expect(layout.controlsRight, `controls end off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
-        expect(layout.headerLeft, `header starts off-screen at ${width}px`).toBeGreaterThanOrEqual(-1);
-        expect(layout.headerRight, `header ends off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
+        expect(layout.documentWidth, `document overflow at ${width}px: ${details}`).toBeLessThanOrEqual(width);
+        expect(layout.bodyWidth, `body overflow at ${width}px: ${details}`).toBeLessThanOrEqual(width);
+        expect(layout.boardLeft, `board starts off-screen at ${width}px: ${details}`).toBeGreaterThanOrEqual(-1);
+        expect(layout.boardRight, `board ends off-screen at ${width}px: ${details}`).toBeLessThanOrEqual(width + 1);
+        expect(layout.controlsLeft, `controls start off-screen at ${width}px: ${details}`).toBeGreaterThanOrEqual(-1);
+        expect(layout.controlsRight, `controls end off-screen at ${width}px: ${details}`).toBeLessThanOrEqual(width + 1);
+        expect(layout.headerLeft, `header starts off-screen at ${width}px: ${details}`).toBeGreaterThanOrEqual(-1);
+        expect(layout.headerRight, `header ends off-screen at ${width}px: ${details}`).toBeLessThanOrEqual(width + 1);
     }
 });
 
