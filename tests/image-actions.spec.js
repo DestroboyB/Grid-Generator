@@ -99,7 +99,7 @@ test("crop editor supports precise keyboard and button movement while constraini
     // Leave room on every side so the test checks movement, not a valid boundary stop.
     await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
-        appState.cropper.setData({ x: 100, y: 25, width: 100, height: 100 });
+        appState.cropper.setCropBoxData({ left: 100, top: 25, width: 100, height: 100 });
     });
 
     const initial = await readCropBox();
