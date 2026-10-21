@@ -1835,3 +1835,73 @@ test("MyAnimeList search remembers the last selected mode when reopened and relo
     await expect(page.locator("#malAnimeTab")).toHaveClass(/active/);
     await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for an anime...");
 });
+
+
+test("MyAnimeList anime picture gallery omits repeated image URLs", async ({ page }) => {
+    const primaryImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=";
+    const otherImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+
+    await page.route("https://jikan.lucashdo.com/v1/**", async route => {
+        const url = new URL(route.request().url());
+
+        if (url.pathname === "/v1/anime" && url.searchParams.has("q")) {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [{
+                        mal_id: 1,
+                        title: "Duplicate Gallery Test",
+                        images: { jpg: { image_url: primaryImage } }
+                    }],
+                    meta: { pagination: { has_next_page: false } }
+                })
+            });
+        } else if (url.pathname === "/v1/anime/1/pictures") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [
+                        { imageUrl: primaryImage },
+                        { imageUrl: primaryImage },
+                        { imageUrl: otherImage },
+                        { imageUrl: otherImage }
+                    ]
+                })
+            });
+        } else if (url.pathname === "/v1/anime/1") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: {
+                        mal_id: 1,
+                        title: "Duplicate Gallery Test",
+                        images: { jpg: { image_url: primaryImage } }
+                    }
+                })
+            });
+        } else {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [] })
+            });
+        }
+    });
+
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+
+    await page.locator("#malAnimeTab").click();
+    await page.locator("#malSearchInput").fill("Duplicate Gallery Test");
+    await page.locator("#malSearchButton").click();
+    const result = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(result).toBeVisible();
+    await result.click();
+
+    await expect(page.locator("#malSearchResults .mal-gallery-picture")).toHaveCount(2);
+});
