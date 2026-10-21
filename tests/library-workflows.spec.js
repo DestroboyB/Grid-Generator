@@ -364,7 +364,4 @@ test("clearing My Grids search restores the default list without pressing Enter"
     for (const gridId of gridIds) {
         await expect(page.locator(`#libraryContent [data-grid-id="${gridId}"]`)).toBeVisible();
     }
-    // The app may also show its pre-existing default grid, so assert the
-    // seeded grids are restored rather than requiring an exact total count.
-    await expect(page.locator("#libraryContent [data-grid-id]")).toHaveCount(await page.locator("#libraryContent [data-grid-id]").count());
 });
