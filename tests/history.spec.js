@@ -1805,3 +1805,33 @@ test("MyAnimeList anime search can browse characters and import a character pict
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveAttribute("src", importedSource);
 });
+
+
+test("MyAnimeList search remembers the last selected mode when reopened and reloaded", async ({ page }) => {
+    await waitForApp(page);
+
+    const openSearch = async () => {
+        await page.locator('#board .image[data-index="0"]').click();
+        await page.locator("#openImageSourceMenuButton").click();
+        await page.locator("#searchMalButton").click();
+        await expect(page.locator("#malSearchModal")).toBeVisible();
+    };
+
+    await openSearch();
+    await page.locator("#malAnimeTab").click();
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for an anime...");
+    await page.locator("#malSearchCloseButton").click();
+    await expect(page.locator("#malSearchModal")).toBeHidden();
+
+    await openSearch();
+    await expect(page.locator("#malAnimeTab")).toHaveClass(/active/);
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for an anime...");
+
+    await page.locator("#malSearchCloseButton").click();
+    await page.reload();
+    await waitForApp(page);
+    await openSearch();
+
+    await expect(page.locator("#malAnimeTab")).toHaveClass(/active/);
+    await expect(page.locator("#malSearchInput")).toHaveAttribute("placeholder", "Search for an anime...");
+});
