@@ -67,3 +67,50 @@ test("reopening an image uses the current board ratio", async ({ page }) => {
     })).toBeCloseTo(16 / 9, 1);
 });
 
+
+
+test("crop editor supports precise keyboard and button movement while constraining the crop to the image", async ({ page }) => {
+    await page.goto("/");
+    const tile = page.locator('#board .image[data-index="0"]');
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#cde"/></svg>');
+    await chooser.setFiles({ name: "crop-adjust.svg", mimeType: "image/svg+xml", buffer: svg });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(400);
+    await expect.poll(() => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return appState.cropper.getCropBoxData().width;
+    })).toBeGreaterThan(0);
+
+    const readCropBox = () => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return {
+            ...appState.cropper.getCropBoxData(),
+            viewMode: appState.cropper.options.viewMode
+        };
+    });
+
+    const initial = await readCropBox();
+    expect(initial.viewMode).toBe(1);
+
+    await page.locator("#cropNudgeUp").click();
+    const afterButton = await readCropBox();
+    expect(afterButton.left).toBeCloseTo(initial.left, 0);
+    expect(afterButton.top).toBeCloseTo(initial.top - 1, 0);
+
+    await page.keyboard.press("ArrowRight");
+    const afterKey = await readCropBox();
+    expect(afterKey.left).toBeCloseTo(afterButton.left + 1, 0);
+    expect(afterKey.top).toBeCloseTo(afterButton.top, 0);
+
+    await page.keyboard.press("Shift+ArrowDown");
+    const afterShift = await readCropBox();
+    expect(afterShift.top).toBeCloseTo(afterKey.top + 10, 0);
+    await page.locator("#cancelButton").click();
+});
