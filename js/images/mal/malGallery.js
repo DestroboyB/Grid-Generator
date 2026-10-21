@@ -227,6 +227,16 @@ export async function openPictureGallery({
         }
 
 
+        // Jikan can occasionally repeat the same picture URL. Keep the
+        // first occurrence so users don't have to sift through duplicates.
+        const seenPictureURLs = new Set();
+        pictures = pictures.filter(picture => {
+            const url = getPictureURL(picture);
+            if (!url || seenPictureURLs.has(url)) return false;
+            seenPictureURLs.add(url);
+            return true;
+        });
+
         /*
          * Show the total number of
          * available pictures.
