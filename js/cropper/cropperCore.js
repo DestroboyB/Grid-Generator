@@ -127,8 +127,9 @@ export function createCropper(
                 aspectRatio:
                     cropRatio,
 
+                // Keep the crop area inside the image instead of allowing blank space.
                 viewMode:
-                    0,
+                    1,
 
                 autoCropArea:
                     1,
