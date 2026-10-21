@@ -184,6 +184,45 @@
     border-color: var(--color-text-subtle);
 }
 
+.editor-panel[data-panel="transform"] {
+    height: 142px;
+    min-height: 142px;
+    max-height: 142px;
+}
+
+.editor-crop-nudge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.editor-crop-nudge-label {
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.editor-crop-nudge-buttons {
+    height: auto;
+    justify-content: center;
+    gap: 8px;
+}
+
+.editor-crop-nudge-buttons button {
+    width: 38px;
+    min-width: 38px;
+    padding: 4px;
+    font-size: 16px;
+}
+
+.editor-crop-nudge-help {
+    color: var(--color-text-muted);
+    font-size: 11px;
+    text-align: center;
+}
+
 /* Adjustments */
 
 .adjust-controls {
