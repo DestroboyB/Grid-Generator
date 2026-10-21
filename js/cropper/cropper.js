@@ -79,6 +79,54 @@ setupAdjustments();
 
 setupFilters();
 
+// Fine crop movement is useful for small alignment corrections that are
+// difficult to make reliably by dragging with a mouse or touch.
+function moveCropBox(dx, dy) {
+    if (!appState.cropper || cropModal.style.display === "none" ||
+        cropModal.style.visibility === "hidden") return;
+
+    const cropBox = appState.cropper.getCropBoxData();
+    if (!cropBox) return;
+
+    appState.cropper.setCropBoxData({
+        left: cropBox.left + dx,
+        top: cropBox.top + dy
+    });
+}
+
+const cropNudgeButtons = [
+    ["cropNudgeUp", 0, -1],
+    ["cropNudgeLeft", -1, 0],
+    ["cropNudgeDown", 0, 1],
+    ["cropNudgeRight", 1, 0]
+];
+
+for (const [id, dx, dy] of cropNudgeButtons) {
+    document.getElementById(id)?.addEventListener("click", () => moveCropBox(dx, dy));
+}
+
+document.addEventListener("keydown", event => {
+    if (!appState.cropper || cropModal.style.display === "none" ||
+        cropModal.style.visibility === "hidden" || event.altKey || event.ctrlKey || event.metaKey) return;
+
+    const target = event.target;
+    if (target instanceof HTMLElement &&
+        (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+
+    const step = event.shiftKey ? 10 : 1;
+    const moves = {
+        ArrowUp: [0, -step],
+        ArrowLeft: [-step, 0],
+        ArrowDown: [0, step],
+        ArrowRight: [step, 0]
+    };
+    const movement = moves[event.key];
+    if (!movement) return;
+
+    event.preventDefault();
+    moveCropBox(...movement);
+});
+
 
 // ========================================
 // Transform Buttons
