@@ -142,7 +142,7 @@ test("crop editor supports precise movement and optionally allows cropping outsi
     })).toBeGreaterThan(0);
     const modalMutations = await page.evaluate(() => window.cropperModalStyleMutations);
     expect(
-        modalMutations.some(mutation => /visibility\\s*:\\s*hidden/.test(mutation.oldValue)),
+        modalMutations.some(mutation => /visibility\s*:\s*hidden/.test(mutation.oldValue)),
         JSON.stringify(modalMutations)
     ).toBe(false);
 
