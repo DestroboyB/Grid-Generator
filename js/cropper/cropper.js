@@ -121,12 +121,15 @@ cropOutsideImageToggle?.addEventListener("change", () => {
         return;
     }
 
-    // CropperJS reads viewMode when enforcing crop-box constraints. Updating
-    // the existing instance avoids destroying the preview and flashing the UI.
+    // CropperJS caches its viewMode constraint in "limited" during setup.
+    // Update both values in place instead of destroying the preview and flashing.
     currentCropper.options.viewMode = cropperState.allowOutsideImage ? 0 : 1;
+    currentCropper.limited = currentCropper.options.viewMode === 1 ||
+        currentCropper.options.viewMode === 2;
 
-    // Reapply the current geometry so the stricter mode clamps the box back
-    // inside the image when outside-image cropping is turned off.
+    // Recalculate the crop-box limits under the new mode, then reapply its
+    // geometry. Turning the option off clamps the box back inside the image.
+    currentCropper.limitCropBox(true, true);
     currentCropper.setCropBoxData(currentCropper.getCropBoxData());
 });
 
