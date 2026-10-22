@@ -27,11 +27,6 @@ function shareUnchangedHistoryImages(stack) {
             continue;
         }
 
-        if (JSON.stringify(previousImages) === JSON.stringify(currentImages)) {
-            stack[index].images = previousImages;
-            continue;
-        }
-
         const sharedLength = Math.min(previousImages.length, currentImages.length);
         for (let imageIndex = 0; imageIndex < sharedLength; imageIndex += 1) {
             if (previousImages[imageIndex] === currentImages[imageIndex]) {
