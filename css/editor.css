@@ -466,6 +466,15 @@
         padding: 12px 16px;
     }
 
+    /* The Transform controls need less bottom padding on phones so the
+       nudge controls sit closer to Cancel/Apply without scrolling. */
+    .editor-panel[data-panel="transform"] {
+        height: 90px;
+        min-height: 90px;
+        max-height: 90px;
+        padding: 8px 10px 0;
+    }
+
     .editor-footer {
         padding: 12px 16px;
     }
