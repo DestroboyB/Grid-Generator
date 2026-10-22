@@ -79,6 +79,19 @@ setupAdjustments();
 
 setupFilters();
 
+const cropOutsideImageToggle = document.getElementById("cropOutsideImageToggle");
+cropOutsideImageToggle?.addEventListener("change", () => {
+    cropperState.allowOutsideImage = cropOutsideImageToggle.checked;
+
+    if (!appState.cropper) {
+        return;
+    }
+
+    // CropperJS reads viewMode from its live options when crop geometry changes.
+    appState.cropper.options.viewMode = cropperState.allowOutsideImage ? 0 : 1;
+    appState.cropper.setCropBoxData(appState.cropper.getCropBoxData());
+});
+
 // Fine crop movement is useful for small alignment corrections that are
 // difficult to make reliably by dragging with a mouse or touch.
 function moveCropBox(dx, dy) {
@@ -516,6 +529,10 @@ export function openCropForExistingImage(
     // ========================================
     // Restore Editing State
     // ========================================
+
+    // Start each editing session constrained to the image; users can opt out
+    // from the Transform panel when they need extra crop area.
+    cropperState.allowOutsideImage = false;
 
     cropperState.editingImageData =
         imageData;
