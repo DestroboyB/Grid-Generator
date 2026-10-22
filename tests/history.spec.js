@@ -1966,3 +1966,75 @@ test("MyAnimeList anime picture gallery omits repeated image URLs", async ({ pag
 
     await expect(page.locator("#malSearchResults .mal-gallery-picture")).toHaveCount(2);
 });
+
+test("anime gallery does not append a separate cover thumbnail when its URL differs", async ({ page }) => {
+    const primaryImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=";
+
+    await page.route("https://images.example.test/**", route => route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: tinyPng
+    }));
+
+    await page.route("https://jikan.lucashdo.com/v1/**", async route => {
+        const url = new URL(route.request().url());
+
+        if (url.pathname === "/v1/anime" && url.searchParams.has("q")) {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [{
+                        mal_id: 11319,
+                        title: "Zero no Tsukaima F",
+                        images: { jpg: { image_url: primaryImage } }
+                    }],
+                    meta: { pagination: { has_next_page: false } }
+                })
+            });
+        } else if (url.pathname === "/v1/anime/11319/pictures") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [1, 2, 3, 4].map(index => ({
+                        imageUrl: `https://images.example.test/gallery/${index}.jpg`
+                    }))
+                })
+            });
+        } else if (url.pathname === "/v1/anime/11319") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: {
+                        mal_id: 11319,
+                        title: "Zero no Tsukaima F",
+                        images: { jpg: { image_url: primaryImage } }
+                    }
+                })
+            });
+        } else {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [] })
+            });
+        }
+    });
+
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+
+    await page.locator("#malAnimeTab").click();
+    await page.locator("#malSearchInput").fill("Zero no Tsukaima F");
+    await page.locator("#malSearchButton").click();
+    const result = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(result).toBeVisible();
+    await result.click();
+
+    await expect(page.locator("#malSearchResults .mal-gallery-picture")).toHaveCount(4);
+});
+
