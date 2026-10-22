@@ -134,8 +134,17 @@ test("crop editor supports precise movement and optionally allows cropping outsi
         }).observe(modal, { attributes: true, attributeFilter: ["style"], attributeOldValue: true });
     });
 
+    await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        window.cropperInstanceBeforeOutsideToggle = appState.cropper;
+    });
+
     await outsideImageToggle.check();
     await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return appState.cropper === window.cropperInstanceBeforeOutsideToggle;
+    })).toBe(true);
     await expect.poll(() => page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
         return appState.cropper?.getCropBoxData()?.width ?? 0;
@@ -165,6 +174,10 @@ test("crop editor supports precise movement and optionally allows cropping outsi
     expect(outsideCrop.crop.left).toBeLessThan(outsideCrop.canvas.left);
 
     await outsideImageToggle.uncheck();
+    await expect.poll(() => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return appState.cropper === window.cropperInstanceBeforeOutsideToggle;
+    })).toBe(true);
     const constrainedCrop = await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
         return {
