@@ -69,7 +69,7 @@ test("reopening an image uses the current board ratio", async ({ page }) => {
 
 
 
-test("crop editor supports precise keyboard and button movement while constraining the crop to the image", async ({ page }) => {
+test("crop editor supports precise movement and optionally allows cropping outside the image", async ({ page }) => {
     await page.goto("/");
     const tile = page.locator('#board .image[data-index="0"]');
     await tile.click();
@@ -118,5 +118,40 @@ test("crop editor supports precise keyboard and button movement while constraini
     await page.keyboard.press("Shift+ArrowDown");
     const afterShift = await readCropBox();
     expect(afterShift.top).toBeCloseTo(afterKey.top + 10, 0);
+
+    const outsideImageToggle = page.locator("#cropOutsideImageToggle");
+    await expect(outsideImageToggle).not.toBeChecked();
+    await outsideImageToggle.check();
+
+    const outsideCrop = await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const canvas = appState.cropper.getCanvasData();
+        appState.cropper.setCropBoxData({
+            left: canvas.left - 20,
+            top: canvas.top + 10,
+            width: 100,
+            height: 100
+        });
+        return {
+            viewMode: appState.cropper.options.viewMode,
+            crop: appState.cropper.getCropBoxData(),
+            canvas
+        };
+    });
+    expect(outsideCrop.viewMode).toBe(0);
+    expect(outsideCrop.crop.left).toBeLessThan(outsideCrop.canvas.left);
+
+    await outsideImageToggle.uncheck();
+    const constrainedCrop = await page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return {
+            viewMode: appState.cropper.options.viewMode,
+            crop: appState.cropper.getCropBoxData(),
+            canvas: appState.cropper.getCanvasData()
+        };
+    });
+    expect(constrainedCrop.viewMode).toBe(1);
+    expect(constrainedCrop.crop.left).toBeGreaterThanOrEqual(constrainedCrop.canvas.left - 1);
+
     await page.locator("#cancelButton").click();
 });
