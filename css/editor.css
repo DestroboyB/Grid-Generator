@@ -185,9 +185,9 @@
 }
 
 .editor-panel[data-panel="transform"] {
-    height: 180px;
-    min-height: 180px;
-    max-height: 180px;
+    height: clamp(132px, 16dvh, 150px);
+    min-height: 132px;
+    max-height: 150px;
     padding: 8px 20px;
 }
 
@@ -469,9 +469,9 @@
     /* Keep every Transform control visible together instead of making
        users scroll this panel to reach the crop nudges. */
     .editor-panel[data-panel="transform"] {
-        height: 180px;
-        min-height: 180px;
-        max-height: 180px;
+        height: clamp(132px, 16dvh, 150px);
+        min-height: 132px;
+        max-height: 150px;
         padding: 8px 10px;
         overflow: hidden;
     }
