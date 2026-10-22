@@ -137,6 +137,7 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
         expect(await page.evaluate(() => window.scrollY), `Background scrolled on ${tool} tab`).toBe(0);
     }
 
+    await page.locator('.editor-tool[data-tool="transform"]').click();
     await expect(page.locator('.editor-panel[data-panel="transform"]')).toHaveClass(/active/);
     const finalTransformLayout = await page.locator('.editor-panel[data-panel="transform"]').evaluate(panel => {
         const panelRect = panel.getBoundingClientRect();
