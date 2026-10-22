@@ -85,6 +85,15 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
 
     await expect(page.locator("#cropButton")).toBeVisible();
     await expect(page.locator("#restoreOriginalButton")).toBeVisible();
+
+    await page.locator('.editor-tool[data-tool="transform"]').click();
+    await expect(page.locator("#cropOutsideImageToggle")).toBeVisible();
+    const transformGap = await page.evaluate(() => {
+        const help = document.querySelector(".editor-crop-nudge-help").getBoundingClientRect();
+        const footer = document.querySelector(".editor-footer").getBoundingClientRect();
+        return footer.top - help.bottom;
+    });
+    expect(transformGap).toBeLessThan(20);
 });
 
 test("mobile library scrolls internally with many saved grids", async ({ page }) => {
