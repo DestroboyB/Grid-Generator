@@ -118,13 +118,15 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
             controls
         };
     });
-    expect(transformLayout.panelHeight).toBeGreaterThanOrEqual(130);
+    expect(transformLayout.panelHeight).toBeGreaterThanOrEqual(170);
     expect(transformLayout.allControlsVisible, JSON.stringify(transformLayout.controls)).toBe(true);
 
     // The modal should lock the document behind it even when the active tab is swiped.
     await expect.poll(() => page.locator("body").evaluate(body =>
         body.classList.contains("cropper-modal-open") &&
-        getComputedStyle(body).overflow === "hidden"
+        getComputedStyle(body).position === "fixed" &&
+        getComputedStyle(body).overflow === "hidden" &&
+        getComputedStyle(document.documentElement).overflow === "hidden"
     )).toBe(true);
     await page.evaluate(() => {
         document.body.style.minHeight = "200vh";
