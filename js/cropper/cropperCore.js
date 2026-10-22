@@ -115,6 +115,12 @@ export function createCropper(
         );
 
 
+    // Keep the toggle in sync when opening or reopening an image.
+    const outsideImageToggle = document.getElementById("cropOutsideImageToggle");
+    if (outsideImageToggle) {
+        outsideImageToggle.checked = Boolean(cropperState.allowOutsideImage);
+    }
+
     // ========================================
     // Create Cropper
     // ========================================
@@ -127,9 +133,10 @@ export function createCropper(
                 aspectRatio:
                     cropRatio,
 
-                // Keep the crop area inside the image instead of allowing blank space.
+                // The default constrains the crop to the image. The Transform
+                // panel can temporarily allow the crop box beyond the image.
                 viewMode:
-                    1,
+                    cropperState.allowOutsideImage ? 0 : 1,
 
                 autoCropArea:
                     1,
