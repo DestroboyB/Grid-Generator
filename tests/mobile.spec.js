@@ -118,7 +118,8 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
             controls
         };
     });
-    expect(transformLayout.panelHeight).toBeGreaterThanOrEqual(170);
+    expect(transformLayout.panelHeight).toBeGreaterThanOrEqual(125);
+    expect(transformLayout.panelHeight).toBeLessThanOrEqual(155);
     expect(transformLayout.allControlsVisible, JSON.stringify(transformLayout.controls)).toBe(true);
 
     // The modal should lock the document behind it even when the active tab is swiped.
