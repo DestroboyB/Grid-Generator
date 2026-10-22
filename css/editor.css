@@ -500,6 +500,12 @@
         font-size: clamp(10px, 2.5vw, 14px);
     }
 
+    .editor-crop-nudge-buttons button {
+        width: 38px;
+        min-width: 38px;
+        padding: 4px;
+    }
+
     .filter-buttons {
         gap: 5px;
     }
