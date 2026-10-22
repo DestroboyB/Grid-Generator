@@ -88,6 +88,55 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
 
     await page.locator('.editor-tool[data-tool="transform"]').click();
     await expect(page.locator("#cropOutsideImageToggle")).toBeVisible();
+
+    const transformLayout = await page.evaluate(() => {
+        const panel = document.querySelector('.editor-panel[data-panel="transform"]');
+        const panelRect = panel.getBoundingClientRect();
+        const controls = [
+            "#rotateLeftButton",
+            "#rotateRightButton",
+            "#flipHorizontalButton",
+            "#flipVerticalButton",
+            "#cropOutsideImageToggle",
+            "#cropNudgeUp",
+            "#cropNudgeLeft",
+            "#cropNudgeDown",
+            "#cropNudgeRight",
+            ".editor-crop-nudge-help"
+        ].map(selector => {
+            const rect = document.querySelector(selector).getBoundingClientRect();
+            return {
+                selector,
+                top: rect.top,
+                bottom: rect.bottom,
+                visible: rect.top >= panelRect.top && rect.bottom <= panelRect.bottom
+            };
+        });
+        return {
+            panelHeight: panelRect.height,
+            allControlsVisible: controls.every(control => control.visible),
+            controls
+        };
+    });
+    expect(transformLayout.panelHeight).toBeGreaterThanOrEqual(130);
+    expect(transformLayout.allControlsVisible, JSON.stringify(transformLayout.controls)).toBe(true);
+
+    // The modal should lock the document behind it even when the active tab is swiped.
+    await expect.poll(() => page.locator("body").evaluate(body =>
+        body.classList.contains("cropper-modal-open") &&
+        getComputedStyle(body).overflow === "hidden"
+    )).toBe(true);
+    await page.evaluate(() => {
+        document.body.style.minHeight = "200vh";
+        window.scrollTo(0, 0);
+    });
+    for (const tool of ["transform", "adjust", "filters"]) {
+        await page.locator(`.editor-tool[data-tool="${tool}"]`).click();
+        await page.mouse.move(180, 650);
+        await page.mouse.wheel(0, 300);
+        expect(await page.evaluate(() => window.scrollY), `Background scrolled on ${tool} tab`).toBe(0);
+    }
+
     const transformGap = await page.evaluate(() => {
         const help = document.querySelector(".editor-crop-nudge-help").getBoundingClientRect();
         const footer = document.querySelector(".editor-footer").getBoundingClientRect();
