@@ -40,6 +40,21 @@ const cropModal =
         "cropModal"
     );
 
+// Keep the document behind the editor stationary while touch gestures happen
+// inside any editor tab. The modal itself is not a scrolling container.
+const syncCropperScrollLock = () => {
+    document.body.classList.toggle(
+        "cropper-modal-open",
+        cropModal.style.display === "flex"
+    );
+};
+
+new MutationObserver(syncCropperScrollLock).observe(cropModal, {
+    attributes: true,
+    attributeFilter: ["style"]
+});
+syncCropperScrollLock();
+
 const cropImage =
     document.getElementById(
         "cropImage"
@@ -107,13 +122,12 @@ cropOutsideImageToggle?.addEventListener("change", () => {
         cropBox
     };
 
-    cropModal.style.visibility = "hidden";
+    // Rebuild CropperJS with the updated viewMode, but keep the editor
+    // modal visible throughout so the checkbox never closes the whole editor.
     currentCropper.destroy();
     appState.cropper = null;
 
-    createCropper(cropImage, imageRatioInput, () => {
-        cropModal.style.visibility = "visible";
-    });
+    createCropper(cropImage, imageRatioInput);
 });
 
 // Fine crop movement is useful for small alignment corrections that are
