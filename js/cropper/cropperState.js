@@ -8,6 +8,8 @@ export const cropperState = {
 
     flipY: false,
 
+    allowOutsideImage: false,
+
 
     // ========================================
     // Selected Filter
@@ -53,6 +55,9 @@ export function resetCropperState() {
         false;
 
     cropperState.flipY =
+        false;
+
+    cropperState.allowOutsideImage =
         false;
 
 
