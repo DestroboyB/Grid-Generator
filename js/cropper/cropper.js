@@ -43,10 +43,9 @@ const cropModal =
 // Keep the document behind the editor stationary while touch gestures happen
 // inside any editor tab. The modal itself is not a scrolling container.
 const syncCropperScrollLock = () => {
-    document.body.classList.toggle(
-        "cropper-modal-open",
-        cropModal.style.display === "flex"
-    );
+    const isOpen = cropModal.style.display === "flex";
+    document.documentElement.classList.toggle("cropper-modal-open", isOpen);
+    document.body.classList.toggle("cropper-modal-open", isOpen);
 };
 
 new MutationObserver(syncCropperScrollLock).observe(cropModal, {
