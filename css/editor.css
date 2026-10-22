@@ -185,9 +185,10 @@
 }
 
 .editor-panel[data-panel="transform"] {
-    height: 170px;
-    min-height: 170px;
-    max-height: 170px;
+    height: 140px;
+    min-height: 140px;
+    max-height: 140px;
+    padding: 8px 20px;
 }
 
 .editor-panel[data-panel="transform"] > .editor-button-row {
@@ -199,8 +200,33 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    margin-top: 10px;
+    gap: 3px;
+    margin-top: 6px;
+}
+
+.editor-crop-nudge-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.editor-crop-outside-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--color-text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.editor-crop-outside-toggle input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--color-primary);
 }
 
 .editor-crop-nudge-label {
