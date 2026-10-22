@@ -42,10 +42,29 @@ const cropModal =
 
 // Keep the document behind the editor stationary while touch gestures happen
 // inside any editor tab. The modal itself is not a scrolling container.
+let cropperLockedScrollY = null;
+
 const syncCropperScrollLock = () => {
     const isOpen = cropModal.style.display === "flex";
-    document.documentElement.classList.toggle("cropper-modal-open", isOpen);
-    document.body.classList.toggle("cropper-modal-open", isOpen);
+    const root = document.documentElement;
+    const body = document.body;
+
+    if (isOpen && cropperLockedScrollY === null) {
+        cropperLockedScrollY = window.scrollY;
+        body.style.setProperty("--cropper-scroll-lock-top", `-${cropperLockedScrollY}px`);
+        root.classList.add("cropper-modal-open");
+        body.classList.add("cropper-modal-open");
+        return;
+    }
+
+    if (!isOpen && cropperLockedScrollY !== null) {
+        const restoreScrollY = cropperLockedScrollY;
+        cropperLockedScrollY = null;
+        root.classList.remove("cropper-modal-open");
+        body.classList.remove("cropper-modal-open");
+        body.style.removeProperty("--cropper-scroll-lock-top");
+        window.scrollTo(0, restoreScrollY);
+    }
 };
 
 new MutationObserver(syncCropperScrollLock).observe(cropModal, {
@@ -97,36 +116,18 @@ const cropOutsideImageToggle = document.getElementById("cropOutsideImageToggle")
 cropOutsideImageToggle?.addEventListener("change", () => {
     cropperState.allowOutsideImage = cropOutsideImageToggle.checked;
 
-    if (!appState.cropper) {
+    const currentCropper = appState.cropper;
+    if (!currentCropper) {
         return;
     }
 
-    // CropperJS applies viewMode constraints while initializing its crop box.
-    // Recreate it with the new mode while restoring the current crop geometry.
-    const currentCropper = appState.cropper;
-    const crop = currentCropper.getData();
-    const cropBox = currentCropper.getCropBoxData();
-    const editingImageData = cropperState.editingImageData ?? {};
+    // CropperJS reads viewMode when enforcing crop-box constraints. Updating
+    // the existing instance avoids destroying the preview and flashing the UI.
+    currentCropper.options.viewMode = cropperState.allowOutsideImage ? 0 : 1;
 
-    cropperState.editingImageData = {
-        ...editingImageData,
-        source: editingImageData.source ?? cropImage.src,
-        originalSource: editingImageData.originalSource ?? editingImageData.source ?? cropImage.src,
-        crop: {
-            x: crop.x,
-            y: crop.y,
-            width: crop.width,
-            height: crop.height
-        },
-        cropBox
-    };
-
-    // Rebuild CropperJS with the updated viewMode, but keep the editor
-    // modal visible throughout so the checkbox never closes the whole editor.
-    currentCropper.destroy();
-    appState.cropper = null;
-
-    createCropper(cropImage, imageRatioInput);
+    // Reapply the current geometry so the stricter mode clamps the box back
+    // inside the image when outside-image cropping is turned off.
+    currentCropper.setCropBoxData(currentCropper.getCropBoxData());
 });
 
 // Fine crop movement is useful for small alignment corrections that are
