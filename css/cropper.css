@@ -52,9 +52,17 @@
 
 /* Prevent touch overscroll from moving the page behind the editor. */
 html.cropper-modal-open {
+    height: 100%;
+    overflow: hidden;
     overscroll-behavior: none;
 }
 
 body.cropper-modal-open {
+    position: fixed;
+    top: var(--cropper-scroll-lock-top, 0px);
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
     overflow: hidden;
+    overscroll-behavior: none;
 }
