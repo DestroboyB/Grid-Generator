@@ -30,6 +30,47 @@ async function addImageToFirstTile(page) {
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
 }
 
+test("history budget counts shared image entries once across snapshots", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { trimHistoryStack } = await import("/js/history.js");
+        const payload = "x".repeat(1024 * 1024);
+        let images = Array.from({ length: 4 }, (_, index) => ({
+            source: `data:image/png;base64,${payload}${index}`
+        }));
+        const stack = [];
+
+        for (let stateIndex = 0; stateIndex < 5; stateIndex += 1) {
+            if (stateIndex > 0) {
+                images = images.map(image => ({ ...image }));
+                images[0] = {
+                    source: `data:image/png;base64,${payload}revision-${stateIndex}`
+                };
+            }
+
+            stack.push({
+                rows: 2,
+                columns: 2,
+                ratio: "1:1",
+                spacing: stateIndex,
+                images: images.map(image => ({ ...image }))
+            });
+        }
+
+        trimHistoryStack(stack, 10, 12 * 1024 * 1024);
+        return {
+            stateCount: stack.length,
+            unchangedImageShared: stack[0].images[1] === stack[4].images[1],
+            changedImageDistinct: stack[0].images[0] !== stack[4].images[0]
+        };
+    });
+
+    expect(result.stateCount).toBe(5);
+    expect(result.unchangedImageShared).toBe(true);
+    expect(result.changedImageDistinct).toBe(true);
+});
+
 test("new board starts with Undo and Redo disabled", async ({ page }) => {
     await waitForApp(page);
     await expect(page.locator("#undoButton")).toBeDisabled();
