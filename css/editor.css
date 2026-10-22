@@ -185,9 +185,9 @@
 }
 
 .editor-panel[data-panel="transform"] {
-    height: 140px;
-    min-height: 140px;
-    max-height: 140px;
+    height: 180px;
+    min-height: 180px;
+    max-height: 180px;
     padding: 8px 20px;
 }
 
@@ -469,9 +469,9 @@
     /* Keep every Transform control visible together instead of making
        users scroll this panel to reach the crop nudges. */
     .editor-panel[data-panel="transform"] {
-        height: 140px;
-        min-height: 140px;
-        max-height: 140px;
+        height: 180px;
+        min-height: 180px;
+        max-height: 180px;
         padding: 8px 10px;
         overflow: hidden;
     }
@@ -550,9 +550,9 @@
 
     /* Compact the complete Transform control set for short landscape screens. */
     .editor-panel[data-panel="transform"] {
-        height: 104px;
-        min-height: 104px;
-        max-height: 104px;
+        height: 124px;
+        min-height: 124px;
+        max-height: 124px;
         padding: 4px 8px;
         overflow: hidden;
     }
