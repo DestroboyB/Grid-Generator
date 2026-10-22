@@ -88,12 +88,89 @@ test("image editor tabs and controls remain usable on a phone-sized viewport", a
 
     await page.locator('.editor-tool[data-tool="transform"]').click();
     await expect(page.locator("#cropOutsideImageToggle")).toBeVisible();
-    const transformGap = await page.evaluate(() => {
-        const help = document.querySelector(".editor-crop-nudge-help").getBoundingClientRect();
-        const footer = document.querySelector(".editor-footer").getBoundingClientRect();
-        return footer.top - help.bottom;
+
+    const transformLayout = await page.evaluate(() => {
+        const panel = document.querySelector('.editor-panel[data-panel="transform"]');
+        const panelRect = panel.getBoundingClientRect();
+        const controls = [
+            "#rotateLeftButton",
+            "#rotateRightButton",
+            "#flipHorizontalButton",
+            "#flipVerticalButton",
+            "#cropOutsideImageToggle",
+            "#cropNudgeUp",
+            "#cropNudgeLeft",
+            "#cropNudgeDown",
+            "#cropNudgeRight",
+            ".editor-crop-nudge-help"
+        ].map(selector => {
+            const rect = document.querySelector(selector).getBoundingClientRect();
+            return {
+                selector,
+                top: rect.top,
+                bottom: rect.bottom,
+                visible: rect.top >= panelRect.top && rect.bottom <= panelRect.bottom
+            };
+        });
+        return {
+            panelHeight: panelRect.height,
+            allControlsVisible: controls.every(control => control.visible),
+            controls
+        };
     });
-    expect(transformGap).toBeLessThan(20);
+    expect(transformLayout.panelHeight).toBeGreaterThanOrEqual(130);
+    expect(transformLayout.allControlsVisible, JSON.stringify(transformLayout.controls)).toBe(true);
+
+    // The modal should lock the document behind it even when the active tab is swiped.
+    await expect.poll(() => page.locator("body").evaluate(body =>
+        body.classList.contains("cropper-modal-open") &&
+        getComputedStyle(body).overflow === "hidden"
+    )).toBe(true);
+    await page.evaluate(() => {
+        document.body.style.minHeight = "200vh";
+        window.scrollTo(0, 0);
+    });
+    for (const tool of ["transform", "adjust", "filters"]) {
+        await page.locator(`.editor-tool[data-tool="${tool}"]`).click();
+        await page.mouse.move(180, 650);
+        await page.mouse.wheel(0, 300);
+        expect(await page.evaluate(() => window.scrollY), `Background scrolled on ${tool} tab`).toBe(0);
+    }
+
+    await page.locator('.editor-tool[data-tool="transform"]').click();
+    await expect(page.locator('.editor-panel[data-panel="transform"]')).toHaveClass(/active/);
+    const finalTransformLayout = await page.locator('.editor-panel[data-panel="transform"]').evaluate(panel => {
+        const panelRect = panel.getBoundingClientRect();
+        const selectors = [
+            "#rotateLeftButton",
+            "#rotateRightButton",
+            "#flipHorizontalButton",
+            "#flipVerticalButton",
+            "#cropOutsideImageToggle",
+            "#cropNudgeUp",
+            "#cropNudgeLeft",
+            "#cropNudgeDown",
+            "#cropNudgeRight",
+            ".editor-crop-nudge-help"
+        ];
+        return {
+            scrollTop: panel.scrollTop,
+            controls: selectors.map(selector => {
+                const rect = panel.querySelector(selector).getBoundingClientRect();
+                return {
+                    selector,
+                    top: rect.top,
+                    bottom: rect.bottom,
+                    visible: rect.top >= panelRect.top && rect.bottom <= panelRect.bottom
+                };
+            })
+        };
+    });
+    expect(finalTransformLayout.scrollTop).toBe(0);
+    expect(
+        finalTransformLayout.controls.every(control => control.visible),
+        JSON.stringify(finalTransformLayout.controls)
+    ).toBe(true);
 });
 
 test("mobile library scrolls internally with many saved grids", async ({ page }) => {

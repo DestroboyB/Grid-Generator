@@ -15,7 +15,8 @@
     padding: 20px;
     z-index: 3000;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow: hidden;
+    overscroll-behavior: contain;
 }
 
 /* ========================================
@@ -47,4 +48,13 @@
     display: block;
     max-width: 100%;
     max-height: 100%;
+}
+
+/* Prevent touch overscroll from moving the page behind the editor. */
+html.cropper-modal-open {
+    overscroll-behavior: none;
+}
+
+body.cropper-modal-open {
+    overflow: hidden;
 }

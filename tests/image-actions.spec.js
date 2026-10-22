@@ -121,7 +121,30 @@ test("crop editor supports precise movement and optionally allows cropping outsi
 
     const outsideImageToggle = page.locator("#cropOutsideImageToggle");
     await expect(outsideImageToggle).not.toBeChecked();
+
+    // Record style mutations to catch a hidden -> visible modal flash during toggle.
+    await page.evaluate(() => {
+        window.cropperModalStyleMutations = [];
+        const modal = document.querySelector("#cropModal");
+        new MutationObserver(records => {
+            window.cropperModalStyleMutations.push(...records.map(record => ({
+                oldValue: record.oldValue || "",
+                currentValue: modal.getAttribute("style") || ""
+            })));
+        }).observe(modal, { attributes: true, attributeFilter: ["style"], attributeOldValue: true });
+    });
+
     await outsideImageToggle.check();
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        return appState.cropper?.getCropBoxData()?.width ?? 0;
+    })).toBeGreaterThan(0);
+    const modalMutations = await page.evaluate(() => window.cropperModalStyleMutations);
+    expect(
+        modalMutations.some(mutation => /visibility\s*:\s*hidden/.test(mutation.oldValue)),
+        JSON.stringify(modalMutations)
+    ).toBe(false);
 
     const outsideCrop = await page.evaluate(async () => {
         const { appState } = await import("/js/state.js");
