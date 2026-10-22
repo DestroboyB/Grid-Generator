@@ -16,62 +16,89 @@ import {
 const MAX_HISTORY_STATES = 10;
 const MAX_HISTORY_DATA_CHARS = 16 * 1024 * 1024;
 
+// Share unchanged image entries between adjacent snapshots. Editing one tile
+// should not make every other large image count as a new history payload.
+function shareUnchangedHistoryImages(stack) {
+    for (let index = 1; index < stack.length; index += 1) {
+        const previousImages = stack[index - 1].images;
+        const currentImages = stack[index].images;
+
+        if (!Array.isArray(previousImages) || !Array.isArray(currentImages)) {
+            continue;
+        }
+
+        const sharedLength = Math.min(previousImages.length, currentImages.length);
+        for (let imageIndex = 0; imageIndex < sharedLength; imageIndex += 1) {
+            if (previousImages[imageIndex] === currentImages[imageIndex]) {
+                continue;
+            }
+
+            if (
+                JSON.stringify(previousImages[imageIndex]) ===
+                JSON.stringify(currentImages[imageIndex])
+            ) {
+                currentImages[imageIndex] = previousImages[imageIndex];
+            }
+        }
+
+        if (
+            previousImages.length === currentImages.length &&
+            previousImages.every((image, imageIndex) => image === currentImages[imageIndex])
+        ) {
+            stack[index].images = previousImages;
+        }
+    }
+}
+
+function measureHistorySize(stack) {
+    const seenImageEntries = new WeakSet();
+    let totalChars = 0;
+
+    for (const state of stack) {
+        const metadata = { ...state, images: undefined };
+        totalChars += JSON.stringify(metadata).length;
+
+        const images = Array.isArray(state.images) ? state.images : [];
+        // Account for the array delimiters and separators without recounting
+        // image objects shared with other snapshots.
+        totalChars += 2 + Math.max(0, images.length - 1);
+
+        for (const image of images) {
+            if (image && typeof image === "object") {
+                if (seenImageEntries.has(image)) {
+                    continue;
+                }
+                seenImageEntries.add(image);
+                totalChars += JSON.stringify(image).length;
+            } else if (image !== null && image !== undefined) {
+                totalChars += String(image).length;
+            }
+        }
+    }
+
+    return totalChars;
+}
+
 // Keep at least two states so Undo remains available after an edit, even if
-// a single image is larger than the preferred history budget. Export the pure
-// helper so the size/count policy can be tested without writing large records
-// into IndexedDB.
+// a single image is larger than the preferred history budget. Count each
+// unique image payload once: changing one tile shouldn't count every unchanged
+// tile again in every snapshot. Export the helper for focused budget tests.
 export function trimHistoryStack(
     stack,
     maxStates = MAX_HISTORY_STATES,
     maxDataChars = MAX_HISTORY_DATA_CHARS
 ) {
-    // Image data often stays identical across many setting-only edits
-    // (for example, changing aspect ratio). Share adjacent identical image
-    // arrays and count their payload once, while still counting each state's
-    // own settings. This keeps those edits undoable without multiplying the
-    // same large data URLs against the history budget.
-    const seenImageArrays = new WeakSet();
-    const stateSizes = stack.map((state, index) => {
-        if (
-            index > 0 &&
-            JSON.stringify(stack[index - 1].images ?? []) ===
-                JSON.stringify(state.images ?? [])
-        ) {
-            state.images = stack[index - 1].images;
-        }
-
-        const metadata = {
-            ...state,
-            images: undefined
-        };
-        const metadataSize = JSON.stringify(metadata).length;
-        let imageSize = 0;
-
-        if (
-            state.images &&
-            typeof state.images === "object" &&
-            !seenImageArrays.has(state.images)
-        ) {
-            seenImageArrays.add(state.images);
-            imageSize = JSON.stringify(state.images).length;
-        }
-
-        return metadataSize + imageSize;
-    });
-    let totalChars = stateSizes.reduce(
-        (total, size) => total + size,
-        0
-    );
+    shareUnchangedHistoryImages(stack);
 
     while (
         stack.length > maxStates ||
         (
             stack.length > 2 &&
-            totalChars > maxDataChars
+            measureHistorySize(stack) > maxDataChars
         )
     ) {
         stack.shift();
-        totalChars -= stateSizes.shift();
+        shareUnchangedHistoryImages(stack);
     }
 
     return stack;

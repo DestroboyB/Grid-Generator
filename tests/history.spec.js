@@ -30,6 +30,47 @@ async function addImageToFirstTile(page) {
     await expect(page.locator('#board .image[data-index="0"] img')).toHaveCount(1);
 }
 
+test("history budget counts shared image entries once across snapshots", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { trimHistoryStack } = await import("/js/history.js");
+        const payload = "x".repeat(1024 * 1024);
+        let images = Array.from({ length: 4 }, (_, index) => ({
+            source: `data:image/png;base64,${payload}${index}`
+        }));
+        const stack = [];
+
+        for (let stateIndex = 0; stateIndex < 5; stateIndex += 1) {
+            if (stateIndex > 0) {
+                images = images.map(image => ({ ...image }));
+                images[0] = {
+                    source: `data:image/png;base64,${payload}revision-${stateIndex}`
+                };
+            }
+
+            stack.push({
+                rows: 2,
+                columns: 2,
+                ratio: "1:1",
+                spacing: stateIndex,
+                images: images.map(image => ({ ...image }))
+            });
+        }
+
+        trimHistoryStack(stack, 10, 12 * 1024 * 1024);
+        return {
+            stateCount: stack.length,
+            unchangedImageShared: stack[0].images[1] === stack[4].images[1],
+            changedImageDistinct: stack[0].images[0] !== stack[4].images[0]
+        };
+    });
+
+    expect(result.stateCount).toBe(5);
+    expect(result.unchangedImageShared).toBe(true);
+    expect(result.changedImageDistinct).toBe(true);
+});
+
 test("new board starts with Undo and Redo disabled", async ({ page }) => {
     await waitForApp(page);
     await expect(page.locator("#undoButton")).toBeDisabled();
@@ -1925,3 +1966,75 @@ test("MyAnimeList anime picture gallery omits repeated image URLs", async ({ pag
 
     await expect(page.locator("#malSearchResults .mal-gallery-picture")).toHaveCount(2);
 });
+
+test("anime gallery does not append a separate cover thumbnail when its URL differs", async ({ page }) => {
+    const primaryImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=";
+
+    await page.route("https://images.example.test/**", route => route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: tinyPng
+    }));
+
+    await page.route("https://jikan.lucashdo.com/v1/**", async route => {
+        const url = new URL(route.request().url());
+
+        if (url.pathname === "/v1/anime" && url.searchParams.has("q")) {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [{
+                        mal_id: 11319,
+                        title: "Zero no Tsukaima F",
+                        images: { jpg: { image_url: primaryImage } }
+                    }],
+                    meta: { pagination: { has_next_page: false } }
+                })
+            });
+        } else if (url.pathname === "/v1/anime/11319/pictures") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: [1, 2, 3, 4].map(index => ({
+                        imageUrl: `https://images.example.test/gallery/${index}.jpg`
+                    }))
+                })
+            });
+        } else if (url.pathname === "/v1/anime/11319") {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({
+                    data: {
+                        mal_id: 11319,
+                        title: "Zero no Tsukaima F",
+                        images: { jpg: { image_url: primaryImage } }
+                    }
+                })
+            });
+        } else {
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                body: JSON.stringify({ data: [] })
+            });
+        }
+    });
+
+    await waitForApp(page);
+    await page.locator('#board .image[data-index="0"]').click();
+    await page.locator("#openImageSourceMenuButton").click();
+    await page.locator("#searchMalButton").click();
+
+    await page.locator("#malAnimeTab").click();
+    await page.locator("#malSearchInput").fill("Zero no Tsukaima F");
+    await page.locator("#malSearchButton").click();
+    const result = page.locator("#malSearchResults .mal-search-result").first();
+    await expect(result).toBeVisible();
+    await result.click();
+
+    await expect(page.locator("#malSearchResults .mal-gallery-picture")).toHaveCount(4);
+});
+

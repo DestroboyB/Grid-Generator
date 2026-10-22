@@ -193,15 +193,17 @@ export async function openPictureGallery({
 
 
         /*
-         * Make sure the primary image is
-         * available in the gallery.
+         * Character picture lists can omit the profile image, so retain that
+         * fallback for characters. Anime galleries should mirror the MAL
+         * Pictures tab: adding the title's cover here can duplicate the same
+         * key visual when the pictures endpoint uses a different image URL.
          */
 
         const primaryImage =
             getImageURL(detail);
 
 
-        if (primaryImage) {
+        if (mode === "character" && primaryImage) {
 
             const alreadyIncluded =
                 pictures.some(
