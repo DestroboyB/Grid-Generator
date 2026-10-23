@@ -141,6 +141,78 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
 });
 
 
+
+test("rotating landscape images keeps the full image in the preview", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#imageRatio").selectOption("16:9");
+
+    const tile = page.locator('#board .image[data-index="0"]');
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="200" height="400" fill="#cde"/><circle cx="100" cy="80" r="35" fill="#f00"/><circle cx="100" cy="320" r="35" fill="#00f"/></svg>');
+    await chooser.setFiles({ name: "rotate-ratio-test.svg", mimeType: "image/svg+xml", buffer: svg });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(400);
+
+    const readGeometry = () => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const cropper = appState.cropper;
+        const canvas = cropper.getCanvasData();
+        const crop = cropper.getCropBoxData();
+        const container = cropper.getContainerData();
+        return {
+            canvas,
+            crop,
+            viewMode: cropper.options.viewMode,
+            ratio: crop.width / crop.height,
+            rotation: cropper.getImageData().rotate ?? 0,
+            container
+        };
+    });
+
+    for (const [button, expectedRotation] of [
+        ["#rotateRightButton", 90],
+        ["#rotateLeftButton", 0]
+    ]) {
+        await page.locator(button).click();
+
+        // Wait for CropperJS to apply the rotation and for the fitting callback
+        // to finish before checking the rendered image geometry.
+        await expect.poll(async () => (await readGeometry()).rotation)
+            .toBe(expectedRotation);
+        await page.evaluate(() => new Promise(resolve => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+        }));
+
+        const geometry = await readGeometry();
+        expect(geometry.ratio).toBeCloseTo(16 / 9, 2);
+        expect(geometry.crop.left).toBeGreaterThanOrEqual(geometry.canvas.left - 1);
+        expect(geometry.crop.top).toBeGreaterThanOrEqual(geometry.canvas.top - 1);
+        expect(geometry.crop.left + geometry.crop.width)
+            .toBeLessThanOrEqual(geometry.canvas.left + geometry.canvas.width + 1);
+        expect(geometry.crop.top + geometry.crop.height)
+            .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
+
+        // Rotation must keep the complete image canvas inside the preview,
+        // including tall images that become wide after a quarter-turn.
+        expect(geometry.canvas.left).toBeGreaterThanOrEqual(-1);
+        expect(geometry.canvas.top).toBeGreaterThanOrEqual(-1);
+        expect(geometry.canvas.left + geometry.canvas.width)
+            .toBeLessThanOrEqual(geometry.container.width + 1);
+        expect(geometry.canvas.top + geometry.canvas.height)
+            .toBeLessThanOrEqual(geometry.container.height + 1);
+        expect(geometry.crop.width).toBeLessThanOrEqual(geometry.canvas.width + 1);
+        expect(geometry.crop.height).toBeLessThanOrEqual(geometry.canvas.height + 1);
+    }
+
+    await page.locator("#cancelButton").click();
+});
+
 test("crop editor supports precise movement and optionally allows cropping outside the image", async ({ page }) => {
     await page.goto("/");
     const tile = page.locator('#board .image[data-index="0"]');
