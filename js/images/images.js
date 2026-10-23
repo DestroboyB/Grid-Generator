@@ -1007,10 +1007,7 @@ document.addEventListener(
         closeAllMenus();
         appState.menuDiv = null;
 
-        if (menuWasOpen && board.contains(event.target)) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
+        // Let board clicks continue so one tap can switch directly to another cell's menu.
 
     },
     true
