@@ -170,7 +170,8 @@ export function rotateImage(
         cropper.setCanvasData({
             left,
             top,
-            width: fittedWidth
+            width: fittedWidth,
+            height: fittedHeight
         });
 
         const fittedCanvas = cropper.getCanvasData();
