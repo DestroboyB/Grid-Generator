@@ -35,6 +35,54 @@ test("mobile layouts do not create horizontal page overflow", async ({ page }) =
     }
 });
 
+test("image-cell menus lock background scrolling on mobile and restore it when closed", async ({ page }) => {
+    await waitForApp(page, 375, 812);
+
+    await page.evaluate(() => {
+        document.body.style.minHeight = "200vh";
+        window.scrollTo(0, 120);
+    });
+
+    const emptyCell = page.locator('#board .image[data-index="0"]');
+    await emptyCell.click();
+    await expect(page.locator("#addImageMenu")).toBeVisible();
+    await expect.poll(() => page.evaluate(() =>
+        document.documentElement.classList.contains("image-menu-open") &&
+        document.body.classList.contains("image-menu-open") &&
+        getComputedStyle(document.body).position === "fixed" &&
+        getComputedStyle(document.body).overflow === "hidden" &&
+        getComputedStyle(document.documentElement).overflow === "hidden"
+    )).toBe(true);
+
+    const lockedScrollY = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(12, 12);
+    await page.mouse.wheel(0, 350);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(lockedScrollY);
+
+    await page.locator("#closeAddImageMenuButton").click();
+    await expect.poll(() => page.evaluate(() =>
+        !document.documentElement.classList.contains("image-menu-open") &&
+        !document.body.classList.contains("image-menu-open") &&
+        getComputedStyle(document.body).position !== "fixed"
+    )).toBe(true);
+
+    await page.locator('#board .image[data-index="0"]').evaluate((cell, imageData) => {
+        const image = document.createElement("img");
+        image.src = imageData;
+        cell.appendChild(image);
+    }, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=");
+
+    await page.locator('#board .image[data-index="0"]').click();
+    await expect(page.locator("#imageMenu")).toBeVisible();
+    await expect.poll(() => page.locator("body").evaluate(body =>
+        body.classList.contains("image-menu-open")
+    )).toBe(true);
+    await page.locator("#closeImageMenuButton").click();
+    await expect.poll(() => page.locator("body").evaluate(body =>
+        !body.classList.contains("image-menu-open")
+    )).toBe(true);
+});
+
 test("mobile board settings and saved-grid drawer are usable", async ({ page }) => {
     await waitForApp(page);
 
