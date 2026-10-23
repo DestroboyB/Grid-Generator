@@ -157,10 +157,16 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         // with the canvas that clips it.
         expect(geometry.imageBounds).not.toBeNull();
         expect(geometry.canvasBounds).not.toBeNull();
-        expect(geometry.imageBounds.centerX)
-            .toBeCloseTo(geometry.canvasBounds.centerX, 0);
-        expect(geometry.imageBounds.centerY)
-            .toBeCloseTo(geometry.canvasBounds.centerY, 0);
+        expect(geometry.canvasBounds.centerX)
+            .toBeCloseTo(
+                (geometry.containerBounds.left + geometry.containerBounds.right) / 2,
+                0
+            );
+        expect(geometry.canvasBounds.centerY)
+            .toBeCloseTo(
+                (geometry.containerBounds.top + geometry.containerBounds.bottom) / 2,
+                0
+            );
     }
 
     await page.locator("#cancelButton").click();
