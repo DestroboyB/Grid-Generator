@@ -995,11 +995,19 @@ document.addEventListener(
         }
 
 
-        // Any tap outside the menu dismisses it, including taps on the board.
+        // Dismiss an open menu when tapping outside it. If no menu is open,
+        // allow board clicks to reach the board handler so it can open one.
+        const menuWasOpen = [
+            imageMenu,
+            addImageMenu,
+            imageSourceMenu,
+            replaceImageSourceMenu
+        ].some(menu => menu.style.display !== "none");
+
         closeAllMenus();
         appState.menuDiv = null;
 
-        if (board.contains(event.target)) {
+        if (menuWasOpen && board.contains(event.target)) {
             event.preventDefault();
             event.stopPropagation();
         }
