@@ -77,6 +77,22 @@ export function rotateImage(
 
 
     // ========================================
+    // Restore Aspect Ratio Before Rotation
+    // ========================================
+    //
+    // setAspectRatio() rebuilds the crop box using the current canvas
+    // geometry. Do this while the canvas is still in its reset orientation;
+    // changing the ratio after rotation can reposition the crop box against
+    // the transformed canvas and make the image appear to shift.
+
+    cropper.setAspectRatio(
+        getCropRatio(
+            imageRatioInput
+        )
+    );
+
+
+    // ========================================
     // Apply Rotation
     // ========================================
 
@@ -89,17 +105,6 @@ export function rotateImage(
         );
 
     }
-
-
-    // ========================================
-    // Restore Aspect Ratio
-    // ========================================
-
-    cropper.setAspectRatio(
-        getCropRatio(
-            imageRatioInput
-        )
-    );
 
 
 
