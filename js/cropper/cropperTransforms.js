@@ -268,6 +268,14 @@ export function fitRotatedImage(
     });
 
 
+    // CropperJS may clamp the requested canvas geometry to its viewMode
+    // constraints. Base the crop box on the geometry it actually accepted,
+    // rather than the requested dimensions, so the box stays aligned with
+    // the rotated image for rectangular aspect ratios.
+    const fittedCanvas =
+        cropper.getCanvasData();
+
+
     // ========================================
     // Fit Crop Box
     // ========================================
@@ -279,7 +287,7 @@ export function fitRotatedImage(
 
 
     let cropWidth =
-        newWidth;
+        fittedCanvas.width;
 
 
     let cropHeight =
@@ -293,11 +301,11 @@ export function fitRotatedImage(
 
     if (
         cropHeight >
-        newHeight
+        fittedCanvas.height
     ) {
 
         cropHeight =
-            newHeight;
+            fittedCanvas.height;
 
 
         cropWidth =
@@ -308,19 +316,21 @@ export function fitRotatedImage(
 
 
     // ========================================
-    // Center Crop Box
+    // Center Crop Box Relative To Actual Canvas
     // ========================================
 
     const cropLeft =
+        fittedCanvas.left +
         (
-            container.width -
+            fittedCanvas.width -
             cropWidth
         ) / 2;
 
 
     const cropTop =
+        fittedCanvas.top +
         (
-            container.height -
+            fittedCanvas.height -
             cropHeight
         ) / 2;
 
