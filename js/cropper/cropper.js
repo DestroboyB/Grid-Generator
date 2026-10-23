@@ -7,7 +7,6 @@ import {
 
 import {
     rotateImage,
-    fitRotatedImage,
     toggleFlipX,
     toggleFlipY
 } from "./cropperTransforms.js";
@@ -807,15 +806,7 @@ function handleRotate(
     rotateImage(
         appState.cropper,
         degrees,
-        imageRatioInput,
-        () => {
-
-            fitRotatedImage(
-                appState.cropper,
-                imageRatioInput
-            );
-
-        }
+        imageRatioInput
     );
 
 }
