@@ -35,37 +35,34 @@ test("mobile layouts do not create horizontal page overflow", async ({ page }) =
     }
 });
 
-test("image-cell menus lock background scrolling on mobile and restore it when closed", async ({ page }) => {
+test("image-cell menus move with page scrolling and close when tapped outside", async ({ page }) => {
     await waitForApp(page, 375, 812);
 
     await page.evaluate(() => {
         document.body.style.minHeight = "200vh";
-        window.scrollTo(0, 120);
+        window.scrollTo(0, 0);
     });
 
     const emptyCell = page.locator('#board .image[data-index="0"]');
     await emptyCell.click();
-    await expect(page.locator("#addImageMenu")).toBeVisible();
-    await expect.poll(() => page.evaluate(() =>
-        document.documentElement.classList.contains("image-menu-open") &&
-        document.body.classList.contains("image-menu-open") &&
-        getComputedStyle(document.body).position === "fixed" &&
-        getComputedStyle(document.body).overflow === "hidden" &&
-        getComputedStyle(document.documentElement).overflow === "hidden"
-    )).toBe(true);
+    const addMenu = page.locator("#addImageMenu");
+    await expect(addMenu).toBeVisible();
 
-    const lockedScrollY = await page.evaluate(() => window.scrollY);
-    await page.mouse.move(12, 12);
-    await page.mouse.wheel(0, 350);
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(lockedScrollY);
+    const initialTop = await addMenu.evaluate(menu => menu.getBoundingClientRect().top);
+    await page.evaluate(() => window.scrollTo(0, 120));
+    await expect.poll(() => addMenu.evaluate(menu => menu.getBoundingClientRect().top))
+        .toBeLessThan(initialTop - 80);
 
-    await page.locator("#closeAddImageMenuButton").click();
     await expect.poll(() => page.evaluate(() =>
         !document.documentElement.classList.contains("image-menu-open") &&
         !document.body.classList.contains("image-menu-open") &&
         getComputedStyle(document.body).position !== "fixed"
     )).toBe(true);
 
+    await page.locator("body").click({ position: { x: 8, y: 8 } });
+    await expect(addMenu).toBeHidden();
+
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator('#board .image[data-index="0"]').evaluate((cell, imageData) => {
         const image = document.createElement("img");
         image.src = imageData;
@@ -73,15 +70,12 @@ test("image-cell menus lock background scrolling on mobile and restore it when c
     }, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=");
 
     await page.locator('#board .image[data-index="0"]').click();
-    await expect(page.locator("#imageMenu")).toBeVisible();
-    await expect.poll(() => page.locator("body").evaluate(body =>
-        body.classList.contains("image-menu-open")
-    )).toBe(true);
-    await page.locator("#closeImageMenuButton").click();
-    await expect.poll(() => page.locator("body").evaluate(body =>
-        !body.classList.contains("image-menu-open")
-    )).toBe(true);
+    const imageMenu = page.locator("#imageMenu");
+    await expect(imageMenu).toBeVisible();
+    await page.locator("body").click({ position: { x: 8, y: 8 } });
+    await expect(imageMenu).toBeHidden();
 });
+
 
 test("mobile board settings and saved-grid drawer are usable", async ({ page }) => {
     await waitForApp(page);
