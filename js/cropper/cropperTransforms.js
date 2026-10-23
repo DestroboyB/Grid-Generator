@@ -138,6 +138,28 @@ export function rotateImage(
 
     }
 
+
+    // ========================================
+    // Keep the Image Centered Under the Crop Box
+    // ========================================
+    //
+    // At 90/270 degrees the image canvas can be much taller than the
+    // preview. CropperJS otherwise clamps its top edge to the container,
+    // leaving the crop box over one end of the rotated image. Align the
+    // canvas center with the crop-box center instead; viewMode still limits
+    // the crop to valid image bounds.
+
+    const canvas = cropper.getCanvasData();
+    const cropBox = cropper.getCropBoxData();
+
+    if (canvas && cropBox && canvas.width > 0 && canvas.height > 0) {
+        cropper.setCanvasData({
+            left: cropBox.left + cropBox.width / 2 - canvas.width / 2,
+            top: cropBox.top + cropBox.height / 2 - canvas.height / 2,
+            width: canvas.width
+        });
+    }
+
 }
 
 
