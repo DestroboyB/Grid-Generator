@@ -5,8 +5,7 @@ import {
 } from "./cropperState.js";
 
 import {
-    getCropRatio,
-    fitRotatedImage
+    getCropRatio
 } from "./cropperTransforms.js";
 
 import {
@@ -255,17 +254,6 @@ export function createCropper(
                                 cropRatio
                             );
 
-
-                            requestAnimationFrame(
-                                () => {
-
-                                    fitRotatedImage(
-                                        appState.cropper,
-                                        imageRatioInput
-                                    );
-
-                                }
-                            );
 
                         }
 
