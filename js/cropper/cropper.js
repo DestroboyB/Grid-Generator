@@ -809,17 +809,6 @@ function handleRotate(
         imageRatioInput
     );
 
-    // CropperJS can leave its canvas offset after rotating a non-square image.
-    // Recenter after it applies the transform and move the crop box by the same
-    // delta so the selected image region remains unchanged.
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            if (appState.cropper && cropModal.style.display !== "none") {
-                centerCropperCanvas();
-            }
-        });
-    });
-
 }
 
 
