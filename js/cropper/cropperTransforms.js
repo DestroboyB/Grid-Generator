@@ -107,10 +107,12 @@ export function rotateImage(
     // Fit Rotated Image
     // ========================================
 
+    // CropperJS updates its rotated canvas during rendering. Wait two frames
+    // before measuring it so fitting uses the final rotated geometry.
     requestAnimationFrame(() => {
-
-        fitRotatedImageCallback();
-
+        requestAnimationFrame(() => {
+            fitRotatedImageCallback();
+        });
     });
 
 
@@ -159,18 +161,8 @@ export function fitRotatedImage(
         return;
     }
 
-
-    // ========================================
-    // Get Container
-    // ========================================
-
-    const container =
-        cropper.getContainerData();
-
-
-    const canvas =
-        cropper.getCanvasData();
-
+    const container = cropper.getContainerData();
+    const canvas = cropper.getCanvasData();
 
     if (
         !container ||
@@ -181,180 +173,24 @@ export function fitRotatedImage(
         return;
     }
 
+    // Fit only the image canvas. CropperJS has already established the crop
+    // box for the selected aspect ratio; moving/resizing that box here can
+    // make the image appear to slide underneath it after a quarter-turn.
+    const scale = Math.min(
+        container.width / Math.abs(canvas.width),
+        container.height / Math.abs(canvas.height),
+        1
+    );
 
-    // ========================================
-    // Current Canvas Dimensions
-    // ========================================
-
-    const canvasWidth =
-        Math.abs(canvas.width);
-
-    const canvasHeight =
-        Math.abs(canvas.height);
-
-
-    // ========================================
-    // Calculate Scale
-    // ========================================
-
-    const widthScale =
-        container.width /
-        canvasWidth;
-
-
-    const heightScale =
-        container.height /
-        canvasHeight;
-
-
-    const scale =
-        Math.min(
-            widthScale,
-            heightScale,
-            1
-        );
-
-
-    // ========================================
-    // New Canvas Dimensions
-    // ========================================
-
-    const newWidth =
-        canvasWidth *
-        scale;
-
-
-    const newHeight =
-        canvasHeight *
-        scale;
-
-
-    // ========================================
-    // Center Image
-    // ========================================
-
-    const newLeft =
-        (
-            container.width -
-            newWidth
-        ) / 2;
-
-
-    const newTop =
-        (
-            container.height -
-            newHeight
-        ) / 2;
-
-
-    // ========================================
-    // Apply Canvas
-    // ========================================
+    const width = Math.abs(canvas.width) * scale;
+    const height = Math.abs(canvas.height) * scale;
 
     cropper.setCanvasData({
-
-        left:
-            newLeft,
-
-        top:
-            newTop,
-
-        width:
-            newWidth,
-
-        height:
-            newHeight
-
+        left: (container.width - width) / 2,
+        top: (container.height - height) / 2,
+        width,
+        height
     });
-
-
-    // CropperJS may clamp the requested canvas geometry to its viewMode
-    // constraints. Base the crop box on the geometry it actually accepted,
-    // rather than the requested dimensions, so the box stays aligned with
-    // the rotated image for rectangular aspect ratios.
-    const fittedCanvas =
-        cropper.getCanvasData();
-
-
-    // ========================================
-    // Fit Crop Box
-    // ========================================
-
-    const cropRatio =
-        getCropRatio(
-            imageRatioInput
-        );
-
-
-    let cropWidth =
-        fittedCanvas.width;
-
-
-    let cropHeight =
-        cropWidth /
-        cropRatio;
-
-
-    // ========================================
-    // If Too Tall
-    // ========================================
-
-    if (
-        cropHeight >
-        fittedCanvas.height
-    ) {
-
-        cropHeight =
-            fittedCanvas.height;
-
-
-        cropWidth =
-            cropHeight *
-            cropRatio;
-
-    }
-
-
-    // ========================================
-    // Center Crop Box Relative To Actual Canvas
-    // ========================================
-
-    const cropLeft =
-        fittedCanvas.left +
-        (
-            fittedCanvas.width -
-            cropWidth
-        ) / 2;
-
-
-    const cropTop =
-        fittedCanvas.top +
-        (
-            fittedCanvas.height -
-            cropHeight
-        ) / 2;
-
-
-    // ========================================
-    // Apply Crop Box
-    // ========================================
-
-    cropper.setCropBoxData({
-
-        left:
-            cropLeft,
-
-        top:
-            cropTop,
-
-        width:
-            cropWidth,
-
-        height:
-            cropHeight
-
-    });
-
 }
 
 
