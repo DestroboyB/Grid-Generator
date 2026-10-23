@@ -69,6 +69,57 @@ test("reopening an image uses the current board ratio", async ({ page }) => {
 
 
 
+test("rotating non-square crop ratios keeps the crop box on the image", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#imageRatio").selectOption("16:9");
+
+    const tile = page.locator('#board .image[data-index="0"]');
+    await tile.click();
+    await page.locator("#openImageSourceMenuButton").click();
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.locator("#uploadImageButton").click();
+    const chooser = await chooserPromise;
+    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#cde"/><circle cx="80" cy="100" r="45" fill="#f00"/><circle cx="320" cy="100" r="45" fill="#00f"/></svg>');
+    await chooser.setFiles({ name: "rotate-ratio-test.svg", mimeType: "image/svg+xml", buffer: svg });
+
+    await expect(page.locator("#cropModal")).toBeVisible();
+    await expect.poll(() => page.locator("#cropImage").evaluate(image => image.naturalWidth)).toBe(400);
+
+    const readGeometry = () => page.evaluate(async () => {
+        const { appState } = await import("/js/state.js");
+        const cropper = appState.cropper;
+        const canvas = cropper.getCanvasData();
+        const crop = cropper.getCropBoxData();
+        return {
+            canvas,
+            crop,
+            viewMode: cropper.options.viewMode,
+            ratio: crop.width / crop.height
+        };
+    });
+
+    for (const button of ["#rotateRightButton", "#rotateLeftButton"]) {
+        await page.locator(button).click();
+        await expect.poll(async () => {
+            const geometry = await readGeometry();
+            return geometry.crop.width > 0 && geometry.crop.height > 0;
+        }).toBe(true);
+
+        const geometry = await readGeometry();
+        expect(geometry.ratio).toBeCloseTo(16 / 9, 2);
+        expect(geometry.crop.left).toBeGreaterThanOrEqual(geometry.canvas.left - 1);
+        expect(geometry.crop.top).toBeGreaterThanOrEqual(geometry.canvas.top - 1);
+        expect(geometry.crop.left + geometry.crop.width)
+            .toBeLessThanOrEqual(geometry.canvas.left + geometry.canvas.width + 1);
+        expect(geometry.crop.top + geometry.crop.height)
+            .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
+    }
+
+    await page.locator("#cancelButton").click();
+});
+
+
 test("crop editor supports precise movement and optionally allows cropping outside the image", async ({ page }) => {
     await page.goto("/");
     const tile = page.locator('#board .image[data-index="0"]');
