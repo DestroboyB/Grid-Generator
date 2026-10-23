@@ -153,7 +153,7 @@ test("rotating landscape images keeps the full image in the preview", async ({ p
     const chooserPromise = page.waitForEvent("filechooser");
     await page.locator("#uploadImageButton").click();
     const chooser = await chooserPromise;
-    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="200" height="400" fill="#cde"/><circle cx="100" cy="80" r="35" fill="#f00"/><circle cx="100" cy="320" r="35" fill="#00f"/></svg>');
+    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#cde"/><circle cx="80" cy="100" r="35" fill="#f00"/><circle cx="320" cy="100" r="35" fill="#00f"/></svg>');
     await chooser.setFiles({ name: "rotate-ratio-test.svg", mimeType: "image/svg+xml", buffer: svg });
 
     await expect(page.locator("#cropModal")).toBeVisible();
