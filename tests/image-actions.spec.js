@@ -91,40 +91,14 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         const cropper = appState.cropper;
         const canvas = cropper.getCanvasData();
         const crop = cropper.getCropBoxData();
-        const containerElement = document.querySelector(".cropper-container");
-        const canvasElement = containerElement?.querySelector(".cropper-canvas");
-        const imageElement = canvasElement?.querySelector("img");
-        const containerRect = containerElement?.getBoundingClientRect();
-        const canvasRect = canvasElement?.getBoundingClientRect();
-        const imageRect = imageElement?.getBoundingClientRect();
+        const container = cropper.getContainerData();
         return {
             canvas,
             crop,
             viewMode: cropper.options.viewMode,
             ratio: crop.width / crop.height,
-            rotation: cropper.getImageData().rotate,
-            containerBounds: containerRect && {
-                left: containerRect.left,
-                top: containerRect.top,
-                right: containerRect.right,
-                bottom: containerRect.bottom
-            },
-            canvasBounds: canvasRect && {
-                left: canvasRect.left,
-                top: canvasRect.top,
-                right: canvasRect.right,
-                bottom: canvasRect.bottom,
-                centerX: (canvasRect.left + canvasRect.right) / 2,
-                centerY: (canvasRect.top + canvasRect.bottom) / 2
-            },
-            imageBounds: imageRect && {
-                centerX: (imageRect.left + imageRect.right) / 2,
-                centerY: (imageRect.top + imageRect.bottom) / 2,
-                left: imageRect.left,
-                top: imageRect.top,
-                right: imageRect.right,
-                bottom: imageRect.bottom
-            }
+            rotation: cropper.getImageData().rotate ?? 0,
+            container
         };
     });
 
@@ -151,22 +125,14 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         expect(geometry.crop.top + geometry.crop.height)
             .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
 
-        // A rotated image's transformed bounding rectangle can extend beyond
-        // the frame even when correctly clipped by CropperJS. What matters for
-        // the reported sideways shift is that its visual center stays aligned
-        // with the canvas that clips it.
-        expect(geometry.imageBounds).not.toBeNull();
-        expect(geometry.canvasBounds).not.toBeNull();
-        expect(geometry.canvasBounds.centerX)
-            .toBeCloseTo(
-                (geometry.containerBounds.left + geometry.containerBounds.right) / 2,
-                0
-            );
-        expect(geometry.canvasBounds.centerY)
-            .toBeCloseTo(
-                (geometry.containerBounds.top + geometry.containerBounds.bottom) / 2,
-                0
-            );
+        // CropperJS returns canvas geometry in container coordinates. Check
+        // that the image canvas remains centered after rotation rather than
+        // comparing transformed DOM bounding rectangles, which include the
+        // rotated element's untransformed width and height.
+        expect(geometry.canvas.left + geometry.canvas.width / 2)
+            .toBeCloseTo(geometry.container.width / 2, 0);
+        expect(geometry.canvas.top + geometry.canvas.height / 2)
+            .toBeCloseTo(geometry.container.height / 2, 0);
     }
 
     await page.locator("#cancelButton").click();
