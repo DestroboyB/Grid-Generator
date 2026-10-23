@@ -117,6 +117,7 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         }));
 
         const geometry = await readGeometry();
+        console.log("Rotation geometry diagnostics:", JSON.stringify(geometry));
         expect(geometry.ratio).toBeCloseTo(16 / 9, 2);
         expect(geometry.crop.left).toBeGreaterThanOrEqual(geometry.canvas.left - 1);
         expect(geometry.crop.top).toBeGreaterThanOrEqual(geometry.canvas.top - 1);
