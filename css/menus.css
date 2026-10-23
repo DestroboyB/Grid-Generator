@@ -331,3 +331,21 @@
 
     color: var(--color-text-subtle);
 }
+
+/* Keep the page behind the image-cell action menus stationary on touch devices. */
+html.image-menu-open {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body.image-menu-open {
+    position: fixed;
+    top: var(--image-menu-scroll-lock-top, 0px);
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
