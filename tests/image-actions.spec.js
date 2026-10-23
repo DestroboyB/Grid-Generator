@@ -114,6 +114,19 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
             .toBeLessThanOrEqual(geometry.canvas.left + geometry.canvas.width + 1);
         expect(geometry.crop.top + geometry.crop.height)
             .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
+
+        expect(
+            Math.abs(
+                geometry.crop.left + geometry.crop.width / 2 -
+                (geometry.canvas.left + geometry.canvas.width / 2)
+            )
+        ).toBeLessThanOrEqual(1);
+        expect(
+            Math.abs(
+                geometry.crop.top + geometry.crop.height / 2 -
+                (geometry.canvas.top + geometry.canvas.height / 2)
+            )
+        ).toBeLessThanOrEqual(1);
     }
 
     await page.locator("#cancelButton").click();
