@@ -91,20 +91,44 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         const cropper = appState.cropper;
         const canvas = cropper.getCanvasData();
         const crop = cropper.getCropBoxData();
+        const containerElement = document.querySelector(".cropper-container");
+        const imageElement = containerElement?.querySelector(".cropper-canvas img");
+        const containerRect = containerElement?.getBoundingClientRect();
+        const imageRect = imageElement?.getBoundingClientRect();
         return {
             canvas,
             crop,
             viewMode: cropper.options.viewMode,
-            ratio: crop.width / crop.height
+            ratio: crop.width / crop.height,
+            rotation: cropper.getImageData().rotate,
+            containerBounds: containerRect && {
+                left: containerRect.left,
+                top: containerRect.top,
+                right: containerRect.right,
+                bottom: containerRect.bottom
+            },
+            imageBounds: imageRect && {
+                left: imageRect.left,
+                top: imageRect.top,
+                right: imageRect.right,
+                bottom: imageRect.bottom
+            }
         };
     });
 
-    for (const button of ["#rotateRightButton", "#rotateLeftButton"]) {
+    for (const [button, expectedRotation] of [
+        ["#rotateRightButton", 90],
+        ["#rotateLeftButton", 0]
+    ]) {
         await page.locator(button).click();
-        await expect.poll(async () => {
-            const geometry = await readGeometry();
-            return geometry.crop.width > 0 && geometry.crop.height > 0;
-        }).toBe(true);
+
+        // Wait for CropperJS to apply the rotation and for the fitting callback
+        // to finish before checking the rendered image geometry.
+        await expect.poll(async () => (await readGeometry()).rotation)
+            .toBe(expectedRotation);
+        await page.evaluate(() => new Promise(resolve => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+        }));
 
         const geometry = await readGeometry();
         expect(geometry.ratio).toBeCloseTo(16 / 9, 2);
@@ -115,18 +139,19 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         expect(geometry.crop.top + geometry.crop.height)
             .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
 
-        expect(
-            Math.abs(
-                geometry.crop.left + geometry.crop.width / 2 -
-                (geometry.canvas.left + geometry.canvas.width / 2)
-            )
-        ).toBeLessThanOrEqual(1);
-        expect(
-            Math.abs(
-                geometry.crop.top + geometry.crop.height / 2 -
-                (geometry.canvas.top + geometry.canvas.height / 2)
-            )
-        ).toBeLessThanOrEqual(1);
+        // The visible image itself must stay inside the cropper frame after
+        // rotation; checking only canvas/crop-box model coordinates missed the
+        // sideways clipping reported on rectangular ratios.
+        expect(geometry.imageBounds).not.toBeNull();
+        expect(geometry.containerBounds).not.toBeNull();
+        expect(geometry.imageBounds.left)
+            .toBeGreaterThanOrEqual(geometry.containerBounds.left - 1);
+        expect(geometry.imageBounds.top)
+            .toBeGreaterThanOrEqual(geometry.containerBounds.top - 1);
+        expect(geometry.imageBounds.right)
+            .toBeLessThanOrEqual(geometry.containerBounds.right + 1);
+        expect(geometry.imageBounds.bottom)
+            .toBeLessThanOrEqual(geometry.containerBounds.bottom + 1);
     }
 
     await page.locator("#cancelButton").click();
