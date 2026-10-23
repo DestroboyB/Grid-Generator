@@ -167,6 +167,24 @@ export function rotateImage(
         const left = (container.width - fittedWidth) / 2;
         const top = (container.height - fittedHeight) / 2;
 
+        const ratio = getCropRatio(imageRatioInput);
+        const cropWidth = Math.min(
+            fittedWidth,
+            fittedHeight * ratio
+        );
+        const cropHeight = cropWidth / ratio;
+
+        // Shrink the crop box first. In viewMode 1, CropperJS will not
+        // shrink the canvas below the current crop box, so trying to fit
+        // the canvas first can leave a rotated image far taller than the
+        // preview. Keep the interim crop box centered in the container.
+        cropper.setCropBoxData({
+            left: (container.width - cropWidth) / 2,
+            top: (container.height - cropHeight) / 2,
+            width: cropWidth,
+            height: cropHeight
+        });
+
         cropper.setCanvasData({
             left,
             top,
@@ -175,18 +193,14 @@ export function rotateImage(
         });
 
         const fittedCanvas = cropper.getCanvasData();
-        const ratio = getCropRatio(imageRatioInput);
-        const cropWidth = Math.min(
-            fittedCanvas.width,
-            fittedCanvas.height * ratio
-        );
-        const cropHeight = cropWidth / ratio;
 
+        // CropperJS may clamp the requested canvas geometry. Reposition the
+        // crop box against the geometry it actually accepted.
         cropper.setCropBoxData({
             left: fittedCanvas.left + (fittedCanvas.width - cropWidth) / 2,
             top: fittedCanvas.top + (fittedCanvas.height - cropHeight) / 2,
-            width: cropWidth,
-            height: cropHeight
+            width: Math.min(cropWidth, fittedCanvas.width, fittedCanvas.height * ratio),
+            height: Math.min(cropWidth, fittedCanvas.width, fittedCanvas.height * ratio) / ratio
         });
     }
 
