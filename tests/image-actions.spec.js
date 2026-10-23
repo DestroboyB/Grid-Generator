@@ -125,13 +125,16 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         expect(geometry.crop.top + geometry.crop.height)
             .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
 
-        // The canvas can extend beyond the preview when rotated. Its center
-        // must remain beneath the crop-box center so the visible crop stays
-        // on the middle of the image instead of drifting to one end.
-        expect(geometry.canvas.left + geometry.canvas.width / 2)
-            .toBeCloseTo(geometry.crop.left + geometry.crop.width / 2, 0);
-        expect(geometry.canvas.top + geometry.canvas.height / 2)
-            .toBeCloseTo(geometry.crop.top + geometry.crop.height / 2, 0);
+        // Rotation must keep the complete image canvas inside the preview,
+        // including tall images that become wide after a quarter-turn.
+        expect(geometry.canvas.left).toBeGreaterThanOrEqual(-1);
+        expect(geometry.canvas.top).toBeGreaterThanOrEqual(-1);
+        expect(geometry.canvas.left + geometry.canvas.width)
+            .toBeLessThanOrEqual(geometry.container.width + 1);
+        expect(geometry.canvas.top + geometry.canvas.height)
+            .toBeLessThanOrEqual(geometry.container.height + 1);
+        expect(geometry.crop.width).toBeLessThanOrEqual(geometry.canvas.width + 1);
+        expect(geometry.crop.height).toBeLessThanOrEqual(geometry.canvas.height + 1);
     }
 
     await page.locator("#cancelButton").click();
