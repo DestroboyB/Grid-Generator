@@ -77,6 +77,32 @@ test("image-cell menus move with page scrolling and close when tapped outside", 
 });
 
 
+test("tapping another grid cell switches its menu in one tap", async ({ page }) => {
+    await waitForApp(page, 375, 812);
+
+    const firstCell = page.locator('#board .image[data-index="0"]');
+    const secondCell = page.locator('#board .image[data-index="8"]');
+    const addMenu = page.locator("#addImageMenu");
+    const imageMenu = page.locator("#imageMenu");
+
+    await secondCell.evaluate((cell, imageData) => {
+        const image = document.createElement("img");
+        image.src = imageData;
+        cell.appendChild(image);
+    }, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=");
+
+    await firstCell.click();
+    await expect(addMenu).toBeVisible();
+
+    await secondCell.click();
+    await expect(imageMenu).toBeVisible();
+    await expect(addMenu).toBeHidden();
+
+    await firstCell.click();
+    await expect(addMenu).toBeVisible();
+    await expect(imageMenu).toBeHidden();
+});
+
 test("mobile board settings and saved-grid drawer are usable", async ({ page }) => {
     await waitForApp(page);
 
