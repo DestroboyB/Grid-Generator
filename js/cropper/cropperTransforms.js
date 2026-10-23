@@ -140,23 +140,52 @@ export function rotateImage(
 
 
     // ========================================
-    // Keep the Image Centered Under the Crop Box
+    // Fit the Entire Rotated Image in the Preview
     // ========================================
     //
-    // At 90/270 degrees the image canvas can be much taller than the
-    // preview. CropperJS otherwise clamps its top edge to the container,
-    // leaving the crop box over one end of the rotated image. Align the
-    // canvas center with the crop-box center instead; viewMode still limits
-    // the crop to valid image bounds.
+    // A 90/270-degree rotation can make a wide image taller than the
+    // preview, or a tall image wider than it. Shrink (never enlarge) the
+    // rotated canvas to fit the preview, then resize the crop box to the
+    // largest size that fits both the image and the selected aspect ratio.
 
     const canvas = cropper.getCanvasData();
     const cropBox = cropper.getCropBoxData();
+    const container = cropper.getContainerData();
 
-    if (canvas && cropBox && canvas.width > 0 && canvas.height > 0) {
+    if (
+        canvas && cropBox && container &&
+        canvas.width > 0 && canvas.height > 0 &&
+        container.width > 0 && container.height > 0
+    ) {
+        const scale = Math.min(
+            1,
+            container.width / canvas.width,
+            container.height / canvas.height
+        );
+        const fittedWidth = canvas.width * scale;
+        const fittedHeight = canvas.height * scale;
+        const left = (container.width - fittedWidth) / 2;
+        const top = (container.height - fittedHeight) / 2;
+
         cropper.setCanvasData({
-            left: cropBox.left + cropBox.width / 2 - canvas.width / 2,
-            top: cropBox.top + cropBox.height / 2 - canvas.height / 2,
-            width: canvas.width
+            left,
+            top,
+            width: fittedWidth
+        });
+
+        const fittedCanvas = cropper.getCanvasData();
+        const ratio = getCropRatio(imageRatioInput);
+        const cropWidth = Math.min(
+            fittedCanvas.width,
+            fittedCanvas.height * ratio
+        );
+        const cropHeight = cropWidth / ratio;
+
+        cropper.setCropBoxData({
+            left: fittedCanvas.left + (fittedCanvas.width - cropWidth) / 2,
+            top: fittedCanvas.top + (fittedCanvas.height - cropHeight) / 2,
+            width: cropWidth,
+            height: cropHeight
         });
     }
 
