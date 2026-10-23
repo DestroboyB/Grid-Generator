@@ -117,7 +117,6 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         }));
 
         const geometry = await readGeometry();
-        console.log("Rotation geometry diagnostics:", JSON.stringify(geometry));
         expect(geometry.ratio).toBeCloseTo(16 / 9, 2);
         expect(geometry.crop.left).toBeGreaterThanOrEqual(geometry.canvas.left - 1);
         expect(geometry.crop.top).toBeGreaterThanOrEqual(geometry.canvas.top - 1);
@@ -126,14 +125,13 @@ test("rotating non-square crop ratios keeps the crop box on the image", async ({
         expect(geometry.crop.top + geometry.crop.height)
             .toBeLessThanOrEqual(geometry.canvas.top + geometry.canvas.height + 1);
 
-        // CropperJS returns canvas geometry in container coordinates. Check
-        // that the image canvas remains centered after rotation rather than
-        // comparing transformed DOM bounding rectangles, which include the
-        // rotated element's untransformed width and height.
+        // The canvas can extend beyond the preview when rotated. Its center
+        // must remain beneath the crop-box center so the visible crop stays
+        // on the middle of the image instead of drifting to one end.
         expect(geometry.canvas.left + geometry.canvas.width / 2)
-            .toBeCloseTo(geometry.container.width / 2, 0);
+            .toBeCloseTo(geometry.crop.left + geometry.crop.width / 2, 0);
         expect(geometry.canvas.top + geometry.canvas.height / 2)
-            .toBeCloseTo(geometry.container.height / 2, 0);
+            .toBeCloseTo(geometry.crop.top + geometry.crop.height / 2, 0);
     }
 
     await page.locator("#cancelButton").click();
