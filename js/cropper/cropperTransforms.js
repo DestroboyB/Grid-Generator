@@ -40,8 +40,7 @@ export function getCropRatio(
 export function rotateImage(
     cropper,
     degrees,
-    imageRatioInput,
-    fitRotatedImageCallback
+    imageRatioInput
 ) {
 
     if (!cropper) {
@@ -103,17 +102,6 @@ export function rotateImage(
     );
 
 
-    // ========================================
-    // Fit Rotated Image
-    // ========================================
-
-    // CropperJS updates its rotated canvas during rendering. Wait two frames
-    // before measuring it so fitting uses the final rotated geometry.
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            fitRotatedImageCallback();
-        });
-    });
 
 
     // ========================================
