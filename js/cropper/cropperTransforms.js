@@ -137,52 +137,6 @@ export function rotateImage(
 
 
 // ========================================
-// Fit Rotated Image Inside Container
-// ========================================
-
-export function fitRotatedImage(
-    cropper,
-    imageRatioInput
-) {
-
-    if (!cropper) {
-        return;
-    }
-
-    const container = cropper.getContainerData();
-    const canvas = cropper.getCanvasData();
-
-    if (
-        !container ||
-        !canvas ||
-        !canvas.width ||
-        !canvas.height
-    ) {
-        return;
-    }
-
-    // Fit only the image canvas. CropperJS has already established the crop
-    // box for the selected aspect ratio; moving/resizing that box here can
-    // make the image appear to slide underneath it after a quarter-turn.
-    const scale = Math.min(
-        container.width / Math.abs(canvas.width),
-        container.height / Math.abs(canvas.height),
-        1
-    );
-
-    const width = Math.abs(canvas.width) * scale;
-    const height = Math.abs(canvas.height) * scale;
-
-    cropper.setCanvasData({
-        left: (container.width - width) / 2,
-        top: (container.height - height) / 2,
-        width,
-        height
-    });
-}
-
-
-// ========================================
 // Toggle Horizontal Flip
 // ========================================
 
