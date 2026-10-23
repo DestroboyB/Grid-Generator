@@ -1002,7 +1002,7 @@ document.addEventListener(
             addImageMenu,
             imageSourceMenu,
             replaceImageSourceMenu
-        ].some(menu => menu.style.display !== "none");
+        ].some(menu => getComputedStyle(menu).display !== "none");
 
         closeAllMenus();
         appState.menuDiv = null;
