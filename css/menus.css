@@ -134,7 +134,7 @@
 .image-menu {
     display: none;
 
-    position: fixed;
+    position: absolute;
 
     background: var(--color-surface);
 
@@ -192,7 +192,7 @@
 .add-image-menu {
     display: none;
 
-    position: fixed;
+    position: absolute;
 
     background: var(--color-surface);
 
@@ -245,7 +245,7 @@
 .image-source-menu {
     display: none;
 
-    position: fixed;
+    position: absolute;
 
     background: var(--color-surface);
 
