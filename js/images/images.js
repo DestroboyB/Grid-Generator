@@ -52,6 +52,49 @@ const replaceImageSourceMenu =
         "replaceImageSourceMenu"
     );
 
+ 
+// Lock document scrolling while any cell action menu is open. These menus are
+// fixed to the viewport, so without this lock touch swipes move the board behind them.
+const imageActionMenus = [
+    imageMenu,
+    addImageMenu,
+    imageSourceMenu,
+    replaceImageSourceMenu
+];
+let imageMenuLockedScrollY = null;
+
+function syncImageMenuScrollLock() {
+    const isOpen = imageActionMenus.some(menu =>
+        menu.style.display !== "none" && getComputedStyle(menu).display !== "none"
+    );
+    const root = document.documentElement;
+    const body = document.body;
+
+    if (isOpen && imageMenuLockedScrollY === null) {
+        imageMenuLockedScrollY = window.scrollY;
+        body.style.setProperty("--image-menu-scroll-lock-top", `-${imageMenuLockedScrollY}px`);
+        root.classList.add("image-menu-open");
+        body.classList.add("image-menu-open");
+        return;
+    }
+
+    if (!isOpen && imageMenuLockedScrollY !== null) {
+        const restoreScrollY = imageMenuLockedScrollY;
+        imageMenuLockedScrollY = null;
+        root.classList.remove("image-menu-open");
+        body.classList.remove("image-menu-open");
+        body.style.removeProperty("--image-menu-scroll-lock-top");
+        window.scrollTo(0, restoreScrollY);
+    }
+}
+
+const imageMenuObserver = new MutationObserver(syncImageMenuScrollLock);
+imageActionMenus.forEach(menu => imageMenuObserver.observe(menu, {
+    attributes: true,
+    attributeFilter: ["style"]
+}));
+syncImageMenuScrollLock();
+
 
 // ========================================
 // Empty Image Menu
