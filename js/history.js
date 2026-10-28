@@ -220,25 +220,34 @@ export function saveHistoryState() {
         ];
 
     /*
-     * Don't create a history entry if
-     * nothing actually changed.
+     * Don't serialize the complete state to detect no-op edits: image sources
+     * can be large data URLs, and serializing them as part of both full states
+     * and then again as image arrays needlessly blocks the main thread.
      */
-    if (
-        lastState &&
-        JSON.stringify(lastState) ===
-            JSON.stringify(currentState)
-    ) {
-        return;
-    }
+    if (lastState) {
+        const imagesUnchanged =
+            JSON.stringify(lastState.images ?? []) ===
+            JSON.stringify(currentState.images ?? []);
 
-    // Reuse unchanged image data between consecutive history states so
-    // setting-only edits do not create another in-memory copy of every image.
-    if (
-        lastState &&
-        JSON.stringify(lastState.images ?? []) ===
-            JSON.stringify(currentState.images ?? [])
-    ) {
-        currentState.images = lastState.images;
+        const settingsUnchanged =
+            lastState.rows === currentState.rows &&
+            lastState.columns === currentState.columns &&
+            lastState.ratio === currentState.ratio &&
+            lastState.spacing === currentState.spacing &&
+            lastState.outerPadding === currentState.outerPadding &&
+            lastState.backgroundColor === currentState.backgroundColor &&
+            lastState.borderEnabled === currentState.borderEnabled &&
+            lastState.borderSize === currentState.borderSize &&
+            lastState.borderColor === currentState.borderColor;
+
+        if (settingsUnchanged && imagesUnchanged) {
+            return;
+        }
+
+        // Setting-only edits can reuse the prior image payload.
+        if (imagesUnchanged) {
+            currentState.images = lastState.images;
+        }
     }
 
     appState.undoStack.push(
