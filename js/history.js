@@ -16,32 +16,71 @@ import {
 const MAX_HISTORY_STATES = 10;
 const MAX_HISTORY_DATA_CHARS = 16 * 1024 * 1024;
 
-// Share unchanged image entries between adjacent snapshots. Editing one tile
-// should not make every other large image count as a new history payload.
+// Share identical image entries across the whole history, regardless of
+// their tile index. Reordering images changes their array positions, but not
+// their image payloads; counting those payloads repeatedly exhausts the
+// mobile history budget after only a few moves.
 function shareUnchangedHistoryImages(stack) {
-    for (let index = 1; index < stack.length; index += 1) {
-        const previousImages = stack[index - 1].images;
-        const currentImages = stack[index].images;
+    const candidatesBySource = new Map();
+    const candidatesWithoutSource = new Map();
 
-        if (!Array.isArray(previousImages) || !Array.isArray(currentImages)) {
+    for (const state of stack) {
+        if (!Array.isArray(state.images)) {
             continue;
         }
 
-        const sharedLength = Math.min(previousImages.length, currentImages.length);
-        for (let imageIndex = 0; imageIndex < sharedLength; imageIndex += 1) {
-            if (previousImages[imageIndex] === currentImages[imageIndex]) {
+        for (let imageIndex = 0; imageIndex < state.images.length; imageIndex += 1) {
+            const image = state.images[imageIndex];
+            if (!image || typeof image !== "object") {
                 continue;
             }
 
-            if (
-                JSON.stringify(previousImages[imageIndex]) ===
-                JSON.stringify(currentImages[imageIndex])
-            ) {
-                currentImages[imageIndex] = previousImages[imageIndex];
+            if (typeof image.source === "string") {
+                let candidates = candidatesBySource.get(image.source);
+                if (!candidates) {
+                    candidates = [];
+                    candidatesBySource.set(image.source, candidates);
+                }
+
+                const metadata = JSON.stringify({
+                    ...image,
+                    source: undefined,
+                    originalSource: undefined
+                });
+                const match = candidates.find(candidate =>
+                    candidate.originalSource === image.originalSource &&
+                    JSON.stringify({
+                        ...candidate,
+                        source: undefined,
+                        originalSource: undefined
+                    }) === metadata
+                );
+
+                if (match) {
+                    state.images[imageIndex] = match;
+                } else {
+                    candidates.push(image);
+                }
+                continue;
+            }
+
+            const key = JSON.stringify(image);
+            const match = candidatesWithoutSource.get(key);
+            if (match) {
+                state.images[imageIndex] = match;
+            } else {
+                candidatesWithoutSource.set(key, image);
             }
         }
+    }
 
+    // Reuse the entire array too when every entry is now shared in the same order.
+    for (let index = 1; index < stack.length; index += 1) {
+        const previousImages = stack[index - 1].images;
+        const currentImages = stack[index].images;
         if (
+            Array.isArray(previousImages) &&
+            Array.isArray(currentImages) &&
             previousImages.length === currentImages.length &&
             previousImages.every((image, imageIndex) => image === currentImages[imageIndex])
         ) {
