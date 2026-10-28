@@ -71,6 +71,48 @@ test("history budget counts shared image entries once across snapshots", async (
     expect(result.changedImageDistinct).toBe(true);
 });
 
+test("history budget preserves undo states when image tiles are repeatedly reordered", async ({ page }) => {
+    await waitForApp(page);
+
+    const result = await page.evaluate(async () => {
+        const { trimHistoryStack } = await import("/js/history.js");
+        const payload = "x".repeat(1024 * 1024);
+        const originals = Array.from({ length: 4 }, (_, index) => ({
+            source: `data:image/png;base64,${payload}${index}`,
+            originalSource: `data:image/png;base64,${payload}${index}`,
+            crop: { x: 0, y: 0, width: 100 + index, height: 100 },
+            rotation: 0
+        }));
+        const stack = [];
+
+        for (let stateIndex = 0; stateIndex < 5; stateIndex += 1) {
+            const offset = stateIndex % originals.length;
+            const reordered = [
+                ...originals.slice(offset),
+                ...originals.slice(0, offset)
+            ];
+            stack.push({
+                rows: 2,
+                columns: 2,
+                ratio: "1:1",
+                spacing: stateIndex,
+                images: reordered.map(image => JSON.parse(JSON.stringify(image)))
+            });
+        }
+
+        trimHistoryStack(stack, 10, 5 * 1024 * 1024);
+        return {
+            stateCount: stack.length,
+            movedImageSharedAcrossPositions: stack[0].images[0] === stack[1].images[3],
+            allStatesRetained: stack.length === 5
+        };
+    });
+
+    expect(result.stateCount).toBe(5);
+    expect(result.movedImageSharedAcrossPositions).toBe(true);
+    expect(result.allStatesRetained).toBe(true);
+});
+
 test("new board starts with Undo and Redo disabled", async ({ page }) => {
     await waitForApp(page);
     await expect(page.locator("#undoButton")).toBeDisabled();
