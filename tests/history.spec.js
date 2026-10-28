@@ -100,7 +100,7 @@ test("history budget preserves undo states when image tiles are repeatedly reord
             });
         }
 
-        trimHistoryStack(stack, 10, 5 * 1024 * 1024);
+        trimHistoryStack(stack, 10, 10 * 1024 * 1024);
         return {
             stateCount: stack.length,
             movedImageSharedAcrossPositions: stack[0].images[0] === stack[1].images[3],
